@@ -32,10 +32,13 @@ Pointer: [RailsGo patches](patches/src/main/kotlin/app/pigfoot/patches/railsgo/R
 
 ### Package isolation and dependencies
 Trigger: changing package naming, manifest rewriting or patch selection.
-Guard: retain the configurable package name and current default for update
-continuity. Preserve the app display name, provider/permission/link isolation,
-and the bus patch's package-isolation and sideload dependencies. Installation
-updates require the same package and local signing key.
+Guard: package renaming is opt-in and disabled by default. The bus patch depends
+only on sideload startup compatibility, never on package renaming. Without rename,
+preserve the original package, providers, permissions and link scheme. With rename,
+retain the configurable package, `.morphe` option default and complete isolation.
+Sideload is REQUIRED for standard/Shizuku installs; root mount stays unavailable
+until independently qualified. Preserve the app display name. Installation updates
+require the same package and local signing key; existing `.morphe` users must select rename.
 Pointer: [RailsGo patches](patches/src/main/kotlin/app/pigfoot/patches/railsgo/RailsGoPatches.kt),
 [installation instructions](README.md#installation).
 
@@ -69,8 +72,10 @@ Pointer: [build instructions](README.md#build),
 
 ### APK regression verification
 Trigger: changing app bytecode, manifest handling or the injected extension.
-Guard: apply the bundle to clean original APKS with default and custom package
-names; compare against an independently generated, untouched merged baseline.
+Guard: apply the bundle to clean original APKS with rename unselected, explicit
+default `.morphe` and custom package names; compare against an independently
+generated, untouched merged baseline. With rename off, verify all original
+provider/permission/link attributes remain unchanged.
 Verify only the two intended original methods change, only the helper is added,
 native/assets remain byte-identical and the original label is preserved. Also
 exercise modified/unsupported input rejection. Never use a previously patched
