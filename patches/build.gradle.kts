@@ -44,3 +44,6 @@ tasks.test { useJUnit() }
 
 // Match the official plugin's JVM 11 target for Java test sources as well.
 java { sourceCompatibility = JavaVersion.VERSION_11 }
+
+// Validate the actual embedded extension, not only source-level behavior.
+tasks.test { dependsOn("buildAndroid") }
