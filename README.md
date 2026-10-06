@@ -6,14 +6,28 @@ App-scoped patches built with the official Morphe Gradle template.
 
 Add `https://github.com/pigfoot/morphe-patches` as a source in Morphe Manager.
 Select the clean RailsGo (台灣鐵道通) **1.25.2 (156), arm64-v8a APKS**.
-Selecting the bus-update patch automatically includes package isolation and sideload compatibility.
-Keep the default package and the same local signing key to update an existing patched installation.
+Selecting the bus-update patch automatically includes sideload startup compatibility, **not package renaming**.
+Sideload startup compatibility is required for supported standard and Shizuku installs.
+Root mount is not qualified and these patches are unavailable in that mode.
+
+**Change package name is optional and unselected by default.** Without it, the app keeps
+`com.waccliu.taiwanrail` and its original providers, permissions and link scheme.
+An ordinary re-signed build cannot update a differently signed Play installation or coexist
+with it under the same package. Uninstalling the Play app removes its local data.
+
+Select **Change package name** for parallel installation: its default is
+`com.waccliu.taiwanrail.morphe`, or enter another valid package name. The patch updates
+the package, providers, permissions and link scheme together; no separate parallel toggle is needed.
+To update an existing `.morphe` installation, **explicitly select Change package name**,
+keep its default value and use the same local signing key. Existing custom-package installs
+likewise require selecting this patch and keeping the same custom value and signing key.
+This opt-in behavior changes the default output identity from v0.0.1.
 The original app display name is preserved. Phone startup and live bus updates still require device validation.
 
 ## Patches
 
 <!-- PATCHES_START -->
-> **[v0.0.1](https://github.com/pigfoot/morphe-patches/releases/tag/v0.0.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+> **[v0.1.0](https://github.com/pigfoot/morphe-patches/releases/tag/v0.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
 <details open>
 <summary>📦 台灣鐵道通&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
 <br>
@@ -25,9 +39,9 @@ The original app display name is preserved. Phone startup and live bus updates s
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
-| [Change package name](#change-package-name) | Change the RailsGo package for parallel installation without changing the app name. Providers, permissions and links remain isolated. | • Package name |
-| [RailsGo bus update without video](#railsgo-bus-update-without-video) | Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. |  |
-| [RailsGo sideload startup compatibility](#railsgo-sideload-startup-compatibility) | Allow the re-signed parallel app to pass its Java Play-license startup entry. |  |
+| [Change package name](#change-package-name) | Optional parallel installation with a default or custom package name. Without this patch the original package is retained. The app name is unchanged; providers, permissions and links are isolated when selected. | • Package name |
+| [RailsGo bus update without video](#railsgo-bus-update-without-video) | Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. Requires sideload startup compatibility, not package renaming. |  |
+| [RailsGo sideload startup compatibility](#railsgo-sideload-startup-compatibility) | Required for supported re-signed standard or Shizuku installs, with or without package renaming. Bypasses the Java Play-license startup entry. Root mount is not qualified. |  |
 
 </details>
 

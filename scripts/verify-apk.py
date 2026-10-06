@@ -12,6 +12,7 @@ HELPER = "Lv5/RailsGoBusUpdate;"
 SHOW = ("Lv5/K;", "e", "()V")
 LICENSE = ("Lcom/pairip/licensecheck/LicenseClient;", "checkLicense", "(Landroid/content/Context;)V")
 ANDROID = "{http://schemas.android.com/apk/res/android}"
+ORIGINAL_PACKAGE = "com.waccliu.taiwanrail"
 
 
 def read_methods(z):
@@ -31,7 +32,7 @@ def main():
     p.add_argument("before", type=Path)
     p.add_argument("after", type=Path)
     p.add_argument("report", type=Path)
-    p.add_argument("--package", default="com.waccliu.taiwanrail.morphe")
+    p.add_argument("--package", default=ORIGINAL_PACKAGE)
     a = p.parse_args()
     with zipfile.ZipFile(a.before) as before, zipfile.ZipFile(a.after) as after:
         assert after.testzip() is None
@@ -69,14 +70,24 @@ def main():
         original_xml = AXMLPrinter(before.read("AndroidManifest.xml")).get_xml_obj()
         assert xml.find("application").attrib[ANDROID + "label"] == original_xml.find("application").attrib[ANDROID + "label"]
         names = [e.attrib.get(ANDROID + "name", "") for e in xml.iter()]
-        assert "com.waccliu.taiwanrail.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" not in names
         assert names.count(a.package + ".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION") == 2
         schemes = [e.attrib.get(ANDROID + "scheme") for e in xml.findall(".//data")]
-        expected_scheme = "taiwanrail-morphe" if a.package == "com.waccliu.taiwanrail.morphe" else "taiwanrail-" + a.package.encode().hex()
-        assert "taiwanrail" not in schemes and expected_scheme in schemes
+        if a.package == ORIGINAL_PACKAGE:
+            # Compare the complete identity-bearing manifest surface, not only prefixes.
+            for tag in ("provider", "permission", "uses-permission", "data"):
+                original_attributes = [dict(e.attrib) for e in original_xml.findall(".//" + tag)]
+                patched_attributes = [dict(e.attrib) for e in xml.findall(".//" + tag)]
+                assert original_attributes == patched_attributes, tag
+            assert "taiwanrail" in schemes
+        else:
+            assert ORIGINAL_PACKAGE + ".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" not in names
+            expected_scheme = "taiwanrail-morphe" if a.package == ORIGINAL_PACKAGE + ".morphe" else "taiwanrail-" + a.package.encode().hex()
+            assert "taiwanrail" not in schemes and expected_scheme in schemes
     report = {"existing_methods_checked": len(old), "changed_methods": sorted(changed),
               "helper_methods_added": len(helper), "original_show_and_license_code_retained": True,
-              "native_and_assets_byte_identical": len(assets), "provider_isolation_verified": 6,
+              "native_and_assets_byte_identical": len(assets),
+              "provider_isolation_verified": 6 if a.package != ORIGINAL_PACKAGE else 0,
+              "original_manifest_identity_preserved": a.package == ORIGINAL_PACKAGE,
               "diagnostic_exporter_absent": True, "original_app_label_preserved": True, "package": a.package, "android_runtime_verified": False}
     a.report.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report))

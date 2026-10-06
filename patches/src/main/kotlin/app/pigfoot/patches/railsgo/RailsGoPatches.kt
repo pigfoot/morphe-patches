@@ -35,14 +35,18 @@ private fun requireClass(original: ClassDef, pin: String) {
 
 val parallelInstallPatch = resourcePatch(
     name = "Change package name",
-    description = "Change the RailsGo package for parallel installation without changing the app name. Providers, permissions and links remain isolated."
+    description = "Optional parallel installation with a default or custom package name. Without this patch the original package is retained. The app name is unchanged; providers, permissions and links are isolated when selected.",
+    default = false
 ) {
     compatibleWith(target)
+    availability { installer, _ ->
+        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED
+    }
     val packageName by stringOption(
         key = "packageName",
         default = DEFAULT_PACKAGE,
         title = "Package name",
-        description = "New package for the parallel app. Keep the default to update an existing Morphe install. The app name is unchanged.",
+        description = "Used only when this patch is selected. Keep the default to update an existing .morphe install with the same signing key. The app name is unchanged.",
         required = true,
         validator = { value ->
             value != null && value.length <= 200 &&
@@ -95,9 +99,12 @@ val parallelInstallPatch = resourcePatch(
 
 val startupCompatibilityPatch = bytecodePatch(
     name = "RailsGo sideload startup compatibility",
-    description = "Allow the re-signed parallel app to pass its Java Play-license startup entry."
+    description = "Required for supported re-signed standard or Shizuku installs, with or without package renaming. Bypasses the Java Play-license startup entry. Root mount is not qualified."
 ) {
     compatibleWith(target)
+    availability { installer, _ ->
+        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.REQUIRED
+    }
     execute {
         require(packageMetadata.versionName == "1.25.2" && packageMetadata.versionCode == "156")
         requireClass(classDefBy("Lcom/pairip/licensecheck/LicenseClient;"), LICENSE_PIN)
@@ -110,10 +117,13 @@ val startupCompatibilityPatch = bytecodePatch(
 
 val busUpdatePatch = bytecodePatch(
     name = "RailsGo bus update without video",
-    description = "Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback."
+    description = "Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. Requires sideload startup compatibility, not package renaming."
 ) {
     compatibleWith(target)
-    dependsOn(parallelInstallPatch, startupCompatibilityPatch)
+    availability { installer, _ ->
+        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED
+    }
+    dependsOn(startupCompatibilityPatch)
     extendWith("extensions/railsgo-bus.mpe")
     execute {
         require(packageMetadata.versionName == "1.25.2" && packageMetadata.versionCode == "156")
