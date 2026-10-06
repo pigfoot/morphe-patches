@@ -27,7 +27,7 @@ The original app display name is preserved. Phone startup and live bus updates s
 ## Patches
 
 <!-- PATCHES_START -->
-> **[v0.0.1](https://github.com/pigfoot/morphe-patches/releases/tag/v0.0.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+> **[v1.0.0](https://github.com/pigfoot/morphe-patches/releases/tag/v1.0.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
 <details open>
 <summary>📦 台灣鐵道通&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
 <br>
@@ -39,9 +39,9 @@ The original app display name is preserved. Phone startup and live bus updates s
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
-| [Change package name](#change-package-name) | Change the RailsGo package for parallel installation without changing the app name. Providers, permissions and links remain isolated. | • Package name |
-| [RailsGo bus update without video](#railsgo-bus-update-without-video) | Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. |  |
-| [RailsGo sideload startup compatibility](#railsgo-sideload-startup-compatibility) | Allow the re-signed parallel app to pass its Java Play-license startup entry. |  |
+| [Change package name](#change-package-name) | Optional parallel installation with a default or custom package name. Without this patch the original package is retained. The app name is unchanged; providers, permissions and links are isolated when selected. | • Package name |
+| [RailsGo bus update without video](#railsgo-bus-update-without-video) | Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. Requires sideload startup compatibility, not package renaming. |  |
+| [RailsGo sideload startup compatibility](#railsgo-sideload-startup-compatibility) | Required for supported re-signed standard or Shizuku installs, with or without package renaming. Bypasses the Java Play-license startup entry. Root mount is not qualified. |  |
 
 </details>
 
