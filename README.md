@@ -6,8 +6,22 @@ App-scoped patches built with the official Morphe Gradle template.
 
 Add `https://github.com/pigfoot/morphe-patches` as a source in Morphe Manager.
 Select the clean RailsGo (台灣鐵道通) **1.25.2 (156), arm64-v8a APKS**.
-Selecting the bus-update patch automatically includes package isolation and sideload compatibility.
-Keep the default package and the same local signing key to update an existing patched installation.
+Selecting the bus-update patch automatically includes sideload startup compatibility, **not package renaming**.
+Sideload startup compatibility is required for supported standard and Shizuku installs.
+Root mount is not qualified and these patches are unavailable in that mode.
+
+**Change package name is optional and unselected by default.** Without it, the app keeps
+`com.waccliu.taiwanrail` and its original providers, permissions and link scheme.
+An ordinary re-signed build cannot update a differently signed Play installation or coexist
+with it under the same package. Uninstalling the Play app removes its local data.
+
+Select **Change package name** for parallel installation: its default is
+`com.waccliu.taiwanrail.morphe`, or enter another valid package name. The patch updates
+the package, providers, permissions and link scheme together; no separate parallel toggle is needed.
+To update an existing `.morphe` installation, **explicitly select Change package name**,
+keep its default value and use the same local signing key. Existing custom-package installs
+likewise require selecting this patch and keeping the same custom value and signing key.
+This opt-in behavior changes the default output identity from v0.0.1.
 The original app display name is preserved. Phone startup and live bus updates still require device validation.
 
 ## Patches
