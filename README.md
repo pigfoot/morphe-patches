@@ -42,7 +42,7 @@ The initial release is **v0.0.1**. Subsequent releases use semantic-release:
 
 - `.releaserc` defines release branches and commit rules.
 - `fix:` / `perf:` / `bump:` increments the patch version.
-- `feat:` increments the minor version; breaking changes increment the major version.
+- `feat:` increments the minor version; a `BREAKING CHANGE:` footer increments the major version.
 - `chore:` / `docs:` alone does not publish a release.
 - `dev` publishes prereleases; merging `dev` into `main` publishes stable releases.
 - Automation updates `gradle.properties`, changelog, Manager metadata and patch list together.
