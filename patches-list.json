@@ -1,0 +1,106 @@
+{
+  "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
+  "version": "0.0.1",
+  "patches": [
+    {
+      "name": "Change package name",
+      "description": "Change the RailsGo package for parallel installation without changing the app name. Providers, permissions and links remain isolated.",
+      "default": true,
+      "category": null,
+      "dependencies": [],
+      "compatiblePackages": [
+        {
+          "packageName": "com.waccliu.taiwanrail",
+          "name": "台灣鐵道通",
+          "description": null,
+          "apkFileType": "APKS",
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.25.2",
+              "versionCodes": {
+                "ARM64_V8A": 156
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": [
+        {
+          "key": "packageName",
+          "title": "Package name",
+          "description": "New package for the parallel app. Keep the default to update an existing Morphe install. The app name is unchanged.",
+          "required": true,
+          "type": "kotlin.String",
+          "default": "com.waccliu.taiwanrail.morphe",
+          "values": null
+        }
+      ]
+    },
+    {
+      "name": "RailsGo bus update without video",
+      "description": "Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback.",
+      "default": true,
+      "category": null,
+      "dependencies": [
+        "ResourcePatch",
+        "BytecodePatch"
+      ],
+      "compatiblePackages": [
+        {
+          "packageName": "com.waccliu.taiwanrail",
+          "name": "台灣鐵道通",
+          "description": null,
+          "apkFileType": "APKS",
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.25.2",
+              "versionCodes": {
+                "ARM64_V8A": 156
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "RailsGo sideload startup compatibility",
+      "description": "Allow the re-signed parallel app to pass its Java Play-license startup entry.",
+      "default": true,
+      "category": null,
+      "dependencies": [],
+      "compatiblePackages": [
+        {
+          "packageName": "com.waccliu.taiwanrail",
+          "name": "台灣鐵道通",
+          "description": null,
+          "apkFileType": "APKS",
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.25.2",
+              "versionCodes": {
+                "ARM64_V8A": 156
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    }
+  ]
+}

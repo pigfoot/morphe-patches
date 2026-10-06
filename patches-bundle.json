@@ -1,0 +1,7 @@
+{
+  "created_at": "2026-10-06T13:11:21",
+  "description": "## Pigfoot Patches v0.0.1\n\nInitial release of the rebuilt repository using the official Morphe Gradle layout.\n\n- RailsGo 1.25.2 (156), arm64-v8a APKS only.\n- Change package name: configurable package with provider, permission and link isolation. The original app display name is preserved.\n- Sideload startup compatibility remains a required dependency.\n- Scoped bus-update completion retains loaded reward metadata, fallback behavior and duplicate-callback protection.\n- Java extension with compile-only declarations excluded from the shipped bundle.\n- English documentation and semantic-release automation for subsequent releases.\n\nKeep the default package name and the same local signing key to update an existing patched installation. Device startup and live bus updates require phone validation after the Java extension migration.",
+  "download_url": "https://github.com/pigfoot/morphe-patches/releases/download/v0.0.1/patches-0.0.1.mpp",
+  "signature_download_url": "",
+  "version": "0.0.1"
+}

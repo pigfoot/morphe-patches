@@ -13,7 +13,24 @@ The original app display name is preserved. Phone startup and live bus updates s
 ## Patches
 
 <!-- PATCHES_START -->
-Release automation generates the patch list here.
+> **[v0.0.1](https://github.com/pigfoot/morphe-patches/releases/tag/v0.0.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+<details open>
+<summary>📦 台灣鐵道通&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 1.25.2 |
+| :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Change package name](#change-package-name) | Change the RailsGo package for parallel installation without changing the app name. Providers, permissions and links remain isolated. | • Package name |
+| [RailsGo bus update without video](#railsgo-bus-update-without-video) | Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. |  |
+| [RailsGo sideload startup compatibility](#railsgo-sideload-startup-compatibility) | Allow the re-signed parallel app to pass its Java Play-license startup entry. |  |
+
+</details>
+
 <!-- PATCHES_END -->
 
 ## Repository layout
