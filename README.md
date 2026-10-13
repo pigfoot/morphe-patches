@@ -100,3 +100,9 @@ Ad support means leaving ads/offline patches unselected; clean selects ads suppr
 offline selects offline mode. Local-feature and telemetry patches remain independent.
 There is no repeat-ad-reward or all-device cropping-fix claim. No opaque donor bootstrap,
 signature spoofing payload or donor module/asset deletion is copied into this bundle.
+
+**CamScanner scanner initialization compatibility** is a separate, unselected experimental
+patch. It changes only the known `verifyKeyV2` entry bytes in the two qualified scanner
+libraries and suppresses the local pirate-app dialog gate. Exact binary hashes and original
+entry bytes are required; unknown ABIs are rejected. This is not an all-device cropping fix
+and is not automatically included in offline mode. Re-signed startup/crop needs phone testing.

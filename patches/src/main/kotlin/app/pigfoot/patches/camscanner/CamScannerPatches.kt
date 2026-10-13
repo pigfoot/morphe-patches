@@ -164,3 +164,22 @@ val camscannerOfflinePatch = resourcePatch(
     dependsOn(camscannerInputPatch, camscannerAdsPatch)
     execute { document("AndroidManifest.xml").use { removeInternet(it) } }
 }
+
+private val scannerNativePatch = resourcePatch {
+    dependsOn(camscannerInputPatch)
+    execute {
+        val libs = listApkEntries("lib/").filter { it.endsWith("/libscannercs.so") }
+        require(libs.isNotEmpty() && libs.all { it in scannerEdits }) { "Unqualified scanner ABI" }
+        // Validate every ABI before writing any library.
+        val replacements = libs.associateWith { editScanner(get(it).readBytes(), scannerEdits.getValue(it)) }
+        replacements.forEach { (path, bytes) -> get(path).writeBytes(bytes) }
+    }
+}
+val camscannerStartupPatch = bytecodePatch(
+    name = "CamScanner scanner initialization compatibility", description = "Experimental re-signed scanner initialization compatibility for exact qualified native binaries, plus the local pirate-app prompt gate. Not an all-device crop fix.", default = false
+) {
+    compatibleWith(target)
+    availability { installer, _ -> noNetwork(installer) }
+    dependsOn(camscannerInputPatch, scannerNativePatch)
+    execute { stop("Lcom/intsig/camscanner/business/PirateAppControl;", "O8", "(Landroid/content/Context;Lcom/intsig/callback/DialogDismissListener;)Z", "const/4 v0, 0\nreturn v0") }
+}

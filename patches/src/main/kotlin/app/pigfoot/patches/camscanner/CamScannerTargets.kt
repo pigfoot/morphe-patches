@@ -2,6 +2,7 @@ package app.pigfoot.patches.camscanner
 
 internal data class AdTarget(val type: String, val name: String, val descriptor: String)
 internal val originalClassPins = mapOf(
+    "Lcom/intsig/camscanner/business/PirateAppControl;" to "684eb8031e5baa8bbba4d6e8081ee234c4dc985353f4f6f797a38a46318f9090",
     "Lcom/bytedance/sdk/openadsdk/adapter/PangleAppOpenAd;" to "e2fc7d8aaadf36800ae393d61a6a10eaf61966314ea5bed8b58965e132690219",
     "Lcom/bytedance/sdk/openadsdk/adapter/PangleAppOpenInterstitialAd;" to "79ee7e867b516317d14cf16afd0e82d7a947548cdb41a4055f9e3723bc1f7c95",
     "Lcom/bytedance/sdk/openadsdk/adapter/PangleBannerAd;" to "2256c425bbec859829457f8395fd37b5803c965cb3a4821c0b45a0459b43f975",
