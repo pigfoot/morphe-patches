@@ -24,3 +24,10 @@ Compile using the official Gradle plugin. Run existing RailsGo tests plus option
 ## Runtime qualification pending
 
 Java/native telemetry and stored reports, foreground/background and cached logger replay, normal scan/import/OCR/crop/export, offline socket/WebView/other-service boundaries, optional cloud integrations and actual advertising completion. Keep unqualified patches disabled by default. No automatic stable release or private APK upload.
+
+### Persisted Crashlytics collection overrides
+
+The all-telemetry policy also guards the two qualified internal collection predicates
+in DataCollectionArbiter, because saved SDK overrides can take precedence over manifest
+collection defaults. It does not erase user preferences or promise no local native crash
+files. Manual upload, public re-enable setters and wrapper paths are handled separately.

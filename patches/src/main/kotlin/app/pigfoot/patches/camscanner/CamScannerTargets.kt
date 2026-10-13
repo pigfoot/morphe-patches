@@ -2,6 +2,7 @@ package app.pigfoot.patches.camscanner
 
 internal data class AdTarget(val type: String, val name: String, val descriptor: String)
 internal val originalClassPins = mapOf(
+    "Lcom/google/firebase/crashlytics/internal/common/DataCollectionArbiter;" to "be3f3ffd66b04f6f649d04e0cb65ccd6181299c49e3459832b6b08dbd20c2af6",
     "Lcom/intsig/camscanner/business/PirateAppControl;" to "684eb8031e5baa8bbba4d6e8081ee234c4dc985353f4f6f797a38a46318f9090",
     "Lcom/bytedance/sdk/openadsdk/adapter/PangleAppOpenAd;" to "e2fc7d8aaadf36800ae393d61a6a10eaf61966314ea5bed8b58965e132690219",
     "Lcom/bytedance/sdk/openadsdk/adapter/PangleAppOpenInterstitialAd;" to "79ee7e867b516317d14cf16afd0e82d7a947548cdb41a4055f9e3723bc1f7c95",

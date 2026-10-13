@@ -103,6 +103,11 @@ val camscannerFirebasePatch = bytecodePatch(
             m.addInstructions(0, if (m.returnType == "Z") "const/4 v0, 0\nreturn v0" else "return-void")
         }
         if (all) {
+            // Persisted SDK overrides can win over manifest defaults. Enforce the arbiter too.
+            val gates = mutableClassDefBy("Lcom/google/firebase/crashlytics/internal/common/DataCollectionArbiter;")
+                .methods.filter { it.returnType == "Z" && it.parameterTypes.isEmpty() }
+            require(gates.size == 2)
+            gates.forEach { it.addInstructions(0, "const/4 v0, 0\nreturn v0") }
             for (m in mutableClassDefBy(CRASH).methods.filter { it.name in setOf("log", "recordException", "setUserId") && it.returnType == "V" }) m.addInstructions(0, "return-void")
             stop(CRASH, "setCrashlyticsCollectionEnabled", "(Z)V", "const/4 p1, 0")
             stop(CRASH, "setCrashlyticsCollectionEnabled", "(Ljava/lang/Boolean;)V", "sget-object p1, Ljava/lang/Boolean;->FALSE:Ljava/lang/Boolean;")
