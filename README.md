@@ -83,3 +83,20 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 ## License
 
 [GNU General Public License v3.0](LICENSE). Build/release scaffolding and patch-list generation derive from the [Morphe template](https://github.com/MorpheApp/morphe-patches-template).
+
+## CamScanner experimental source
+
+The working branch adds independently selectable CamScanner patches for clean
+**7.26.5.2609160000 (72651) APKM**. All are experimental and unselected by default.
+See [implementation and validation](docs/camscanner-implementation.md).
+
+- **CamScanner local features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
+- **CamScanner disable Firebase telemetry**: options select all Firebase telemetry or Analytics only. Unrelated Firebase functionality is retained. Stored/native reports and device traffic still require qualification.
+- **CamScanner disable app logging**: network event/re-enable/cache-replay boundaries; optional local app output suppression.
+- **CamScanner disable ads**: qualified SDK load/show entry points and optional ad-only manifest cleanup. Login, billing and WorkManager components are preserved. Async no-fill/fallback behavior requires device validation.
+- **CamScanner offline mode**: includes ad suppression and removes every INTERNET declaration, without falsifying platform network state. External apps/services and online retry flows require device validation.
+
+Ad support means leaving ads/offline patches unselected; clean selects ads suppression;
+offline selects offline mode. Local-feature and telemetry patches remain independent.
+There is no repeat-ad-reward or all-device cropping-fix claim. No opaque donor bootstrap,
+signature spoofing payload or donor module/asset deletion is copied into this bundle.
