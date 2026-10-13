@@ -83,3 +83,31 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 ## License
 
 [GNU General Public License v3.0](LICENSE). Build/release scaffolding and patch-list generation derive from the [Morphe template](https://github.com/MorpheApp/morphe-patches-template).
+
+## CamScanner experimental source
+
+Supports pristine full APKM **7.26.5.2609160000 (72651)** and
+**7.27.0.2609220000 (72701)**. Preserve original modules, OCR assets and identity;
+update with the same local signing key without clearing data.
+
+| Patch | Default / scope |
+| --- | --- |
+| CamScanner restore trust on re-signed builds | Required for standard/Shizuku; mount unavailable. Narrow native signing compatibility and API Center cache recovery, not certificate/auth-result spoofing. |
+| CamScanner local premium features | Recommended; local feature status only, not a server subscription or credit grant. Folder limit remains original by default. |
+| CamScanner reduce telemetry and app logging | Recommended; qualified Firebase/app/local logging suppression, not a zero-telemetry guarantee. |
+| CamScanner disable ads | Optional. Rewarded videos are blocked by default; explicit online 72701-only lottery video skipping is independently guarded. |
+| CamScanner offline mode | Optional. Includes ads/core and removes all app INTERNET declarations; incompatible with lottery skipping. |
+
+For online ad support, select the recommendation set and leave ads/offline off.
+Premium and privacy remain independently deselectable. No scanner initialization
+patch, diagnostic option, overlay, native observer or cloud Word fix is shipped.
+The retired `inspect-lottery` value fails option validation; use `block` or
+`skip-lottery`. Desktop CLI may warn and continue with default `block`, rather
+than aborting the command.
+The ordinary skip profile includes the phone-accepted dispatch-label correction
+and silent scoped initialization protection. An observed reward receipt is not a
+promise that every account/request will receive a server grant.
+
+See the [implementation contract](docs/camscanner-implementation.md),
+[lottery skip contract and regression](docs/camscanner-reward-video-experiment.md),
+and [independent version-porting workflow](docs/camscanner-version-porting.md).
