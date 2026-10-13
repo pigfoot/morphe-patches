@@ -106,11 +106,11 @@ val camscannerFirebasePatch = bytecodePatch(
             for (m in mutableClassDefBy(CRASH).methods.filter { it.name in setOf("log", "recordException", "setUserId") && it.returnType == "V" }) m.addInstructions(0, "return-void")
             stop(CRASH, "setCrashlyticsCollectionEnabled", "(Z)V", "const/4 p1, 0")
             stop(CRASH, "setCrashlyticsCollectionEnabled", "(Ljava/lang/Boolean;)V", "sget-object p1, Ljava/lang/Boolean;->FALSE:Ljava/lang/Boolean;")
-            stop(CRASH, "sendUnsentReports", "()Lcom/google/android/gms/tasks/Task;", "const/4 v0, 0\ninvoke-static {v0}, Lcom/google/android/gms/tasks/Tasks;->forResult(Ljava/lang/Object;)Lcom/google/android/gms/tasks/Task;\nmove-result-object v0\nreturn-object v0")
+            stop(CRASH, "sendUnsentReports", "()V")
             // Permanent deactivation is manifest-controlled; prevent later public API overrides too.
             val perf = mutableClassDefBy("Lcom/google/firebase/perf/FirebasePerformance;").methods
-                .filter { it.name == "setPerformanceCollectionEnabled" && it.returnType == "V" }
-            require(perf.isNotEmpty())
+                .filter { it.name in setOf("o〇0", "〇〇888") && it.returnType == "V" }
+            require(perf.size == 2)
             perf.forEach { it.addInstructions(0, "return-void") }
         }
     }
