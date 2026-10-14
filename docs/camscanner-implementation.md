@@ -53,30 +53,38 @@ The CamScanner patches are independently listed and disabled by default:
 - **CamScanner disable ads**: `manifestCleanup` = true or false.
 - **CamScanner offline mode**: includes ads suppression through a dependency; does not imply local features, Firebase suppression or scanner compatibility.
 - **CamScanner scanner initialization compatibility**: separately opt-in, qualified ARM scanner library patches only.
-- **CamScanner Word export diagnostics**: temporary diagnostic-only marker on the existing Word result-103 limit dialog. It does not bypass limits or change conversion outcomes.
+- **CamScanner Word export diagnostics**: temporary diagnostic-only labels on three Word result-103 dialogs and recent numeric HTTP observations. It does not bypass limits or change conversion outcomes.
 
-### No-ADB Word diagnostic (experimental)
+### No-ADB Word diagnostic v2 (experimental)
 
-Motivation: distinguish the existing Word conversion result-103 dialog from other
-similar quota messages without requiring phone logcat. The exact pristine
-WordListPresenter fingerprint and dialog instruction/register layout are checked
-before insertion. Only the existing error-dialog message is annotated with
-`CS-DIAG-W103: Word export result = 103`; its confirmation button, branch condition,
-requests and success/error handling remain unchanged. No new APK class, permission,
-telemetry or credential-bearing data is introduced.
+The first diagnostic covered only WordListPresenter. Other Word UI paths can
+show the same quota confirmation dialog. V2 qualifies pristine fingerprints
+for WordListPresenter, ImageToWordFragment, BaseJsonDocConverterFacade and
+Json2WordCallable before mutation; all three dialog sites receive distinct
+`CS-DIAG-V2` path labels, retaining the original result-103 condition and button.
 
-Apply to the same clean supported input, selecting local premium features and
-scanner compatibility as before, plus Word export diagnostics. Keep other options
-unchanged. A visible `CS-DIAG-W103` confirms the result-103 UI path; absence of the
-marker does not establish a server error or diagnose the alternate path. This is
-not a Word/reward fix or a verified phone-runtime outcome. Remove this optional
-patch after investigation.
+One small Java helper keeps a bounded in-memory history of Word preparation and
+numeric HTTP error-header observations. It observes the existing parsed header;
+no request, quota, return value or response body is changed. No account, token,
+URL, document content, arbitrary header text or on-disk diagnostic log is retained.
+A missing/nonnumeric header is marked, not silently treated as zero. Events older
+than 120 seconds are omitted. Recent events are explicitly process-local, **not
+per-document correlated**: concurrent exports may appear together, and no recent
+observation means UNKNOWN, not proof that a request was never sent. The display
+contains only the exact error header already read by the original code (including
+its original default); it does not distinguish missing header from that default.
 
-Validation frame: official build/tests; real patch application; preserve the
-complete class/module/native/asset inventory and original result-103 dispatch;
-verify only the intended presenter method changes for diagnostics-only selection.
-Normal result 0 and other errors must retain their original behavior; unsupported
-or already instrumented presenter definitions must reject.
+Rebuild from clean supported input using the same prior options plus diagnostics.
+Record one export attempt, then screenshot the failure dialog. Do not apply to an
+already patched APK. This bundle is a diagnostic, not a restored Word/reward
+feature or a verified phone-runtime result. Remove it after investigation.
+
+Validation frame: build/tests; real diagnostics-only and combined application;
+exactly one injected helper, exactly four qualified modified app classes; preserve
+original instruction/register/branch/handler graphs, permissions, assets and native
+binaries (except independently selected scanner compatibility). Test all three UI
+sites, bounded/concurrent history, numeric/missing/nonnumeric values, diagnostic-off
+unchanged, modified/unsupported rejection and unchanged result0/other errors.
 
 For an ad-support combination, leave ads suppression and offline mode unselected.
 For clean, select ads suppression but not offline mode.

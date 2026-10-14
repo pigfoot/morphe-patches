@@ -18,6 +18,9 @@ class BundleContractTest {
             val bytes = zip.getInputStream(zip.getEntry("extensions/railsgo-bus.mpe")).readBytes()
             val dex = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(bytes))
             assertEquals(setOf("Lv5/RailsGoBusUpdate;"), dex.classes.map { it.type }.toSet())
+            val wordBytes = zip.getInputStream(zip.getEntry("extensions/camscanner-word-diagnostics.mpe")).readBytes()
+            val wordDex = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(wordBytes))
+            assertEquals(setOf("Lapp/pigfoot/diagnostics/WordTrace;"), wordDex.classes.map { it.type }.toSet())
             assertFalse(zip.entries().asSequence().any { it.name.startsWith("v5/") || it.name.startsWith("t0/") })
         }
     }
