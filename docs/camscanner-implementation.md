@@ -47,7 +47,7 @@ The artifact retains the upstream build version; the hash/source commit identify
 
 Six public CamScanner patches are independently listed and disabled by default:
 
-- **CamScanner local features**: `folderLimit` = 0 (original limit) or 5000.
+- **CamScanner local premium features**: `folderLimit` = 0 (original limit) or 5000.
 - **CamScanner disable Firebase telemetry**: `scope` = `all` or `analytics`.
 - **CamScanner disable app logging**: `localOutput` = true or false.
 - **CamScanner disable ads**: `manifestCleanup` = true or false.
@@ -139,3 +139,26 @@ The three combinations are reference-inspired reimplementations, not equivalent 
    Capture network/log evidence before claiming telemetry or connectivity suppression.
 6. Fix reproducible failures, review the draft PR, then authorize merge/release. This document
    records a test plan, not completed device qualification.
+
+## Local-premium label clarification
+
+Motivation: the previous "local features" label obscured the intended local paid-feature
+scope. Rename the public patch to **CamScanner local premium features** without changing
+bytecode targets, options, compatibility, dependencies or disabled-by-default behavior.
+Success: the rebuilt bundle exposes the new name; the prior name is absent. Existing
+selection/dependency/option tests and official compilation must pass. Historical validated
+bundles may still expose the previous label. This is not a reward-playback fix.
+
+## Open runtime issue: task-center lottery
+
+A reported symptom is no visible reaction when requesting a rewarded ad from Task Center,
+Daily Tasks, Lottery, using local premium/Firebase/logging/scanner compatibility without
+ads suppression or offline mode. A cloud-capacity concern was withdrawn; do not change
+quota handling in response. The root cause of the lottery symptom is not established.
+
+Static entry tracing finds WebAction's `watchad_lottery` action constructs WatchAdControl
+with LeftRewardVideoManager; it is distinct from AdRewardedManager's document-function
+reward paths. No fake ad-completion or fabricated task reward should be introduced.
+The next evidence is exact click/loading behavior and a same-device donor/original control,
+then a minimal patch-selection A/B. Build-only validation does not establish normal
+availability of an ad or successful task-center callbacks.

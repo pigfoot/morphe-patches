@@ -90,7 +90,7 @@ The working branch adds independently selectable CamScanner patches for clean
 **7.26.5.2609160000 (72651) APKM**. All are experimental and unselected by default.
 See [implementation and validation](docs/camscanner-implementation.md).
 
-- **CamScanner local features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
+- **CamScanner local premium features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
 - **CamScanner disable Firebase telemetry**: options select all Firebase telemetry or Analytics only. Unrelated Firebase functionality is retained. Stored/native reports and device traffic still require qualification.
 - **CamScanner disable app logging**: network event/re-enable/cache-replay boundaries; optional local app output suppression.
 - **CamScanner disable ads**: qualified SDK load/show entry points and optional ad-only manifest cleanup. Login, billing and WorkManager components are preserved. Async no-fill/fallback behavior requires device validation.

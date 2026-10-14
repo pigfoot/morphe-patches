@@ -48,7 +48,7 @@ private fun noNetwork(installer: InstallerType) = if (installer == InstallerType
     PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED
 
 val camscannerLocalFeaturesPatch = bytecodePatch(
-    name = "CamScanner local features", description = "Experimental local account-status features. Does not unlock server credits or cloud quotas.", default = false
+    name = "CamScanner local premium features", description = "Experimental local account-status features. Does not unlock server credits or cloud quotas.", default = false
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
