@@ -8,6 +8,13 @@ import java.io.ByteArrayInputStream
 import javax.xml.parsers.DocumentBuilderFactory
 
 class CamScannerSelectionTest {
+    @Test fun wordDiagnosticsRemainIndependentAndOptIn() {
+        assertFalse(camscannerWordDiagnosticsPatch.default)
+        assertEquals(setOf(camscannerInputPatch), camscannerWordDiagnosticsPatch.dependencies)
+        for (patch in listOf(camscannerLocalFeaturesPatch, camscannerAdsPatch, camscannerOfflinePatch)) {
+            assertFalse(patch.dependencies.contains(camscannerWordDiagnosticsPatch))
+        }
+    }
     @Test fun offlinePullsInAdsButNotPremiumOrTelemetry() {
         assertTrue(camscannerOfflinePatch.dependencies.contains(camscannerAdsPatch))
         for (patch in listOf(camscannerLocalFeaturesPatch, camscannerFirebasePatch, camscannerLoggingPatch, camscannerAdsPatch, camscannerOfflinePatch)) assertFalse(patch.default)

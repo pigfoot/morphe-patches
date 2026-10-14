@@ -45,7 +45,7 @@ The artifact retains the upstream build version; the hash/source commit identify
 
 ### Selection and options
 
-Six public CamScanner patches are independently listed and disabled by default:
+The CamScanner patches are independently listed and disabled by default:
 
 - **CamScanner local premium features**: `folderLimit` = 0 (original limit) or 5000.
 - **CamScanner disable Firebase telemetry**: `scope` = `all` or `analytics`.
@@ -53,6 +53,30 @@ Six public CamScanner patches are independently listed and disabled by default:
 - **CamScanner disable ads**: `manifestCleanup` = true or false.
 - **CamScanner offline mode**: includes ads suppression through a dependency; does not imply local features, Firebase suppression or scanner compatibility.
 - **CamScanner scanner initialization compatibility**: separately opt-in, qualified ARM scanner library patches only.
+- **CamScanner Word export diagnostics**: temporary diagnostic-only marker on the existing Word result-103 limit dialog. It does not bypass limits or change conversion outcomes.
+
+### No-ADB Word diagnostic (experimental)
+
+Motivation: distinguish the existing Word conversion result-103 dialog from other
+similar quota messages without requiring phone logcat. The exact pristine
+WordListPresenter fingerprint and dialog instruction/register layout are checked
+before insertion. Only the existing error-dialog message is annotated with
+`CS-DIAG-W103: Word export result = 103`; its confirmation button, branch condition,
+requests and success/error handling remain unchanged. No new APK class, permission,
+telemetry or credential-bearing data is introduced.
+
+Apply to the same clean supported input, selecting local premium features and
+scanner compatibility as before, plus Word export diagnostics. Keep other options
+unchanged. A visible `CS-DIAG-W103` confirms the result-103 UI path; absence of the
+marker does not establish a server error or diagnose the alternate path. This is
+not a Word/reward fix or a verified phone-runtime outcome. Remove this optional
+patch after investigation.
+
+Validation frame: official build/tests; real patch application; preserve the
+complete class/module/native/asset inventory and original result-103 dispatch;
+verify only the intended presenter method changes for diagnostics-only selection.
+Normal result 0 and other errors must retain their original behavior; unsupported
+or already instrumented presenter definitions must reject.
 
 For an ad-support combination, leave ads suppression and offline mode unselected.
 For clean, select ads suppression but not offline mode.

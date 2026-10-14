@@ -3,7 +3,9 @@ package app.pigfoot.patches.camscanner
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.*
 import com.android.tools.smali.dexlib2.Opcodes
+import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
 import com.android.tools.smali.dexlib2.writer.pool.DexPool
@@ -187,4 +189,42 @@ val camscannerStartupPatch = bytecodePatch(
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, scannerNativePatch)
     execute { stop("Lcom/intsig/camscanner/business/PirateAppControl;", "O8", "(Landroid/content/Context;Lcom/intsig/callback/DialogDismissListener;)Z", "const/4 v0, 0\nreturn v0") }
+}
+
+val camscannerWordDiagnosticsPatch = bytecodePatch(
+    name = "CamScanner Word export diagnostics",
+    description = "Temporary opt-in on-screen marker for the existing Word export result-103 limit dialog. Does not change quotas, requests, success or error handling.",
+    default = false
+) {
+    compatibleWith(target)
+    availability { installer, _ -> noNetwork(installer) }
+    dependsOn(camscannerInputPatch)
+    execute {
+        val type = "Lcom/intsig/camscanner/pagelist/presenter/WordListPresenter;"
+        val pool = DexPool(Opcodes.forDexVersion(39))
+        pool.internClass(classDefBy(type))
+        val store = MemoryDataStore()
+        pool.writeTo(store)
+        require(sha256(store.data) == "6655527113faa81e40bb2a350d63c300beec6727a8948b212ba153f52f22a2c8") {
+            "Unsupported or already instrumented Word presenter"
+        }
+        val method = mutableClassDefBy(type).methods.single {
+            it.name == "o8〇" && it.signature() == "($type)V"
+        }
+        val impl = requireNotNull(method.implementation)
+        val instructions = impl.instructions.toList()
+        require(impl.registerCount == 3 && instructions[8].opcode == Opcode.MOVE_RESULT_OBJECT)
+        val message = instructions[7] as FiveRegisterInstruction
+        require(message.registerCount == 2 && message.registerC == 0 && message.registerD == 2 &&
+            (message as ReferenceInstruction).reference.toString() ==
+            "Lcom/intsig/app/AlertDialog\$Builder;->OO0o〇〇(I)Lcom/intsig/app/AlertDialog\$Builder;")
+        // The original message call and move-result remain adjacent. v2 holds the
+        // builder; v0 is overwritten by the original OK-button resource next.
+        // This runs only in the existing UI-thread failure dialog, never in the
+        // HTTP worker. No new extension, permission, request or success callback.
+        method.addInstructions(9, """
+            const-string v0, "Free usage limit reached.\nCS-DIAG-W103: Word export result = 103"
+            invoke-virtual {v2, v0}, Lcom/intsig/app/AlertDialog${'$'}Builder;->Oooo8o0〇(Ljava/lang/CharSequence;)Lcom/intsig/app/AlertDialog${'$'}Builder;
+        """.trimIndent())
+    }
 }
