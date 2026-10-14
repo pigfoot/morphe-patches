@@ -106,3 +106,8 @@ patch. It changes only the known `verifyKeyV2` entry bytes in the two qualified 
 libraries and suppresses the local pirate-app dialog gate. Exact binary hashes and original
 entry bytes are required; unknown ABIs are rejected. This is not an all-device cropping fix
 and is not automatically included in offline mode. Re-signed startup/crop needs phone testing.
+
+For the distinction between donor paid-feature/native changes and this reimplementation,
+see [donor comparison](docs/camscanner-implementation.md#donor-comparison-what-paid-feature-and-native-changes-establish).
+Follow the [device qualification plan](docs/camscanner-implementation.md#next-step-device-qualification-before-mergerelease)
+before treating build/static results as working paid features or approving a stable release.

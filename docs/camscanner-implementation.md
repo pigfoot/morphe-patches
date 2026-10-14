@@ -86,3 +86,56 @@ patch's own fail-closed guard.
 Static/build checks are not Android runtime qualification. Outputs were not signed,
 installed or launched. Startup, crop/OCR/export behavior, SDK native reports, actual
 ad callbacks and external-service/network boundaries still need device tests.
+
+## Donor comparison: what paid-feature and native changes establish
+
+The supplied ad-support sample is a reference, not proof of complete paid-feature coverage.
+Its added `bin.ghost` bootstrap changes the Application inheritance path and loads an
+additional `libyrf.so`. In the inspected ARM64 JNI path, a conditional branch writes true
+to the injected static boolean `LogUtils.〇〇878`. Two AccountPreference predicates and
+one SyncUtil predicate consume this flag as a fallback instead of false. Despite its
+placement in LogUtils, this is an entitlement/status flag, not the logging switch.
+Another account predicate returns true and the folder-cap getter returns 5000.
+This demonstrates local gate manipulation, not a genuine subscription or server entitlement.
+
+The added payload also contains signature-spoofing and donor validation/dialog/update
+machinery; its entire behavior has not been qualified. This project does not copy
+`libyrf.so` or the `bin.ghost` machinery. Local-feature patches change qualified DEX
+predicates directly. The project also changes the local long-valued status getter,
+which the donor leaves preference-backed; do not claim identical entitlement semantics.
+
+Separately, the donor modifies the existing `libscannercs.so` in two ABIs. The observed
+change is an immediate zero return at `verifyKeyV2`: eight bytes in ARM64 and four bytes
+in armeabi Thumb. No crop-algorithm change was found in those scanner-library diffs.
+Re-signed scanner initialization compatibility is a hypothesis requiring runtime evidence,
+not an established all-device crop fix. The optional scanner compatibility patch reproduces
+these qualified entry changes, independently of local feature selection.
+
+The three combinations are reference-inspired reimplementations, not equivalent donor copies:
+
+- Local feature predicates target similar local checks, with different implementation paths.
+- Firebase/logging suppression adds persisted-override, re-enable and cache-replay defenses.
+- Clean removes reviewed ad-only manifest components, retaining non-ad login/Billing/WorkManager
+  entries removed by the donor. Donor ad-support and clean have identical DEX/native/assets.
+- Offline removes every INTERNET permission; the donor retains INTERNET and instead changes
+  connectivity returns, URLs and related literals. It is not the same network policy.
+- Repeat ad rewards, every paid feature, server credits and cloud quotas are not certified.
+
+## Next step: device qualification before merge/release
+
+1. Back up app documents first. Re-signed output may not update an existing official install;
+   updates require a compatible signing key. Do not uninstall a document-bearing installation
+   without a verified backup.
+2. Use the qualified pristine complete APKM. Start with local features, Firebase scope `all`
+   and app logging; leave ads, offline and scanner compatibility unselected to isolate failures.
+   Configure folderLimit explicitly if testing the 5000 option.
+3. Test launch, scan/import, crop, OCR and PDF export. List each paid feature of interest and
+   record whether it actually works; a status boolean is not a substitute for these results.
+4. If scanner initialization fails, compare the optional compatibility patch with the same
+   input, options and signing setup. Record device/ABI and reproduction steps; avoid assuming
+   a crop failure is caused by signing.
+5. After basic flows work, qualify ads/clean and offline separately: asynchronous ad fallback,
+   login/share integrations, foreground/background requests and external-app/service behavior.
+   Capture network/log evidence before claiming telemetry or connectivity suppression.
+6. Fix reproducible failures, review the draft PR, then authorize merge/release. This document
+   records a test plan, not completed device qualification.
