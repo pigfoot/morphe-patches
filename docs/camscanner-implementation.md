@@ -162,3 +162,18 @@ reward paths. No fake ad-completion or fabricated task reward should be introduc
 The next evidence is exact click/loading behavior and a same-device donor/original control,
 then a minimal patch-selection A/B. Build-only validation does not establish normal
 availability of an ad or successful task-center callbacks.
+
+### Minimal-selection runtime control
+
+The lottery no-response and Word-limit symptoms were also reported with only scanner
+initialization compatibility and local premium selected, without the Firebase or logging
+patches. Thus neither suppression patch alone explains the report. This is user-reported
+runtime evidence, not an independently reproduced fix or proof of the remaining root cause.
+The previously supplied ad-support donor can play the lottery ad and convert Word according
+to the control report; completed daily-task rewards remain a separate unverified outcome.
+
+Next inspect the exact device-generated APK: applied method bodies, manifest/DEX/module
+inventory and entry-point selection, against the independently validated output and donor.
+Do not keep toggling unrelated options or assume source-level success guarantees identical
+Manager/device output. The actual generated APK and exact Word entrance are still needed;
+no corrective bytecode change is justified yet.
