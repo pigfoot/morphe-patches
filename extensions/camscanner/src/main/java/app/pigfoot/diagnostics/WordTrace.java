@@ -5,13 +5,73 @@ public final class WordTrace {
     private static final String[] events = new String[8];
     private static final long[] times = new long[8];
     private static int count;
+    private static String loginDetails;
+    private static int loginCode;
+    private static long loginTime;
     private WordTrace() {}
 
-    /** Annotate the existing email-login error only; retain no login state. */
-    public static String loginMessage(String message, int code) {
+    /** Retain only sanitized, short-lived metadata, never the exception or message. */
+    public static void loginError(Throwable error, int code) {
+        loginErrorAt(error, code, System.nanoTime());
+    }
+
+    static synchronized void loginErrorAt(Throwable error, int code, long now) {
+        loginDetails = sanitizedLoginDetails(error);
+        loginCode = code;
+        loginTime = now;
+    }
+
+    static String sanitizedLoginDetails(Throwable error) {
+        try {
+            if (error == null) return "DETAILS_UNAVAILABLE";
+            String raw = error.getMessage();
+            if (raw == null || raw.length() > 32768) return "DETAILS_UNAVAILABLE";
+            String phase = raw.contains("/query?") ? "QUERY" : raw.contains("/login_c?") ? "LOGIN_C" : "OTHER";
+            StringBuilder out = new StringBuilder("PATH_HINT=").append(phase);
+            int head = raw.indexOf("errorHeadCode:");
+            if (head >= 0) {
+                java.util.regex.Matcher number = java.util.regex.Pattern.compile(
+                        "errorHeadCode:\\s*(-?[0-9]{1,8})(?=\\s|$)").matcher(raw);
+                out.append("\nHTTP500_MESSAGE_MARKER=true\nHEADER_CODE=")
+                        .append(number.find() ? number.group(1) : "NON_NUMERIC");
+                int start = raw.indexOf(" errorMsg:", head), end = raw.indexOf(" headerServer:", head);
+                String flags = "UNAVAILABLE";
+                if (start >= 0 && end >= start && end - start <= 2048) {
+                    String text = raw.substring(start + " errorMsg:".length(), end).toLowerCase(java.util.Locale.ROOT);
+                    StringBuilder hints = new StringBuilder();
+                    if (containsAny(text, "signature", "certificate", "签名", "簽章", "签章")) hints.append("SIGNATURE ");
+                    if (containsAny(text, "decrypt", "encrypt", "cipher", "解密", "加密")) hints.append("CRYPTO ");
+                    if (containsAny(text, "token", "login", "auth", "expired", "登录", "登入", "过期", "過期")) hints.append("AUTH ");
+                    flags = hints.length() == 0 ? "UNCLASSIFIED" : hints.toString().trim();
+                }
+                out.append("\nMSG_WORD_HINT=").append(flags);
+            } else out.append("\nHTTP500_MESSAGE_MARKER=false");
+            int count = 0, scanned = 0;
+            for (StackTraceElement frame : error.getStackTrace()) {
+                if (++scanned > 64) break;
+                if (frame == null) continue;
+                String owner = frame.getClassName(), method = frame.getMethodName();
+                if (!owner.startsWith("com.intsig.") || owner.length() > 180 || method.length() > 80 ||
+                        !owner.matches("[\\p{L}\\p{N}_.$]+") || !method.matches("[\\p{L}\\p{N}_$<>]+")) continue;
+                out.append("\nSOURCE=").append(owner).append('.').append(method);
+                if (++count == 2) break;
+            }
+            return out.toString();
+        } catch (Throwable ignored) { return "DETAILS_UNAVAILABLE"; }
+    }
+
+    static synchronized String recentLoginDetails(int code, long now) {
+        long age = now - loginTime;
+        return loginDetails != null && loginCode == code && age >= 0 && age <= 5000000000L ? loginDetails : null;
+    }
+
+    /** Annotate only the existing error; process metadata is not request-correlated. */
+    public static synchronized String loginMessage(String message, int code) {
         try {
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG code=" + code;
+            String details = recentLoginDetails(code, System.nanoTime());
+            return message + "\nCS-LOGIN-DIAG-V2 code=" + code +
+                    (details == null ? "\nNO_RECENT_DETAIL" : "\nRecent exception; not request-correlated:\n" + details);
         } catch (Throwable ignored) { return message; }
     }
 
