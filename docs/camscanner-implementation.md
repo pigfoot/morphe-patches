@@ -219,3 +219,18 @@ inventory and entry-point selection, against the independently validated output 
 Do not keep toggling unrelated options or assume source-level success guarantees identical
 Manager/device output. The actual generated APK and exact Word entrance are still needed;
 no corrective bytecode change is justified yet.
+
+## Temporary startup warning caller diagnostics
+
+`CamScanner startup warning diagnostics` is independent and opt-in. It annotates
+only the qualified local piracy warning with `CS-BOOT-TRACE` and up to four
+app-owned class/method names from the live call stack. It does not suppress the
+warning, change checks, spoof signatures, or imply that startup is repaired.
+Other messages retain the same CharSequence object. No filenames, line numbers,
+arguments, account identifiers, disk logs, or network requests are emitted.
+Unsupported or previously instrumented dialog-builder definitions are rejected.
+
+Both startup and Word diagnostics share a single extension dependency. Selecting
+both must still inject only `app.pigfoot.diagnostics.WordTrace`. A successful
+build/static APK comparison is not a substitute for observing the phone's
+actual warning caller.

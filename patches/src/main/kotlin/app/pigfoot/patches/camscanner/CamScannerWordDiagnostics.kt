@@ -23,6 +23,10 @@ private val diagnosticPins = mapOf(
     CALLABLE to "3fe946365075f021df84c89d1482200dc1b77e0bf6dce4c937782ecf27182e4c"
 )
 
+internal val camscannerDiagnosticExtensionPatch = bytecodePatch {
+    extendWith("extensions/camscanner-word-diagnostics.mpe")
+}
+
 val camscannerWordDiagnosticsPatch = bytecodePatch(
     name = "CamScanner Word export diagnostics",
     description = "Temporary v3 diagnostics: three Word result-103 dialogs, numeric error headers and fixed error-message word hints only. Recent process events are not document-correlated. Does not change quotas, requests or results.",
@@ -32,8 +36,7 @@ val camscannerWordDiagnosticsPatch = bytecodePatch(
         targets = listOf(AppTarget(CAM_VERSION, versionCodes = mapOf(SupportedAbi.ARM64_V8A to 72651,
             SupportedAbi.ARMEABI_V7A to 72651), isExperimental = true))))
     availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED }
-    dependsOn(camscannerInputPatch)
-    extendWith("extensions/camscanner-word-diagnostics.mpe")
+    dependsOn(camscannerInputPatch, camscannerDiagnosticExtensionPatch)
     execute {
         // Reject v1/v2/already-modified classes before any instruction mutation.
         for ((type, expected) in diagnosticPins) {

@@ -10,9 +10,18 @@ import javax.xml.parsers.DocumentBuilderFactory
 class CamScannerSelectionTest {
     @Test fun wordDiagnosticsRemainIndependentAndOptIn() {
         assertFalse(camscannerWordDiagnosticsPatch.default)
-        assertEquals(setOf(camscannerInputPatch), camscannerWordDiagnosticsPatch.dependencies)
+        assertEquals(setOf(camscannerInputPatch, camscannerDiagnosticExtensionPatch), camscannerWordDiagnosticsPatch.dependencies)
         for (patch in listOf(camscannerLocalFeaturesPatch, camscannerAdsPatch, camscannerOfflinePatch)) {
             assertFalse(patch.dependencies.contains(camscannerWordDiagnosticsPatch))
+        }
+    }
+    @Test fun startupTraceIsIndependentAndSharesOnlyTheDiagnosticExtension() {
+        assertFalse(camscannerStartupDiagnosticsPatch.default)
+        assertEquals(setOf(camscannerInputPatch, camscannerDiagnosticExtensionPatch), camscannerStartupDiagnosticsPatch.dependencies)
+        assertFalse(camscannerWordDiagnosticsPatch.dependencies.contains(camscannerStartupDiagnosticsPatch))
+        assertFalse(camscannerStartupDiagnosticsPatch.dependencies.contains(camscannerStartupPatch))
+        for (patch in listOf(camscannerStartupPatch, camscannerLocalFeaturesPatch, camscannerAdsPatch, camscannerOfflinePatch)) {
+            assertFalse(patch.dependencies.contains(camscannerStartupDiagnosticsPatch))
         }
     }
     @Test fun offlinePullsInAdsButNotPremiumOrTelemetry() {

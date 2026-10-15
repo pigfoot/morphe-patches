@@ -71,6 +71,36 @@ public final class WordTrace {
         }
     }
 
+    /** Only the qualified local piracy warning gets app-only caller names. */
+    public static CharSequence startupMessage(CharSequence message) {
+        try {
+            return startupMessageWithFrames(message, Thread.currentThread().getStackTrace());
+        } catch (Throwable ignored) { return message; }
+    }
+
+    static CharSequence startupMessageWithFrames(CharSequence message, StackTraceElement[] frames) {
+        if (message == null) return null;
+        String text = message.toString();
+        boolean warning = text.startsWith("This CamScanner copy is not genuine.") ||
+                ((text.contains("盜版") || text.contains("盗版")) &&
+                 (text.contains("掃描全能王") || text.contains("扫描全能王")));
+        if (!warning || text.contains("CS-BOOT-TRACE")) return message;
+        StringBuilder out = new StringBuilder(text).append("\nCS-BOOT-TRACE (caller names only)");
+        int emitted = 0;
+        if (frames != null) for (StackTraceElement frame : frames) {
+            if (frame == null) continue;
+            String owner = frame.getClassName(), method = frame.getMethodName();
+            if (!owner.startsWith("com.intsig.camscanner.") || owner.length() > 200 ||
+                    method.length() > 80 || !owner.matches("[\\p{L}\\p{N}_.$]+") ||
+                    !method.matches("[\\p{L}\\p{N}_$<>]+")) continue;
+            out.append('\n').append(owner.substring("com.intsig.camscanner.".length()))
+                    .append('.').append(method);
+            if (++emitted == 4) break;
+        }
+        if (emitted == 0) out.append("\nCALLER_UNAVAILABLE");
+        return out.toString();
+    }
+
     public static synchronized String snapshot(String path) {
         try {
             String label = "PRESENTER".equals(path) || "IMAGE2WORD".equals(path) ||
