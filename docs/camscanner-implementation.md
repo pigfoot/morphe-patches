@@ -76,12 +76,13 @@ request. True means present, **not valid or entitled**. Neither value is retaine
 It also observes the original parsed code header;
 no request, quota, return value or response body is changed. No account, token,
 URL, document content, arbitrary header text or on-disk diagnostic log is retained.
-A missing/nonnumeric header is marked, not silently treated as zero. Events older
+A null/nonnumeric observed code value is marked, not silently treated as zero. Events older
 than 120 seconds are omitted. Recent events are explicitly process-local, **not
 per-document correlated**: concurrent exports may appear together, and no recent
-observation means UNKNOWN, not proof that a request was never sent. The display
-contains only the exact error header already read by the original code (including
-its original default); it does not distinguish missing header from that default.
+observation means UNKNOWN, not proof that a request was never sent. The main numeric code observation uses the exact header value already read by
+the original code (including its original default); it does not distinguish a
+missing main header from that default. The other fields above are separately
+observed presence flags or sanitized hints.
 
 Rebuild from clean supported input using the same prior options plus diagnostics.
 Record one export attempt, then screenshot the failure dialog. Do not apply to an
