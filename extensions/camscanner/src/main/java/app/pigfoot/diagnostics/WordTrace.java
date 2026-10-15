@@ -8,7 +8,108 @@ public final class WordTrace {
     private static String loginDetails;
     private static int loginCode;
     private static long loginTime;
+    private static final java.lang.ref.WeakReference<?>[] linkedKeys = new java.lang.ref.WeakReference<?>[16];
+    private static final String[] linkedDetails = new String[16];
+    private static final int[] linkedCodes = new int[16];
+    private static final long[] linkedTimes = new long[16];
+    private static int linkedNext;
+    private static final ThreadLocal<String[]> pendingLogin = new ThreadLocal<>();
     private WordTrace() {}
+
+    // Only sanitized strings survive these calls; keys never strongly retain
+    // application exceptions/events. Identity, not equals(), owns correlation.
+    static synchronized void linkAt(Object key, int code, String details, long now) {
+        if (key == null || details == null) return;
+        int index = Math.floorMod(linkedNext++, linkedKeys.length);
+        linkedKeys[index] = new java.lang.ref.WeakReference<>(key);
+        linkedDetails[index] = details;
+        linkedCodes[index] = code;
+        linkedTimes[index] = now;
+    }
+
+    static synchronized String takeLinkedAt(Object key, int code, long now) {
+        if (key == null) return null;
+        for (int i = 0; i < linkedKeys.length; i++) {
+            Object stored = linkedKeys[i] == null ? null : linkedKeys[i].get();
+            long age = now - linkedTimes[i];
+            boolean expired = stored == null || age < 0 || age > 30000000000L;
+            if (expired || stored == key) {
+                String result = !expired && linkedCodes[i] == code ? linkedDetails[i] : null;
+                linkedKeys[i] = null;
+                linkedDetails[i] = null;
+                if (stored == key) return result;
+            }
+        }
+        return null;
+    }
+
+    /** Called only immediately before the qualified HTTP-500 exception throw. */
+    public static void loginHttp500(Throwable error, Object connection, int code) {
+        try {
+            if (error == null || code != 500) return;
+            String details = "HTTP_STATUS=500\nERROR_HEADER=UNAVAILABLE\nERROR_MESSAGE_PRESENT=UNKNOWN";
+            try {
+                java.lang.reflect.Method getter = connection.getClass().getMethod("getHeaderField", String.class);
+                String header = (String) getter.invoke(connection, "X-IS-Error-Code");
+                String message = (String) getter.invoke(connection, "X-IS-Error-Msg");
+                String state = header == null ? "MISSING" : header.isEmpty() ? "EMPTY" :
+                        header.matches("-?[0-9]{1,8}") ? header : "NON_NUMERIC";
+                details = "HTTP_STATUS=500\nERROR_HEADER=" + state +
+                        "\nERROR_MESSAGE_PRESENT=" + (message != null && !message.isEmpty());
+            } catch (Throwable ignored) { }
+            linkAt(error, code, details, System.nanoTime());
+        } catch (Throwable ignored) { }
+    }
+
+    static String queryCaller(Throwable error) {
+        try {
+            int scanned = 0;
+            for (StackTraceElement frame : error.getStackTrace()) {
+                if (++scanned > 64) break;
+                if (frame == null) continue;
+                String owner = frame.getClassName();
+                if (owner.equals("com.intsig.tsapp.account.viewmodel.EmailLoginViewModel$queryEmailAccountExist$1$1"))
+                    return "ACCOUNT_EXISTENCE";
+                if (owner.equals("com.intsig.tsapp.account.util.PwdLoginCommonControl$1") &&
+                        frame.getMethodName().equals("operationLogin")) return "PASSWORD_PRECHECK";
+            }
+        } catch (Throwable ignored) { }
+        return "UNKNOWN";
+    }
+
+    /** Synchronous handoff inside one original exception handler, not a global latest error. */
+    public static void loginLinkedError(Throwable error, int code) {
+        try {
+            pendingLogin.remove();
+            long now = System.nanoTime();
+            String transport = takeLinkedAt(error, code, now);
+            String details = "QUERY_CALLER=" + queryCaller(error) + "\n" + sanitizedLoginDetails(error) +
+                    "\n" + (transport == null ? "TRANSPORT_NOT_LINKED" : transport);
+            pendingLogin.set(new String[]{Integer.toString(code), Long.toString(now), details});
+        } catch (Throwable ignored) { pendingLogin.remove(); }
+    }
+
+    /** Bind the exact ErrorMsg just constructed, before its original postValue. */
+    public static void loginBind(Object event) {
+        try {
+            String[] pending = pendingLogin.get();
+            pendingLogin.remove();
+            if (pending == null) return;
+            long now = System.nanoTime(), age = now - Long.parseLong(pending[1]);
+            if (age < 0 || age > 30000000000L) return;
+            linkAt(event, Integer.parseInt(pending[0]), pending[2], now);
+        } catch (Throwable ignored) { pendingLogin.remove(); }
+    }
+
+    /** The UI event must be the same object; no code/time-only fallback. */
+    public static String loginLinkedMessage(String message, int code, Object event) {
+        try {
+            String details = takeLinkedAt(event, code, System.nanoTime());
+            if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
+            return message + "\nCS-LOGIN-DIAG-V3 code=" + code +
+                    (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
+        } catch (Throwable ignored) { return message; }
+    }
 
     /** Retain only sanitized, short-lived metadata, never the exception or message. */
     public static void loginError(Throwable error, int code) {

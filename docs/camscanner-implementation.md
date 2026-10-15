@@ -259,26 +259,36 @@ Acceptance requires absence of both the modal warning and the bottom Toast.
 
 ## Optional email-login error diagnostics
 
-`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V2 code=<integer>`
-to the existing email/password error text. The generic service-unavailable
-message maps many different application errors; it is not evidence of an outage
-or a signature failure by itself. This diagnostic preserves authentication,
-requests, error branches and normal login behavior. It captures no credentials,
-exception bodies or identifiers. It targets only the exact qualified
-email-password scene, not Google login, phone login or every authentication UI.
+`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V3 code=<integer>`
+to the existing email/password error text. This is diagnostic instrumentation,
+not a login repair. Authentication, requests, original exceptions and error
+branches are preserved. It does not target Google login, phone login or every
+authentication UI.
 
-Both the scene and email view-model are independently guarded before mutation.
-The scene gains a helper call/result move after its numeric code getter; the
-view-model gains one observation call after its existing exception code getter.
-All original instructions, registers, handlers and branches are retained.
+Three original classes are fingerprint-guarded before mutation. The qualified
+TianShuAPI HTTP-500 exception branch gains one observation before its original
+throw. Only the existing response's numeric error-header category and message
+presence are observed; no body, request parameters or credentials are read.
+Missing, empty, numeric zero, other bounded numeric values, invalid values and
+unavailable reflection are distinct. The exact exception is a weak identity key;
+HTTP status is not inferred solely from a message-format marker.
 
-V2 retains only bounded sanitized metadata and displays it only within five
-seconds for a matching code: fixed QUERY/LOGIN_C/OTHER path hints; a marker for the known
-HTTP-500 exception message layout; a bounded numeric header code; fixed
-SIGNATURE/CRYPTO/AUTH word hints; and up to two app-only class/method names.
-Raw exceptions, messages, URLs, credentials and response bodies are not retained
-or emitted. A message-layout marker is not an observed HTTP capture, and keyword
-hints are not proof of rejection cause. Metadata is process-local, recent, and
-explicitly not request-correlated. Missing details are marked, not guessed.
-The shared diagnostic extension remains a single helper class. This option is
-independent of startup compatibility and does not fix login or Word.
+The view-model handler gains an observation of its exact exception and a bind
+before each of its six original ErrorMsg postValue calls. A synchronous
+thread-local sanitized handoff binds metadata to that exact ErrorMsg object.
+The UI consumes it only by object identity and matching numeric code, never by
+code/time proximity or equals(). UI scheduling can cross threads. Cache size is
+16 weak keys with a 30-second monotonic expiry; overflow, mismatches and missing
+links produce explicit unavailable output rather than borrowed metadata.
+
+Fixed stack-caller labels distinguish the initial account-existence query from
+the password-login precheck where those exact frames are present. Unknown
+callers remain unknown. Existing bounded path/message-layout hints, numeric
+codes and up to two app-only source names remain available; keywords are not
+proof of rejection cause. URLs, raw exceptions/messages, account values,
+tokens, device identifiers and response bodies are not retained or emitted.
+
+All original instructions, register counts, branches, handlers and method
+metadata must remain after removing documented instrumentation. The shared
+extension remains one helper class. This option is independently selectable,
+does not change signature APIs, and does not fix login or Word by itself.
