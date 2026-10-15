@@ -81,6 +81,22 @@ val camscannerWordDiagnosticsPatch = bytecodePatch(
         }
         // No arguments/register mutations, file writes, or network interception.
         core.addInstructions(0, "invoke-static {}, $TRACE->begin()V")
+        // Observe presence only, on the exact values already sent by the app.
+        // No credential or device identifier is retained by the helper.
+        val coreIns = requireNotNull(core.implementation).instructions.toList()
+        val inputs = listOf(
+            "Lcom/intsig/tianshu/TianShuAPI;->〇000〇〇08()Ljava/lang/String;" to "token",
+            "Lcom/intsig/utils/ApplicationHelper;->〇O8o08O()Ljava/lang/String;" to "securityDevice"
+        ).map { (reference, observer) ->
+            val index = coreIns.indexOfFirst { it is ReferenceInstruction && it.reference.toString() == reference }
+            require(index >= 0 && coreIns[index + 1].opcode == Opcode.MOVE_RESULT_OBJECT)
+            val register = (coreIns[index + 1] as OneRegisterInstruction).registerA
+            require(register == 12)
+            Triple(index + 2, observer, register)
+        }
+        inputs.sortedByDescending { it.first }.forEach { (index, observer, register) ->
+            core.addInstructions(index, "invoke-static {v$register}, $TRACE->$observer(Ljava/lang/String;)V")
+        }
         val parser = mutableClassDefBy(CALLABLE).methods.single {
             it.name == "〇o〇" && it.signature() == "(Lokhttp3/Response;)I"
         }

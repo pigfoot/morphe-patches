@@ -70,7 +70,10 @@ Only fixed keyword-match hints (QUOTA/AUTH/SIGNATURE/DEVICE/UNCLASSIFIED/EMPTY)
 and a bounded numeric extension code are retained; no arbitrary message text.
 Hints are heuristic word matches, **not proof of the backend rejection reason**.
 Missing headers and unavailable reflection are explicit; the body is never read
-by diagnostics. It also observes the original parsed code header;
+by diagnostics. V3 additionally observes only the nonempty/empty booleans for
+the exact token and encrypted security-device field already used in the original
+request. True means present, **not valid or entitled**. Neither value is retained.
+It also observes the original parsed code header;
 no request, quota, return value or response body is changed. No account, token,
 URL, document content, arbitrary header text or on-disk diagnostic log is retained.
 A missing/nonnumeric header is marked, not silently treated as zero. Events older

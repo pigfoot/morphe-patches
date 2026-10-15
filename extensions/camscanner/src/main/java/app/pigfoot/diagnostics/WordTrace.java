@@ -18,6 +18,16 @@ public final class WordTrace {
         try { record("WORD_PREPARE"); } catch (Throwable ignored) { }
     }
 
+    public static void token(String value) {
+        try { record("REQ_TOKEN_PRESENT=" + (value != null && !value.isEmpty())); }
+        catch (Throwable ignored) { }
+    }
+
+    public static void securityDevice(String value) {
+        try { record("REQ_SECURITY_FIELD_PRESENT=" + (value != null && !value.isEmpty())); }
+        catch (Throwable ignored) { }
+    }
+
     public static void header(String value) {
         try {
             // Retain ONLY a bounded numeric error code, never arbitrary header text.

@@ -4,6 +4,18 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class WordTraceTest {
+    @Test public void requestInputsExposePresenceOnlyNotValuesOrValidity() {
+        WordTrace.token("private-login-token-example");
+        WordTrace.securityDevice("private-encrypted-device-example");
+        String text = WordTrace.snapshot("JSONDOC");
+        assertTrue(text.contains("REQ_TOKEN_PRESENT=true"));
+        assertTrue(text.contains("REQ_SECURITY_FIELD_PRESENT=true"));
+        assertFalse(text.contains("private-login-token-example"));
+        assertFalse(text.contains("private-encrypted-device-example"));
+        WordTrace.token(null); WordTrace.securityDevice("");
+        assertTrue(WordTrace.snapshot("JSONDOC").contains("REQ_TOKEN_PRESENT=false"));
+        assertTrue(WordTrace.snapshot("JSONDOC").contains("REQ_SECURITY_FIELD_PRESENT=false"));
+    }
     public static class HeaderResponse {
         private final String message, extension;
         HeaderResponse(String message, String extension) { this.message=message; this.extension=extension; }
