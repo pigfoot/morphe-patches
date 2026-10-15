@@ -7,6 +7,14 @@ public final class WordTrace {
     private static int count;
     private WordTrace() {}
 
+    /** Annotate the existing email-login error only; retain no login state. */
+    public static String loginMessage(String message, int code) {
+        try {
+            if (message == null || code == 0 || message.contains("CS-LOGIN-DIAG")) return message;
+            return message + "\nCS-LOGIN-DIAG code=" + code;
+        } catch (Throwable ignored) { return message; }
+    }
+
     private static synchronized void record(String event) {
         int index = count % events.length;
         events[index] = event;

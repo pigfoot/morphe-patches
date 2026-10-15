@@ -256,3 +256,18 @@ scanner edits retain their existing exact hash/ABI guards and remain optional.
 A phone acceptance test must cover first open, close/reopen, and delayed reopen;
 a passed build or a constant-return DEX entry is not a runtime acceptance result.
 Acceptance requires absence of both the modal warning and the bottom Toast.
+
+## Optional email-login error diagnostics
+
+`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG code=<integer>`
+to the existing email/password error text. The generic service-unavailable
+message maps many different application errors; it is not evidence of an outage
+or a signature failure by itself. This diagnostic preserves authentication,
+requests, error branches and normal login behavior. It captures no credentials,
+exception bodies, identifiers or login state. It targets only the exact qualified
+email-password scene, not Google login, phone login or every authentication UI.
+
+The independently guarded scene retains all original instructions and registers;
+only a helper call and its result move are added after the existing numeric code
+getter. The shared diagnostic extension remains a single helper class. This
+option is independent of startup compatibility and does not fix login or Word.
