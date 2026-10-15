@@ -55,16 +55,22 @@ The CamScanner patches are independently listed and disabled by default:
 - **CamScanner scanner initialization compatibility**: separately opt-in, qualified ARM scanner library patches only.
 - **CamScanner Word export diagnostics**: temporary diagnostic-only labels on three Word result-103 dialogs and recent numeric HTTP observations. It does not bypass limits or change conversion outcomes.
 
-### No-ADB Word diagnostic v2 (experimental)
+### No-ADB Word diagnostic v3 (experimental)
 
 The first diagnostic covered only WordListPresenter. Other Word UI paths can
-show the same quota confirmation dialog. V2 qualifies pristine fingerprints
+show the same quota confirmation dialog. V3 qualifies pristine fingerprints
 for WordListPresenter, ImageToWordFragment, BaseJsonDocConverterFacade and
 Json2WordCallable before mutation; all three dialog sites receive distinct
-`CS-DIAG-V2` path labels, retaining the original result-103 condition and button.
+`CS-DIAG-V3` path labels, retaining the original result-103 condition and button.
 
 One small Java helper keeps a bounded in-memory history of Word preparation and
-numeric HTTP error-header observations. It observes the existing parsed header;
+numeric HTTP error-header observations. V3 also reads optional
+`X-IS-Error-Msg` and `X-IS-Error-Code-Ext` from that same existing response.
+Only fixed keyword-match hints (QUOTA/AUTH/SIGNATURE/DEVICE/UNCLASSIFIED/EMPTY)
+and a bounded numeric extension code are retained; no arbitrary message text.
+Hints are heuristic word matches, **not proof of the backend rejection reason**.
+Missing headers and unavailable reflection are explicit; the body is never read
+by diagnostics. It also observes the original parsed code header;
 no request, quota, return value or response body is changed. No account, token,
 URL, document content, arbitrary header text or on-disk diagnostic log is retained.
 A missing/nonnumeric header is marked, not silently treated as zero. Events older

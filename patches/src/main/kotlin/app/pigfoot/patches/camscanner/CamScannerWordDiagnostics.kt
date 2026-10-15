@@ -25,7 +25,7 @@ private val diagnosticPins = mapOf(
 
 val camscannerWordDiagnosticsPatch = bytecodePatch(
     name = "CamScanner Word export diagnostics",
-    description = "Temporary v2 diagnostics for three Word result-103 dialogs and recent numeric HTTP error-header observations. Process-local events are not document-correlated. Does not change quotas, requests or results.",
+    description = "Temporary v3 diagnostics: three Word result-103 dialogs, numeric error headers and fixed error-message word hints only. Recent process events are not document-correlated. Does not change quotas, requests or results.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
@@ -91,5 +91,8 @@ val camscannerWordDiagnosticsPatch = bytecodePatch(
             "Lokhttp3/Response;->O8ooOoo〇(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;")
         // Observe the very same header string; preserve original parsing/value.
         parser.addInstructions(4, "invoke-static {v3}, $TRACE->header(Ljava/lang/String;)V")
+        // Read optional metadata from the same Response, before v3 becomes the
+        // header string. No additional network call or response-body reads.
+        parser.addInstructions(0, "invoke-static {v3}, $TRACE->response(Ljava/lang/Object;)V")
     }
 }

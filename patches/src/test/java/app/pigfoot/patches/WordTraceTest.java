@@ -4,6 +4,36 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class WordTraceTest {
+    public static class HeaderResponse {
+        private final String message, extension;
+        HeaderResponse(String message, String extension) { this.message=message; this.extension=extension; }
+        public String O8ooOoo〇(String name, String fallback) {
+            if ("X-IS-Error-Msg".equals(name)) return message;
+            if ("X-IS-Error-Code-Ext".equals(name)) return extension;
+            throw new AssertionError("unexpected header");
+        }
+    }
+    @Test public void responseMetadataEmitsOnlyFixedHintsAndNumericExtension() {
+        WordTrace.response(new HeaderResponse("quota exceeded: private-person@example.test, private-token-value", "123"));
+        String text=WordTrace.snapshot("JSONDOC");
+        assertTrue(text.contains("HTTP_ERROR_MSG_WORD_HINT=QUOTA AUTH"));
+        assertTrue(text.contains("HTTP_ERROR_EXT=123"));
+        assertFalse(text.contains("private-person"));
+        assertFalse(text.contains("private-token-value"));
+        WordTrace.response(new HeaderResponse("unrecognized private value", "private-extension"));
+        text=WordTrace.snapshot("JSONDOC");
+        assertTrue(text.contains("HTTP_ERROR_MSG_WORD_HINT=UNCLASSIFIED"));
+        assertTrue(text.contains("HTTP_ERROR_EXT=NON_NUMERIC"));
+        assertFalse(text.contains("private-extension"));
+    }
+    @Test public void emptyMetadataAndReflectionFailureAreExplicitAndNonFatal() {
+        WordTrace.response(new HeaderResponse(null, ""));
+        assertTrue(WordTrace.snapshot("JSONDOC").contains("HTTP_ERROR_MSG_WORD_HINT=EMPTY"));
+        assertTrue(WordTrace.snapshot("JSONDOC").contains("HTTP_ERROR_EXT=EMPTY"));
+        WordTrace.response(new Object());
+        WordTrace.response(null);
+        assertTrue(WordTrace.snapshot("JSONDOC").contains("HTTP_ERROR_DETAILS_UNAVAILABLE"));
+    }
     @Test public void distinguishesPathsAndNeverExposesUnexpectedHeaderText() {
         WordTrace.begin();
         WordTrace.header("103");
