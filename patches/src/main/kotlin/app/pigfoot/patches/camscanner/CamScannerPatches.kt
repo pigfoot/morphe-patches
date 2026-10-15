@@ -52,7 +52,7 @@ private fun noNetwork(installer: InstallerType) = if (installer == InstallerType
 
 val camscannerSideloadStartupPatch = bytecodePatch(
     name = "CamScanner sideload startup compatibility",
-    description = "Local re-signed startup compatibility. Replaces the qualified pirate-app prompt gate only; does not spoof signatures or unlock server services.",
+    description = "Local re-signed startup compatibility. Replaces the qualified pirate-app dialog and Toast entries only; does not spoof signatures or unlock server services.",
     default = false
 ) {
     compatibleWith(target)
@@ -62,8 +62,13 @@ val camscannerSideloadStartupPatch = bytecodePatch(
         val type = mutableClassDefBy(PIRATE_CONTROL)
         val method = type.methods.single { it.name == "O8" && it.signature() == PIRATE_GATE_DESCRIPTOR }
         val replacement = MutableMethod(startupGateReplacement(method))
+        val toast = type.methods.single { it.name == "Oo08" && it.signature() == PIRATE_TOAST_DESCRIPTOR }
+        val toastReplacement = MutableMethod(startupToastReplacement(toast))
+        // Validate both qualified entries before modifying either one.
         require(type.methods.remove(method))
         require(type.methods.add(replacement))
+        require(type.methods.remove(toast))
+        require(type.methods.add(toastReplacement))
     }
 }
 

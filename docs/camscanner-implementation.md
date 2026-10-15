@@ -243,10 +243,16 @@ the separate optional native scanner initialization feature. The shared gate
 replaces the entire qualified `PirateAppControl.O8(Context, DialogDismissListener)`
 body with a constant-false return, preserving its signature, access flags,
 annotations, and register count. No old dialog instructions or exception
-handlers remain in that method. Other piracy/risk checks, signature APIs,
+handlers remain in that method. The separate same-message Toast entry,
+`PirateAppControl.Oo08(Context)`, is replaced with a single void return,
+also preserving its method contract and register count. Both entries are
+validated before either replacement is applied. The shared predicate and
+other five methods in this class remain unchanged. Unrelated Toasts and
+other piracy/risk checks, signature APIs,
 account status and cloud quotas are not changed by this startup patch.
 
 Diagnostics remain independently selectable to observe the baseline. Native
 scanner edits retain their existing exact hash/ABI guards and remain optional.
 A phone acceptance test must cover first open, close/reopen, and delayed reopen;
 a passed build or a constant-return DEX entry is not a runtime acceptance result.
+Acceptance requires absence of both the modal warning and the bottom Toast.

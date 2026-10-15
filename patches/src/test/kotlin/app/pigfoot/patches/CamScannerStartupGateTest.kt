@@ -16,6 +16,41 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CamScannerStartupGateTest {
+    private fun toast(owner: String = PIRATE_CONTROL, name: String = "Oo08", result: String = "V",
+        parameter: String = "Landroid/content/Context;",
+        flags: Int = AccessFlags.PUBLIC.value or AccessFlags.STATIC.value,
+        registers: Int = 3, body: Boolean = true): Method = ImmutableMethod(owner, name,
+        listOf(ImmutableMethodParameter(parameter, emptySet(), "context")), result, flags,
+        setOf(ImmutableAnnotation(AnnotationVisibility.RUNTIME, "Ltest/Metadata;", emptySet())),
+        emptySet(), if (body) ImmutableMethodImplementation(registers, listOf(
+            ImmutableInstruction10x(Opcode.NOP), ImmutableInstruction10x(Opcode.RETURN_VOID)
+        ), emptyList(), emptyList()) else null)
+
+    @Test fun toastBodyIsCompletelyReplacedWithoutChangingItsContract() {
+        val before = toast()
+        val after = startupToastReplacement(before)
+        assertEquals(listOf(Opcode.RETURN_VOID), after.implementation!!.instructions.map { it.opcode })
+        assertEquals(3, after.implementation!!.registerCount)
+        assertTrue(after.implementation!!.tryBlocks.isEmpty())
+        assertFalse(after.implementation!!.debugItems.iterator().hasNext())
+        assertEquals(before.definingClass, after.definingClass)
+        assertEquals(before.name, after.name)
+        assertEquals(before.signature(), after.signature())
+        assertEquals(before.accessFlags, after.accessFlags)
+        assertEquals(before.annotations, after.annotations)
+        assertEquals(before.hiddenApiRestrictions, after.hiddenApiRestrictions)
+        assertEquals(before.parameters.map { it.name }, after.parameters.map { it.name })
+        assertEquals(2, before.implementation!!.instructions.count())
+    }
+
+    @Test fun unrelatedToastsAndUnsupportedBodiesAreRejected() {
+        for (method in listOf(toast(owner = "Lother/Control;"), toast(name = "O8"),
+                toast(result = "Z"), toast(parameter = "Ljava/lang/String;"),
+                toast(flags = AccessFlags.PUBLIC.value), toast(registers = 2), toast(body = false))) {
+            assertThrows(IllegalArgumentException::class.java) { startupToastReplacement(method) }
+        }
+    }
+
     private fun gate(owner: String = PIRATE_CONTROL, name: String = "O8", result: String = "Z",
         flags: Int = AccessFlags.PUBLIC.value or AccessFlags.STATIC.value,
         registers: Int = 6, body: Boolean = true): Method = ImmutableMethod(owner, name,
