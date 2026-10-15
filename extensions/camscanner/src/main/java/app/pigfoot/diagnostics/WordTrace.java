@@ -10,7 +10,7 @@ public final class WordTrace {
     /** Annotate the existing email-login error only; retain no login state. */
     public static String loginMessage(String message, int code) {
         try {
-            if (message == null || code == 0 || message.contains("CS-LOGIN-DIAG")) return message;
+            if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
             return message + "\nCS-LOGIN-DIAG code=" + code;
         } catch (Throwable ignored) { return message; }
     }
