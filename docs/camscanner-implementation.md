@@ -234,3 +234,19 @@ Both startup and Word diagnostics share a single extension dependency. Selecting
 both must still inject only `app.pigfoot.diagnostics.WordTrace`. A successful
 build/static APK comparison is not a substitute for observing the phone's
 actual warning caller.
+
+## Shared local sideload startup gate
+
+All non-diagnostic CamScanner features depend on `CamScanner sideload startup
+compatibility`. The local Java piracy-warning gate must not depend on selecting
+the separate optional native scanner initialization feature. The shared gate
+replaces the entire qualified `PirateAppControl.O8(Context, DialogDismissListener)`
+body with a constant-false return, preserving its signature, access flags,
+annotations, and register count. No old dialog instructions or exception
+handlers remain in that method. Other piracy/risk checks, signature APIs,
+account status and cloud quotas are not changed by this startup patch.
+
+Diagnostics remain independently selectable to observe the baseline. Native
+scanner edits retain their existing exact hash/ABI guards and remain optional.
+A phone acceptance test must cover first open, close/reopen, and delayed reopen;
+a passed build or a constant-return DEX entry is not a runtime acceptance result.

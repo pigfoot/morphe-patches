@@ -2,6 +2,7 @@ package app.pigfoot.patches.camscanner
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.*
+import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
@@ -49,12 +50,29 @@ private fun BytecodePatchContext.stop(type: String, name: String, descriptor: St
 private fun noNetwork(installer: InstallerType) = if (installer == InstallerType.MOUNT)
     PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED
 
+val camscannerSideloadStartupPatch = bytecodePatch(
+    name = "CamScanner sideload startup compatibility",
+    description = "Local re-signed startup compatibility. Replaces the qualified pirate-app prompt gate only; does not spoof signatures or unlock server services.",
+    default = false
+) {
+    compatibleWith(target)
+    availability { installer, _ -> noNetwork(installer) }
+    dependsOn(camscannerInputPatch)
+    execute {
+        val type = mutableClassDefBy(PIRATE_CONTROL)
+        val method = type.methods.single { it.name == "O8" && it.signature() == PIRATE_GATE_DESCRIPTOR }
+        val replacement = MutableMethod(startupGateReplacement(method))
+        require(type.methods.remove(method))
+        require(type.methods.add(replacement))
+    }
+}
+
 val camscannerLocalFeaturesPatch = bytecodePatch(
     name = "CamScanner local premium features", description = "Experimental local account-status features. Does not unlock server credits or cloud quotas.", default = false
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch)
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch)
     val folderLimit by intOption(key = "folderLimit", default = 0, title = "Folder limit",
         values = mapOf("Keep original limit" to 0, "5000 folders" to 5000), required = true,
         validator = { it == 0 || it == 5000 })
@@ -91,7 +109,7 @@ val camscannerFirebasePatch = bytecodePatch(
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, firebaseManifestPatch)
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, firebaseManifestPatch)
     val scope by firebaseScope()
     execute {
         stop(ANALYTICS, "〇o〇", "(Z)V")
@@ -128,7 +146,7 @@ val camscannerLoggingPatch = bytecodePatch(
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch)
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch)
     val local by booleanOption(key = "localOutput", default = true, title = "Disable local app logs", required = true)
     execute {
         stop("Lcom/intsig/log/LogAgentHelper;", "oO", "()Z", "const/4 v0, 1\nreturn v0")
@@ -152,7 +170,7 @@ val camscannerAdsPatch = bytecodePatch(
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, adsManifestPatch)
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, adsManifestPatch)
     val cleanup by adsCleanup()
     execute {
         for (t in adTargets) {
@@ -168,7 +186,7 @@ val camscannerOfflinePatch = resourcePatch(
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, camscannerAdsPatch)
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, camscannerAdsPatch)
     execute { document("AndroidManifest.xml").use { removeInternet(it) } }
 }
 
@@ -183,10 +201,9 @@ private val scannerNativePatch = resourcePatch {
     }
 }
 val camscannerStartupPatch = bytecodePatch(
-    name = "CamScanner scanner initialization compatibility", description = "Experimental re-signed scanner initialization compatibility for exact qualified native binaries, plus the local pirate-app prompt gate. Not an all-device crop fix.", default = false
+    name = "CamScanner scanner initialization compatibility", description = "Experimental scanner initialization compatibility for exact qualified native binaries. Includes local sideload startup compatibility. Not an all-device crop fix.", default = false
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, scannerNativePatch)
-    execute { stop("Lcom/intsig/camscanner/business/PirateAppControl;", "O8", "(Landroid/content/Context;Lcom/intsig/callback/DialogDismissListener;)Z", "const/4 v0, 0\nreturn v0") }
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, scannerNativePatch)
 }
