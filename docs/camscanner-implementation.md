@@ -259,6 +259,32 @@ Acceptance requires absence of both the modal warning and the bottom Toast.
 
 ## Optional email-login error diagnostics
 
+### Optional production account-service fallback compatibility
+
+`CamScanner account API fallback compatibility` is a separate, default-off
+experimental candidate for the exact qualified version and pristine CsHosts
+fingerprint. A bounded synthetic reserved-domain account query observed HTTP500
+without a structured error header at the production backup endpoint, but HTTP406
+with application code201 at the catalog primary endpoint. LITE/FULL controls
+gave the same respective outcomes. These transport probes are not equivalent
+to phone login and do not establish that every backup request fails.
+
+Only the production fallback literals in `CsHosts.o0ooO` (login UAPI) and
+`CsHosts.〇00〇8` (main UAPI) change from
+`https://api-cs-bak.intsig.net/user/cs` to the existing catalog endpoint
+`https://api-cs.intsig.net/user/cs`. Nonblank server-configured UAPI values return
+before that branch and remain unchanged. Sandbox and every other service getter
+remain unchanged. No retry, response-code rewrite, authentication bypass,
+credential storage, signature hook, native edit or membership change is added.
+
+Validation must demonstrate exactly two string-constant replacements, retained
+register/branch/handler graphs and metadata, unchanged standalone class/native/
+asset inventories, clean-input guards and compatibility with existing optional
+diagnostics. Device acceptance still requires genuine email login and reopen;
+successful build or a synthetic unregistered-account response is not that result.
+
+### Error observations
+
 `CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V6 code=<integer>`
 to the existing email/password error text. This is diagnostic instrumentation,
 not a login repair. Authentication, requests, original exceptions and error
