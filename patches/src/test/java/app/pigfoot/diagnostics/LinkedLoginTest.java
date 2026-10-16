@@ -114,7 +114,7 @@ public class LinkedLoginTest {
 
     @Test public void reflectionFailureDoesNotInventMissingHeaderOrChangeError() {
         String result = deliver(failure("outside.Private"), "0", new Object());
-        assertTrue(result.startsWith("Service unavailable\nCS-LOGIN-DIAG-V5 code=500"));
+        assertTrue(result.startsWith("Service unavailable\nCS-LOGIN-DIAG-V6 code=500"));
         Exception error = failure("outside.Private");
         WordTrace.loginHttp500(error, new Object(), 500);
         WordTrace.loginLinkedError(error, 500);

@@ -33,7 +33,7 @@ public class LoginQueryRouteTest {
     @Test public void ambiguousOrUnsupportedUrlsFailClosed() {
         String[] urls = {"https://user:PRIVATE@cs-bak.intsig.net/query", "http://cs-bak.intsig.net/query",
             "https://cs-bak.intsig.net:444/query", "https://cs-bak.intsig.net/query#PRIVATE",
-            "https://cs-bak.intsig.net/PRIVATE_PATH", "https://cs-bak.intsig.net/query?client_app=x&client_app=y",
+            "https://cs-bak.intsig.net/query?client_app=x&client_app=y",
             "https://cs-bak.intsig.net/query?client_app=x&%63lient_app=y", "https://cs-bak.intsig.net/query?client_app=%ZZ"};
         for (String url : urls) {
             String result = observe(url);
@@ -66,7 +66,7 @@ public class LoginQueryRouteTest {
         assertFalse(result.contains("PRIVATE_"));
         assertFalse(result.contains("https:"));
         assertFalse(result.contains("TianshuException ("));
-        assertTrue(result.startsWith("Error\nCS-LOGIN-DIAG-V5 code=500"));
+        assertTrue(result.startsWith("Error\nCS-LOGIN-DIAG-V6 code=500"));
     }
 
     @Test public void unrecognizedWrappersAreNotLooselyStripped() {
@@ -74,5 +74,27 @@ public class LoginQueryRouteTest {
         for (String text : new String[]{"TianshuException (406, " + uri + ")", "TianshuException (500, " + uri,
                 "PRIVATE_PREFIX " + uri, "TianshuException (500, PRIVATE_PREFIX " + uri + ")"})
             assertTrue(WordTrace.loginQueryRoute(text).startsWith("QUERY_ROUTE=UNAVAILABLE"));
+    }
+
+    @Test public void qualifiedDexAccountRouteUsesUserCsNotSync() {
+        // OoOOo8 selector1 -> O8O〇88oO0(1)=29 -> getAPI(29)
+        // -> CsHosts.o0ooO() UAPI /user/cs, then the /query suffix.
+        Exception error = new WrappedFailure("https://api-cs-bak.intsig.net/user/cs/query?emailEncrypt=PRIVATE_ACCOUNT&client_app=" + CLIENT + " errorHeadCode:0 errorMsg:null headerServer:null");
+        WordTrace.loginHttp500(error, new LinkedLoginTest.Headers(null), 500);
+        WordTrace.loginLinkedError(error, 500);
+        Object event = new Object(); WordTrace.loginBind(event);
+        String result = WordTrace.loginLinkedMessage("Error", 500, event);
+        assertTrue(result.contains("QUERY_HOST_CLASS=ACCOUNT_BACKUP_PRODUCTION"));
+        assertTrue(result.contains("QUERY_PATH=/user/cs/query"));
+        assertTrue(result.contains("CLIENT_APP=CamScanner_AD_1FULL@7.26.5.2609160000"));
+        assertFalse(result.contains("PRIVATE_"));
+    }
+
+    @Test public void unknownPathDoesNotSuppressIndependentSafeMetadata() {
+        String result = observe("https://api-cs.intsig.net/PRIVATE_PATH?emailEncrypt=PRIVATE_ACCOUNT&client_app=" + CLIENT);
+        assertTrue(result.contains("QUERY_HOST_CLASS=ACCOUNT_PRIMARY_PRODUCTION"));
+        assertTrue(result.contains("QUERY_PATH=OTHER"));
+        assertTrue(result.contains("CLIENT_APP=CamScanner_AD_1FULL@7.26.5.2609160000"));
+        assertFalse(result.contains("PRIVATE_"));
     }
 }

@@ -84,8 +84,14 @@ public final class WordTrace {
             if (uri.getPort() != -1 && uri.getPort() != 443) return unavailable + "\nQUERY_ROUTE_REASON=PORT";
             String host = uri.getHost(), path = uri.getRawPath();
             if (host == null) return unavailable + "\nQUERY_ROUTE_REASON=HOST";
-            if (!("/sync/query".equals(path) || "/query".equals(path))) return unavailable + "\nQUERY_ROUTE_REASON=ENDPOINT";
-            String hostClass = "cs-bak.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_PRODUCTION" :
+            // An unknown path must not suppress separately safe host/client metadata.
+            path = "/user/cs/query".equals(path) ? "/user/cs/query" :
+                    "/sync/query".equals(path) ? "/sync/query" : "/query".equals(path) ? "/query" : "OTHER";
+            String hostClass = "api-cs-bak.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_BACKUP_PRODUCTION" :
+                    "api-cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_BACKUP_SANDBOX" :
+                    "api-cs.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_PRIMARY_PRODUCTION" :
+                    "api-cs-sandbox.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_PRIMARY_SANDBOX" :
+                    "cs-bak.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_PRODUCTION" :
                     "cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_SANDBOX" : "OTHER";
             String client = "MISSING";
             int found = 0;
@@ -149,7 +155,7 @@ public final class WordTrace {
         try {
             String details = takeLinkedAt(event, code, System.nanoTime());
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG-V5 code=" + code +
+            return message + "\nCS-LOGIN-DIAG-V6 code=" + code +
                     (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
         } catch (Throwable ignored) { return message; }
     }

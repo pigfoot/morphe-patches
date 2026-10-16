@@ -259,7 +259,7 @@ Acceptance requires absence of both the modal warning and the bottom Toast.
 
 ## Optional email-login error diagnostics
 
-`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V5 code=<integer>`
+`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V6 code=<integer>`
 to the existing email/password error text. This is diagnostic instrumentation,
 not a login repair. Authentication, requests, original exceptions and error
 branches are preserved. It does not target Google login, phone login or every
@@ -270,8 +270,9 @@ TianShuAPI HTTP-500 exception branch gains one observation before its original
 throw. Only the existing response's numeric error-header category and message
 presence are observed; no body or credentials are read. V4 additionally parses
 the URL prefix already present in this exact original exception formatter.
-It retains only `/query` or `/sync/query`, the default production/sandbox host
-classification (all other hosts become `OTHER`), and the exact qualified
+It retains only `/query`, `/sync/query` or `/user/cs/query` (other paths become
+`OTHER`), known account primary/backup production/sandbox and legacy sync host
+classifications (all other hosts become `OTHER`), and the exact qualified
 `CamScanner_AD_1` FULL/LITE client and version with optional `.Debug` suffix.
 Other client values are redacted. Userinfo, fragments, non-HTTPS URLs,
 unexpected ports, duplicate client parameters, malformed and oversize inputs
@@ -281,6 +282,14 @@ V5 corrects V4's bare-URL fixture assumption: the original exception overrides
 `getMessage()` with `TianshuException (500, <formatter>)`. Only this exact wrapper
 is unwrapped. End-to-end regression tests reproduce the original method's
 format, and unavailable output includes fixed reason categories, never raw input.
+V6 corrects the earlier incomplete route derivation: the account-existence
+selector `1` is transformed by `O8O〇88oO0` into network API type `29` before
+`UserInfo.getAPI`. Its switch selects `CsHosts.o0ooO` / `ApiCenterInfo.UAPI`,
+whose production fallback is `https://api-cs-bak.intsig.net/user/cs`, not SAPI.
+Appending `/query` produces `/user/cs/query`. End-to-end fixtures cover this
+complete chain's public default route. Unknown paths are redacted independently
+and no longer discard otherwise safe host/client observations. This is not
+proof of a runtime destination or the cause of a server error.
 Missing, empty, numeric zero, other bounded numeric values, invalid values and
 unavailable reflection are distinct. The exact exception is a weak identity key;
 HTTP status is not inferred solely from a message-format marker.
