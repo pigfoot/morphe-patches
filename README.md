@@ -83,3 +83,31 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 ## License
 
 [GNU General Public License v3.0](LICENSE). Build/release scaffolding and patch-list generation derive from the [Morphe template](https://github.com/MorpheApp/morphe-patches-template).
+
+## CamScanner experimental source
+
+The working branch adds independently selectable CamScanner patches for clean
+**7.26.5.2609160000 (72651) APKM**. All are experimental and unselected by default.
+See [implementation and validation](docs/camscanner-implementation.md).
+
+- **CamScanner local premium features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
+- **CamScanner disable Firebase telemetry**: options select all Firebase telemetry or Analytics only. Unrelated Firebase functionality is retained. Stored/native reports and device traffic still require qualification.
+- **CamScanner disable app logging**: network event/re-enable/cache-replay boundaries; optional local app output suppression.
+- **CamScanner disable ads**: qualified SDK load/show entry points and optional ad-only manifest cleanup. Login, billing and WorkManager components are preserved. Async no-fill/fallback behavior requires device validation.
+- **CamScanner offline mode**: includes ad suppression and removes every INTERNET declaration, without falsifying platform network state. External apps/services and online retry flows require device validation.
+
+Ad support means leaving ads/offline patches unselected; clean selects ads suppression;
+offline selects offline mode. Local-feature and telemetry patches remain independent.
+There is no repeat-ad-reward or all-device cropping-fix claim. No opaque donor bootstrap,
+signature spoofing payload or donor module/asset deletion is copied into this bundle.
+
+**CamScanner scanner initialization compatibility** is a separate, unselected experimental
+patch. It changes only the known `verifyKeyV2` entry bytes in the two qualified scanner
+libraries and suppresses the local pirate-app dialog gate. Exact binary hashes and original
+entry bytes are required; unknown ABIs are rejected. This is not an all-device cropping fix
+and is not automatically included in offline mode. Re-signed startup/crop needs phone testing.
+
+For the distinction between donor paid-feature/native changes and this reimplementation,
+see [donor comparison](docs/camscanner-implementation.md#donor-comparison-what-paid-feature-and-native-changes-establish).
+Follow the [device qualification plan](docs/camscanner-implementation.md#next-step-device-qualification-before-mergerelease)
+before treating build/static results as working paid features or approving a stable release.
