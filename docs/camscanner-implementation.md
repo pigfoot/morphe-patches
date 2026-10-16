@@ -259,7 +259,7 @@ Acceptance requires absence of both the modal warning and the bottom Toast.
 
 ## Optional email-login error diagnostics
 
-`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V3 code=<integer>`
+`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V4 code=<integer>`
 to the existing email/password error text. This is diagnostic instrumentation,
 not a login repair. Authentication, requests, original exceptions and error
 branches are preserved. It does not target Google login, phone login or every
@@ -268,7 +268,15 @@ authentication UI.
 Three original classes are fingerprint-guarded before mutation. The qualified
 TianShuAPI HTTP-500 exception branch gains one observation before its original
 throw. Only the existing response's numeric error-header category and message
-presence are observed; no body, request parameters or credentials are read.
+presence are observed; no body or credentials are read. V4 additionally parses
+the URL prefix already present in this exact original exception formatter.
+It retains only `/query` or `/sync/query`, the default production/sandbox host
+classification (all other hosts become `OTHER`), and the exact qualified
+`CamScanner_AD_1` FULL/LITE client and version with optional `.Debug` suffix.
+Other client values are redacted. Userinfo, fragments, non-HTTPS URLs,
+unexpected ports, duplicate client parameters, malformed and oversize inputs
+produce unavailable output. Raw URLs and all other query values are discarded.
+Host classification is not evidence of which configuration source selected it.
 Missing, empty, numeric zero, other bounded numeric values, invalid values and
 unavailable reflection are distinct. The exact exception is a weak identity key;
 HTTP status is not inferred solely from a message-format marker.

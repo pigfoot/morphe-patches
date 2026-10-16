@@ -57,8 +57,40 @@ public final class WordTrace {
                 details = "HTTP_STATUS=500\nERROR_HEADER=" + state +
                         "\nERROR_MESSAGE_PRESENT=" + (message != null && !message.isEmpty());
             } catch (Throwable ignored) { }
+            details += "\n" + loginQueryRoute(error.getMessage());
             linkAt(error, code, details, System.nanoTime());
         } catch (Throwable ignored) { }
+    }
+
+    /** Parse only the qualified formatter prefix; never retain a raw URL or query. */
+    static String loginQueryRoute(String message) {
+        String unavailable = "QUERY_ROUTE=UNAVAILABLE";
+        try {
+            if (message == null || message.length() > 32768) return unavailable;
+            int end = message.indexOf(" errorHeadCode:");
+            if (end <= 0 || end > 16384) return unavailable;
+            java.net.URI uri = new java.net.URI(message.substring(0, end));
+            if (!"https".equals(uri.getScheme()) || uri.getRawUserInfo() != null ||
+                    uri.getFragment() != null || (uri.getPort() != -1 && uri.getPort() != 443)) return unavailable;
+            String host = uri.getHost(), path = uri.getRawPath();
+            if (host == null || !("/sync/query".equals(path) || "/query".equals(path))) return unavailable;
+            String hostClass = "cs-bak.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_PRODUCTION" :
+                    "cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_SANDBOX" : "OTHER";
+            String client = "MISSING";
+            int found = 0;
+            String query = uri.getRawQuery();
+            if (query != null) for (String part : query.split("&", -1)) {
+                int equal = part.indexOf('=');
+                String key = java.net.URLDecoder.decode(equal < 0 ? part : part.substring(0, equal), "UTF-8");
+                if (!"client_app".equals(key)) continue;
+                if (++found > 1) return unavailable;
+                String value = java.net.URLDecoder.decode(equal < 0 ? "" : part.substring(equal + 1), "UTF-8");
+                // Exact qualified app/version plus the original builder's two flags only.
+                client = value.matches("CamScanner_AD_1(FULL|LITE)@7\\.26\\.5\\.2609160000(\\.Debug)?") ? value : "OTHER";
+            }
+            return "QUERY_ROUTE=QUALIFIED_FORMATTER\nQUERY_HOST_CLASS=" + hostClass +
+                    "\nQUERY_PATH=" + path + "\nCLIENT_APP=" + client;
+        } catch (Throwable ignored) { return unavailable; }
     }
 
     static String queryCaller(Throwable error) {
@@ -106,7 +138,7 @@ public final class WordTrace {
         try {
             String details = takeLinkedAt(event, code, System.nanoTime());
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG-V3 code=" + code +
+            return message + "\nCS-LOGIN-DIAG-V4 code=" + code +
                     (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
         } catch (Throwable ignored) { return message; }
     }
