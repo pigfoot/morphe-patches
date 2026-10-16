@@ -16,6 +16,18 @@ public final class WordTrace {
     private static final ThreadLocal<String[]> pendingLogin = new ThreadLocal<>();
     private WordTrace() {}
 
+    /** Treat only the observed obsolete UAPI cache as an original cache miss.
+     * No identity, payload, preference or diagnostic record is retained. */
+    public static String refreshLoginApis(String cached) {
+        if (cached == null || cached.isEmpty() || cached.length() > 32768) return cached;
+        try {
+            Class<?> json = Class.forName("org.json.JSONObject");
+            Object object = json.getConstructor(String.class).newInstance(cached);
+            Object uapi = json.getMethod("opt", String.class).invoke(object, "UAPI");
+            return "https://api-cs-bak.intsig.net/user/cs".equals(uapi) ? null : cached;
+        } catch (Throwable ignored) { return cached; }
+    }
+
     // Only sanitized strings survive these calls; keys never strongly retain
     // application exceptions/events. Identity, not equals(), owns correlation.
     static synchronized void linkAt(Object key, int code, String details, long now) {

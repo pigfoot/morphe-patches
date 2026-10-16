@@ -21,6 +21,9 @@ dependencies {
     compileOnly(libs.gson)
     patchListGeneratorClasspath(libs.gson)
     testImplementation(libs.junit)
+    // Platform-compatible JSON parser for the scoped API-cache policy tests.
+    // Test-only: never bundled into the application extension.
+    testImplementation("org.json:json:20240303")
 }
 
 tasks {

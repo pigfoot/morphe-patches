@@ -30,6 +30,7 @@ class CamScannerSigningTest {
     @Test fun signingDoesNotEnableLegacyRouteSubstitutionOrOfflineMode() {
         assertFalse(camscannerSigningPatch.default)
         assertTrue(camscannerSigningPatch.dependencies.contains(camscannerSideloadStartupPatch))
+        assertTrue(camscannerSigningPatch.dependencies.contains(camscannerLoginDiagnosticsPatch))
         assertFalse(camscannerSigningPatch.dependencies.contains(camscannerAccountServicePatch))
         assertFalse(camscannerSigningPatch.dependencies.contains(camscannerOfflinePatch))
     }

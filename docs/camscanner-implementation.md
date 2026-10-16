@@ -389,5 +389,9 @@ empty. A bounded synthetic signed API Center lookup returns the official US UAPI
 separately from UAPI_CN. These checks are not proof of phone authentication.
 V8 diagnostics additionally classify that official US account service; all
 identity values and signing material remain redacted. Retain the original API
-Center cache/discovery behavior. Do not select the withdrawn fallback or offline
+Center discovery behavior, treating only a cached UAPI exactly equal to the
+observed obsolete backup URL as an original cache miss. Other configurations
+remain the identical object; malformed/oversized/unavailable JSON parsing retains
+the original cache. No preference, account or document is deleted. The two scoped
+lookup hooks use the existing fetch/persist flow, not a login retry. Do not select the withdrawn fallback or offline
 mode when testing legitimate online login.
