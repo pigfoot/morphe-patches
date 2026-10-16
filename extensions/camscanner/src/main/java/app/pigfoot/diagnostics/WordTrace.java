@@ -66,14 +66,25 @@ public final class WordTrace {
     static String loginQueryRoute(String message) {
         String unavailable = "QUERY_ROUTE=UNAVAILABLE";
         try {
-            if (message == null || message.length() > 32768) return unavailable;
+            if (message == null || message.length() > 32768) return unavailable + "\nQUERY_ROUTE_REASON=INPUT_LIMIT";
+            // The qualified app overrides getMessage(): its URL formatter is
+            // wrapped even though the HTTP branch constructor receives bare text.
+            if (message.startsWith("TianshuException (")) {
+                String prefix = "TianshuException (500, ";
+                if (!message.startsWith(prefix) || !message.endsWith(")"))
+                    return unavailable + "\nQUERY_ROUTE_REASON=WRAPPER";
+                message = message.substring(prefix.length(), message.length() - 1);
+            }
             int end = message.indexOf(" errorHeadCode:");
-            if (end <= 0 || end > 16384) return unavailable;
+            if (end <= 0 || end > 16384) return unavailable + "\nQUERY_ROUTE_REASON=FORMAT";
             java.net.URI uri = new java.net.URI(message.substring(0, end));
-            if (!"https".equals(uri.getScheme()) || uri.getRawUserInfo() != null ||
-                    uri.getFragment() != null || (uri.getPort() != -1 && uri.getPort() != 443)) return unavailable;
+            if (!"https".equals(uri.getScheme())) return unavailable + "\nQUERY_ROUTE_REASON=SCHEME";
+            if (uri.getRawUserInfo() != null) return unavailable + "\nQUERY_ROUTE_REASON=USERINFO";
+            if (uri.getFragment() != null) return unavailable + "\nQUERY_ROUTE_REASON=FRAGMENT";
+            if (uri.getPort() != -1 && uri.getPort() != 443) return unavailable + "\nQUERY_ROUTE_REASON=PORT";
             String host = uri.getHost(), path = uri.getRawPath();
-            if (host == null || !("/sync/query".equals(path) || "/query".equals(path))) return unavailable;
+            if (host == null) return unavailable + "\nQUERY_ROUTE_REASON=HOST";
+            if (!("/sync/query".equals(path) || "/query".equals(path))) return unavailable + "\nQUERY_ROUTE_REASON=ENDPOINT";
             String hostClass = "cs-bak.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_PRODUCTION" :
                     "cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_SANDBOX" : "OTHER";
             String client = "MISSING";
@@ -83,14 +94,14 @@ public final class WordTrace {
                 int equal = part.indexOf('=');
                 String key = java.net.URLDecoder.decode(equal < 0 ? part : part.substring(0, equal), "UTF-8");
                 if (!"client_app".equals(key)) continue;
-                if (++found > 1) return unavailable;
+                if (++found > 1) return unavailable + "\nQUERY_ROUTE_REASON=DUPLICATE_CLIENT";
                 String value = java.net.URLDecoder.decode(equal < 0 ? "" : part.substring(equal + 1), "UTF-8");
                 // Exact qualified app/version plus the original builder's two flags only.
                 client = value.matches("CamScanner_AD_1(FULL|LITE)@7\\.26\\.5\\.2609160000(\\.Debug)?") ? value : "OTHER";
             }
             return "QUERY_ROUTE=QUALIFIED_FORMATTER\nQUERY_HOST_CLASS=" + hostClass +
                     "\nQUERY_PATH=" + path + "\nCLIENT_APP=" + client;
-        } catch (Throwable ignored) { return unavailable; }
+        } catch (Throwable ignored) { return unavailable + "\nQUERY_ROUTE_REASON=PARSE_ERROR"; }
     }
 
     static String queryCaller(Throwable error) {
@@ -138,7 +149,7 @@ public final class WordTrace {
         try {
             String details = takeLinkedAt(event, code, System.nanoTime());
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG-V4 code=" + code +
+            return message + "\nCS-LOGIN-DIAG-V5 code=" + code +
                     (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
         } catch (Throwable ignored) { return message; }
     }

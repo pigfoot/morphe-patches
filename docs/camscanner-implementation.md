@@ -259,7 +259,7 @@ Acceptance requires absence of both the modal warning and the bottom Toast.
 
 ## Optional email-login error diagnostics
 
-`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V4 code=<integer>`
+`CamScanner email login diagnostics` appends `CS-LOGIN-DIAG-V5 code=<integer>`
 to the existing email/password error text. This is diagnostic instrumentation,
 not a login repair. Authentication, requests, original exceptions and error
 branches are preserved. It does not target Google login, phone login or every
@@ -277,6 +277,10 @@ Other client values are redacted. Userinfo, fragments, non-HTTPS URLs,
 unexpected ports, duplicate client parameters, malformed and oversize inputs
 produce unavailable output. Raw URLs and all other query values are discarded.
 Host classification is not evidence of which configuration source selected it.
+V5 corrects V4's bare-URL fixture assumption: the original exception overrides
+`getMessage()` with `TianshuException (500, <formatter>)`. Only this exact wrapper
+is unwrapped. End-to-end regression tests reproduce the original method's
+format, and unavailable output includes fixed reason categories, never raw input.
 Missing, empty, numeric zero, other bounded numeric values, invalid values and
 unavailable reflection are distinct. The exact exception is a weak identity key;
 HTTP status is not inferred solely from a message-format marker.
