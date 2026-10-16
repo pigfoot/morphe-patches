@@ -1,6 +1,7 @@
 package app.pigfoot.patches.camscanner
 
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.*
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.Opcode
@@ -15,7 +16,7 @@ private const val PRIMARY_ACCOUNT_FALLBACK = "https://api-cs.intsig.net/user/cs"
 
 val camscannerAccountServicePatch = bytecodePatch(
     name = "CamScanner account API fallback compatibility",
-    description = "Experimental: use the existing catalog primary account service only when production UAPI discovery has no usable configuration. Preserve configured hosts, sandbox and authentication decisions. Phone login unverified.",
+    description = "Experimental: route the exact legacy production backup account base and unconfigured production fallback to the existing catalog primary. Preserve all other configured hosts, sandbox and authentication decisions. Phone login unverified.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
@@ -33,8 +34,8 @@ val camscannerAccountServicePatch = bytecodePatch(
         require(sha256(store.data) == "45d89f62e47907ea096670b644816aff9e989c4331ea90c0d45ae99216ec9d79") {
             "Unsupported or already modified CamScanner account hosts"
         }
-        // Both getters first return a nonblank server-configured UAPI. Only
-        // their final production fallback constant changes; sandbox is retained.
+        // Normalize only the exact known failing production backup base, including
+        // nonblank configured UAPI. All other configured values remain untouched.
         val sites = listOf("o0ooO", "〇00〇8").map { name ->
             val method = mutableClassDefBy(ACCOUNT_HOSTS).methods.single {
                 it.name == name && it.signature() == "()Ljava/lang/String;"
@@ -52,11 +53,27 @@ val camscannerAccountServicePatch = bytecodePatch(
                     "https://api-cs-bak-sandbox.intsig.net/user/cs" }) {
                 "Unsupported CamScanner account fallback body"
             }
-            method to index
+            val configuredReturn = code.indexOfFirst { it.opcode == Opcode.RETURN_OBJECT }
+            require(configuredReturn >= 0 && configuredReturn < index &&
+                (code[configuredReturn] as OneRegisterInstruction).registerA == 0 &&
+                code.count { it.opcode == Opcode.RETURN_OBJECT } == 3) {
+                "Unsupported CamScanner configured account return"
+            }
+            Triple(method, index, configuredReturn)
         }
         // All input definitions and both sites are qualified before mutation.
-        sites.forEach { (method, index) ->
+        sites.forEach { (method, index, configuredReturn) ->
             method.replaceInstruction(index, "const-string v0, \"$PRIMARY_ACCOUNT_FALLBACK\"")
+            // Replace the branch target itself; prefix insertion alone can be skipped.
+            method.replaceInstruction(configuredReturn, "const-string v1, \"$OLD_ACCOUNT_FALLBACK\"")
+            method.addInstructionsWithLabels(configuredReturn + 1, """
+                invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+                move-result v1
+                if-eqz v1, :keep_configured
+                const-string v0, "$PRIMARY_ACCOUNT_FALLBACK"
+                :keep_configured
+                return-object v0
+            """)
         }
     }
 }

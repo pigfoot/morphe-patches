@@ -269,18 +269,25 @@ with application code201 at the catalog primary endpoint. LITE/FULL controls
 gave the same respective outcomes. These transport probes are not equivalent
 to phone login and do not establish that every backup request fails.
 
-Only the production fallback literals in `CsHosts.o0ooO` (login UAPI) and
+The production fallback literals in `CsHosts.o0ooO` (login UAPI) and
 `CsHosts.〇00〇8` (main UAPI) change from
 `https://api-cs-bak.intsig.net/user/cs` to the existing catalog endpoint
-`https://api-cs.intsig.net/user/cs`. Nonblank server-configured UAPI values return
-before that branch and remain unchanged. Sandbox and every other service getter
-remain unchanged. No retry, response-code rewrite, authentication bypass,
-credential storage, signature hook, native edit or membership change is added.
+`https://api-cs.intsig.net/user/cs`. The first candidate preserved nonblank
+configured UAPI values, and the phone continued to report the backup route.
+The revised candidate also normalizes that exact backup base when returned by
+configuration. Every other configured value, including regional hosts,
+lookalikes, trailing-slash variants and sandbox, remains unchanged. No retry,
+response-code rewrite, authentication bypass, credential storage, signature hook,
+native edit or membership change is added.
 
-Validation must demonstrate exactly two string-constant replacements, retained
-register/branch/handler graphs and metadata, unchanged standalone class/native/
-asset inventories, clean-input guards and compatibility with existing optional
-diagnostics. Device acceptance still requires genuine email login and reopen;
+Both configured-return instructions are replaced by the first instruction of
+an exact-string guard, preserving incoming branch targets. Original registers,
+neighboring method graphs, sandbox paths and error behavior are retained.
+Validation must independently execute both getters with null/blank, exact old,
+primary, sandbox, regional, lookalike and trailing-slash configurations with both
+sandbox states, compare standalone class/native/asset inventories, and exercise
+clean-input guards and compatibility with existing optional diagnostics.
+Device acceptance still requires genuine email login and reopen;
 successful build or a synthetic unregistered-account response is not that result.
 
 ### Error observations
