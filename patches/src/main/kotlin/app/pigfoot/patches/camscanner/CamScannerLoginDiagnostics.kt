@@ -18,7 +18,7 @@ private const val LOGIN_API = "Lcom/intsig/tianshu/TianShuAPI;"
 
 val camscannerLoginDiagnosticsPatch = bytecodePatch(
     name = "CamScanner email login diagnostics",
-    description = "Temporary v7 email diagnostics: exact error linkage, HTTP-500 and HTTP-406/application-201 provenance, redacted account route/client and encrypted-email presence. No credentials, request edits or authentication bypass. Not a login fix.",
+    description = "Temporary v8 email diagnostics (including the official US account service): exact error linkage, HTTP-500 and HTTP-406/application-201 provenance, redacted account route/client and encrypted-email presence. No credentials, request edits or authentication bypass. Not a login fix.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,

@@ -66,7 +66,7 @@ public class LoginQueryRouteTest {
         assertFalse(result.contains("PRIVATE_"));
         assertFalse(result.contains("https:"));
         assertFalse(result.contains("TianshuException ("));
-        assertTrue(result.startsWith("Error\nCS-LOGIN-DIAG-V7 code=500"));
+        assertTrue(result.startsWith("Error\nCS-LOGIN-DIAG-V8 code=500"));
     }
 
     @Test public void unrecognizedWrappersAreNotLooselyStripped() {
@@ -96,5 +96,12 @@ public class LoginQueryRouteTest {
         assertTrue(result.contains("QUERY_PATH=OTHER"));
         assertTrue(result.contains("CLIENT_APP=CamScanner_AD_1FULL@7.26.5.2609160000"));
         assertFalse(result.contains("PRIVATE_"));
+    }
+    @Test public void officialCenterUsRouteIsExplicitlyClassifiedAndRedacted() {
+        String result = observe("https://api-cs-us.intsig.net/user/cs/query?emailEncrypt=PRIVATE_ACCOUNT&client_app=" + CLIENT);
+        assertTrue(result.contains("QUERY_HOST_CLASS=ACCOUNT_US_PRODUCTION"));
+        assertTrue(result.contains("QUERY_EMAIL_ENCRYPT=PRESENT"));
+        assertFalse(result.contains("PRIVATE_"));
+        assertFalse(result.contains("api-cs-us.intsig.net"));
     }
 }

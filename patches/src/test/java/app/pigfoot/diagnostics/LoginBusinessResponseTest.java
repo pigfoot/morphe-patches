@@ -16,7 +16,7 @@ public class LoginBusinessResponseTest {
 
     @Test public void real201PathHasExactTransportAndSanitizedRoute() {
         String result = deliver(new Exception("PRIVATE_BODY"), new LinkedLoginTest.Headers("201"), 201, URI);
-        assertTrue(result.contains("CS-LOGIN-DIAG-V7 code=201"));
+        assertTrue(result.contains("CS-LOGIN-DIAG-V8 code=201"));
         assertTrue(result.contains("HTTP_STATUS=406"));
         assertTrue(result.contains("ERROR_ORIGIN=HTTP_406_BUSINESS"));
         assertTrue(result.contains("ERROR_HEADER=201"));

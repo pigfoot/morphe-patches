@@ -109,6 +109,7 @@ public final class WordTrace {
             String hostClass = "api-cs-bak.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_BACKUP_PRODUCTION" :
                     "api-cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_BACKUP_SANDBOX" :
                     "api-cs.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_PRIMARY_PRODUCTION" :
+                    "api-cs-us.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_US_PRODUCTION" :
                     "api-cs-sandbox.intsig.net".equalsIgnoreCase(host) ? "ACCOUNT_PRIMARY_SANDBOX" :
                     "cs-bak.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_PRODUCTION" :
                     "cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_SANDBOX" : "OTHER";
@@ -181,7 +182,7 @@ public final class WordTrace {
         try {
             String details = takeLinkedAt(event, code, System.nanoTime());
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG-V7 code=" + code +
+            return message + "\nCS-LOGIN-DIAG-V8 code=" + code +
                     (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
         } catch (Throwable ignored) { return message; }
     }

@@ -365,3 +365,29 @@ marker is V7; the account fallback compatibility option remains independent.
 
 This is an evidence correction, not a functional login repair. Successful build,
 unit tests and unchanged original method graphs do not demonstrate phone login.
+
+### Native request signing and official service discovery
+
+The previous account fallback option is withdrawn: the catalog explicitly
+separates UAPI from UAPI_CN, so substituting the latter's default is not a
+region-equivalent fallback. Stale forced selections now fail with an explanation.
+
+The independent, default-off account service signing compatibility option pins
+both original `libnative-encrypt.so` binaries and replaces only the caller's
+skip-computation branch in `NativeEncrypt.getSignParameter`: one ARM64 instruction
+and one Thumb instruction. A local signer mismatch otherwise returns an empty
+signature before the existing native salt/MD5 computation. The original package
+certificate passes the gate; re-signed outputs do not. The checkSignature function
+itself, all other callers, cryptographic routines and service request code remain
+unchanged. No global package-manager hook, forced hostname, response rewriting,
+password validation bypass or server entitlement change is introduced.
+
+Isolated ARM64 instruction execution with simulated JNI/libc/MD5 boundaries checks
+both API-type flags and empty/nonempty inputs. The changed caller matches the
+original accepted-signer computation, while the unmodified re-signed case returns
+empty. A bounded synthetic signed API Center lookup returns the official US UAPI
+separately from UAPI_CN. These checks are not proof of phone authentication.
+V8 diagnostics additionally classify that official US account service; all
+identity values and signing material remain redacted. Retain the original API
+Center cache/discovery behavior. Do not select the withdrawn fallback or offline
+mode when testing legitimate online login.

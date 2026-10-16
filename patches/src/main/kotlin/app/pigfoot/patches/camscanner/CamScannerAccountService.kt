@@ -1,79 +1,17 @@
 package app.pigfoot.patches.camscanner
 
-import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.*
-import com.android.tools.smali.dexlib2.Opcodes
-import com.android.tools.smali.dexlib2.Opcode
-import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
-import com.android.tools.smali.dexlib2.writer.io.MemoryDataStore
-import com.android.tools.smali.dexlib2.writer.pool.DexPool
 
-private const val ACCOUNT_HOSTS = "Lcom/intsig/CsHosts;"
-private const val OLD_ACCOUNT_FALLBACK = "https://api-cs-bak.intsig.net/user/cs"
-private const val PRIMARY_ACCOUNT_FALLBACK = "https://api-cs.intsig.net/user/cs"
-
+// Retain the old name so stale explicit selections fail clearly rather than
+// silently redirecting UAPI to the distinct UAPI_CN catalog service.
 val camscannerAccountServicePatch = bytecodePatch(
     name = "CamScanner account API fallback compatibility",
-    description = "Experimental: route the exact legacy production backup account base and unconfigured production fallback to the existing catalog primary. Preserve all other configured hosts, sandbox and authentication decisions. Phone login unverified.",
+    description = "Withdrawn: replacing UAPI with the UAPI_CN fallback is not region-equivalent. Deselect this option and use account service signing compatibility to preserve official API Center discovery.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
         targets = listOf(AppTarget(CAM_VERSION, versionCodes = mapOf(SupportedAbi.ARM64_V8A to 72651,
             SupportedAbi.ARMEABI_V7A to 72651), isExperimental = true))))
-    availability { installer, _ ->
-        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED
-    }
-    dependsOn(camscannerInputPatch)
-    execute {
-        val pool = DexPool(Opcodes.forDexVersion(39))
-        pool.internClass(classDefBy(ACCOUNT_HOSTS))
-        val store = MemoryDataStore()
-        pool.writeTo(store)
-        require(sha256(store.data) == "45d89f62e47907ea096670b644816aff9e989c4331ea90c0d45ae99216ec9d79") {
-            "Unsupported or already modified CamScanner account hosts"
-        }
-        // Normalize only the exact known failing production backup base, including
-        // nonblank configured UAPI. All other configured values remain untouched.
-        val sites = listOf("o0ooO", "〇00〇8").map { name ->
-            val method = mutableClassDefBy(ACCOUNT_HOSTS).methods.single {
-                it.name == name && it.signature() == "()Ljava/lang/String;"
-            }
-            val impl = requireNotNull(method.implementation)
-            val code = impl.instructions.toList()
-            val index = code.indices.single {
-                (code[it] as? ReferenceInstruction)?.reference.toString() == OLD_ACCOUNT_FALLBACK
-            }
-            require(impl.registerCount == 2 && code[index].opcode == Opcode.CONST_STRING &&
-                (code[index] as OneRegisterInstruction).registerA == 0 &&
-                code[index + 1].opcode == Opcode.RETURN_OBJECT &&
-                (code[index + 1] as OneRegisterInstruction).registerA == 0 &&
-                code.any { (it as? ReferenceInstruction)?.reference.toString() ==
-                    "https://api-cs-bak-sandbox.intsig.net/user/cs" }) {
-                "Unsupported CamScanner account fallback body"
-            }
-            val configuredReturn = code.indexOfFirst { it.opcode == Opcode.RETURN_OBJECT }
-            require(configuredReturn >= 0 && configuredReturn < index &&
-                (code[configuredReturn] as OneRegisterInstruction).registerA == 0 &&
-                code.count { it.opcode == Opcode.RETURN_OBJECT } == 3) {
-                "Unsupported CamScanner configured account return"
-            }
-            Triple(method, index, configuredReturn)
-        }
-        // All input definitions and both sites are qualified before mutation.
-        sites.forEach { (method, index, configuredReturn) ->
-            method.replaceInstruction(index, "const-string v0, \"$PRIMARY_ACCOUNT_FALLBACK\"")
-            // Replace the branch target itself; prefix insertion alone can be skipped.
-            method.replaceInstruction(configuredReturn, "const-string v1, \"$OLD_ACCOUNT_FALLBACK\"")
-            method.addInstructionsWithLabels(configuredReturn + 1, """
-                invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-                move-result v1
-                if-eqz v1, :keep_configured
-                const-string v0, "$PRIMARY_ACCOUNT_FALLBACK"
-                :keep_configured
-                return-object v0
-            """)
-        }
-    }
+    availability { _, _ -> PatchAvailability.UNAVAILABLE }
+    execute { error("Withdrawn account fallback: deselect this option; preserve official API Center discovery with account service signing compatibility") }
 }
