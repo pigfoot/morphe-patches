@@ -66,7 +66,7 @@ public class LoginQueryRouteTest {
         assertFalse(result.contains("PRIVATE_"));
         assertFalse(result.contains("https:"));
         assertFalse(result.contains("TianshuException ("));
-        assertTrue(result.startsWith("Error\nCS-LOGIN-DIAG-V6 code=500"));
+        assertTrue(result.startsWith("Error\nCS-LOGIN-DIAG-V7 code=500"));
     }
 
     @Test public void unrecognizedWrappersAreNotLooselyStripped() {

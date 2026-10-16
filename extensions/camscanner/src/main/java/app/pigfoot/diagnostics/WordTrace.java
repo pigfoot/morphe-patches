@@ -62,6 +62,25 @@ public final class WordTrace {
         } catch (Throwable ignored) { }
     }
 
+    /** Passive observation at the original HTTP-406 generic business throw. */
+    public static void loginHttp406(Throwable error, Object connection, int code, String requestUrl) {
+        try {
+            if (error == null || code != 201) return;
+            String details = "ERROR_ORIGIN=HTTP_406_BUSINESS\nHTTP_STATUS=406\nERROR_HEADER=UNAVAILABLE\nERROR_MESSAGE_PRESENT=UNKNOWN";
+            try {
+                java.lang.reflect.Method getter = connection.getClass().getMethod("getHeaderField", String.class);
+                String header = (String) getter.invoke(connection, "X-IS-Error-Code");
+                String message = (String) getter.invoke(connection, "X-IS-Error-Msg");
+                String state = header == null ? "MISSING" : header.isEmpty() ? "EMPTY" :
+                        header.matches("-?[0-9]{1,8}") ? header : "NON_NUMERIC";
+                details = "ERROR_ORIGIN=HTTP_406_BUSINESS\nHTTP_STATUS=406\nERROR_HEADER=" + state +
+                        "\nERROR_MESSAGE_PRESENT=" + (message != null && !message.isEmpty());
+            } catch (Throwable ignored) { }
+            details += "\n" + loginQueryRoute(requestUrl == null ? null : requestUrl + " errorHeadCode:");
+            linkAt(error, code, details, System.nanoTime());
+        } catch (Throwable ignored) { }
+    }
+
     /** Parse only the qualified formatter prefix; never retain a raw URL or query. */
     static String loginQueryRoute(String message) {
         String unavailable = "QUERY_ROUTE=UNAVAILABLE";
@@ -94,11 +113,18 @@ public final class WordTrace {
                     "cs-bak.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_PRODUCTION" :
                     "cs-bak-sandbox.intsig.net".equalsIgnoreCase(host) ? "DEFAULT_SANDBOX" : "OTHER";
             String client = "MISSING";
+            String email = "MISSING";
+            int emailCount = 0;
             int found = 0;
             String query = uri.getRawQuery();
             if (query != null) for (String part : query.split("&", -1)) {
                 int equal = part.indexOf('=');
                 String key = java.net.URLDecoder.decode(equal < 0 ? part : part.substring(0, equal), "UTF-8");
+                if ("emailEncrypt".equals(key)) {
+                    if (++emailCount > 1) return unavailable + "\nQUERY_ROUTE_REASON=DUPLICATE_EMAIL";
+                    String value = java.net.URLDecoder.decode(equal < 0 ? "" : part.substring(equal + 1), "UTF-8");
+                    email = value.isEmpty() ? "EMPTY" : "PRESENT";
+                }
                 if (!"client_app".equals(key)) continue;
                 if (++found > 1) return unavailable + "\nQUERY_ROUTE_REASON=DUPLICATE_CLIENT";
                 String value = java.net.URLDecoder.decode(equal < 0 ? "" : part.substring(equal + 1), "UTF-8");
@@ -106,7 +132,7 @@ public final class WordTrace {
                 client = value.matches("CamScanner_AD_1(FULL|LITE)@7\\.26\\.5\\.2609160000(\\.Debug)?") ? value : "OTHER";
             }
             return "QUERY_ROUTE=QUALIFIED_FORMATTER\nQUERY_HOST_CLASS=" + hostClass +
-                    "\nQUERY_PATH=" + path + "\nCLIENT_APP=" + client;
+                    "\nQUERY_PATH=" + path + "\nCLIENT_APP=" + client + "\nQUERY_EMAIL_ENCRYPT=" + email;
         } catch (Throwable ignored) { return unavailable + "\nQUERY_ROUTE_REASON=PARSE_ERROR"; }
     }
 
@@ -155,7 +181,7 @@ public final class WordTrace {
         try {
             String details = takeLinkedAt(event, code, System.nanoTime());
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG-V6 code=" + code +
+            return message + "\nCS-LOGIN-DIAG-V7 code=" + code +
                     (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
         } catch (Throwable ignored) { return message; }
     }

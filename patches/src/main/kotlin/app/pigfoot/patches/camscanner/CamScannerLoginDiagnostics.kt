@@ -18,7 +18,7 @@ private const val LOGIN_API = "Lcom/intsig/tianshu/TianShuAPI;"
 
 val camscannerLoginDiagnosticsPatch = bytecodePatch(
     name = "CamScanner email login diagnostics",
-    description = "Temporary v6 email diagnostics: exact error linkage, HTTP-500 headers and independent redacted account-route/client observations, including the original exception wrapper. No credentials, request edits or authentication bypass. Not a login fix.",
+    description = "Temporary v7 email diagnostics: exact error linkage, HTTP-500 and HTTP-406/application-201 provenance, redacted account route/client and encrypted-email presence. No credentials, request edits or authentication bypass. Not a login fix.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
@@ -78,6 +78,23 @@ val camscannerLoginDiagnosticsPatch = bytecodePatch(
                     (apiCode[it] as? ReferenceInstruction)?.reference.toString() == " headerServer:"
                 }
         }
+        // Generic business error reached only from the HTTP-406 branch. The
+        // helper records code201 only; v6 is the current request URL, not a
+        // previous-request/global value. All arguments already fit low registers.
+        val business406 = apiCode.indices.single { index ->
+            index >= 8 && index + 1 < apiCode.size &&
+                (apiCode[index] as? ReferenceInstruction)?.reference.toString() ==
+                    "$LOGIN_EXCEPTION-><init>(ILjava/lang/String;)V" &&
+                (apiCode[index] as? FiveRegisterInstruction)?.let {
+                    it.registerCount == 3 && it.registerC == 0 && it.registerD == 3 && it.registerE == 1
+                } == true &&
+                apiCode[index + 1].opcode == Opcode.THROW &&
+                (apiCode[index + 1] as? OneRegisterInstruction)?.registerA == 0 &&
+                (index - 8 until index).any {
+                    (apiCode[it] as? ReferenceInstruction)?.reference.toString() == " \t"
+                }
+        }
+        require(business406 < http500)
         val method = mutableClassDefBy(EMAIL_SCENE).methods.single {
             it.name == "〇O〇80o08O" && it.signature() == "($EMAIL_SCENE$LOGIN_ERROR)Lkotlin/Unit;"
         }
@@ -95,6 +112,8 @@ val camscannerLoginDiagnosticsPatch = bytecodePatch(
         // All original classes and insertion sites have now been validated.
         api.addInstructions(http500 + 1,
             "invoke-static {v1, v11, v8}, Lapp/pigfoot/diagnostics/WordTrace;->loginHttp500(Ljava/lang/Throwable;Ljava/lang/Object;I)V")
+        api.addInstructions(business406 + 1,
+            "invoke-static {v0, v11, v3, v6}, Lapp/pigfoot/diagnostics/WordTrace;->loginHttp406(Ljava/lang/Throwable;Ljava/lang/Object;ILjava/lang/String;)V")
         posts.sortedDescending().forEach {
             handler.addInstructions(it,
                 "invoke-static {v0}, Lapp/pigfoot/diagnostics/WordTrace;->loginBind(Ljava/lang/Object;)V")

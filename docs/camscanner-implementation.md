@@ -346,3 +346,22 @@ All original instructions, register counts, branches, handlers and method
 metadata must remain after removing documented instrumentation. The shared
 extension remains one helper class. This option is independently selectable,
 does not change signature APIs, and does not fix login or Word by itself.
+
+### Email diagnostic V7: business-response provenance
+
+V6 only captured transport metadata at the qualified HTTP-500 throw. A subsequent
+application-201 exception consequently had no matched transport metadata. V7 adds
+one passive call immediately after the original generic HTTP-406 business-error
+constructor. The exact pinned original class and constructor/register context are
+required; the helper only records application code201. Existing authentication,
+request arguments, routing, exception and UI result branches remain unchanged.
+
+The exact exception-to-event identity handoff now exposes HTTP406, bounded error
+header state, allowlisted account host/path/client and whether `emailEncrypt` is
+missing, empty or present. No account value, ciphertext, hash, length, credential,
+raw URL, response body or error message is emitted. Existing HTTP500 observations
+remain available. Unmatched records remain explicitly unavailable. The display
+marker is V7; the account fallback compatibility option remains independent.
+
+This is an evidence correction, not a functional login repair. Successful build,
+unit tests and unchanged original method graphs do not demonstrate phone login.
