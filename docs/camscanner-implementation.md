@@ -382,7 +382,15 @@ The previous account fallback option is withdrawn: the catalog explicitly
 separates UAPI from UAPI_CN, so substituting the latter's default is not a
 region-equivalent fallback. Stale forced selections now fail with an explanation.
 
-The independent, default-off account service signing compatibility option pins
+Account service signing compatibility is default-enabled and marked REQUIRED
+for supported STANDARD/Shizuku repacks; unqualified root mount is unavailable.
+It must not be accidentally omitted from a normal online installation. The
+resolver is installer/architecture-based, not an offline-mode selection detector.
+Compatibility does not grant INTERNET or force login: selecting offline still
+removes all app INTERNET declarations. Explicit exclusive CLI selections remain
+useful for isolated diagnostic baselines, not recommended end-user profiles.
+
+The account service signing compatibility patch pins
 both original `libnative-encrypt.so` binaries and replaces only the caller's
 skip-computation branch in `NativeEncrypt.getSignParameter`: one ARM64 instruction
 and one Thumb instruction. A local signer mismatch otherwise returns an empty
@@ -397,10 +405,11 @@ both API-type flags and empty/nonempty inputs. The changed caller matches the
 original accepted-signer computation, while the unmodified re-signed case returns
 empty. A bounded synthetic signed API Center lookup returns the official US UAPI
 separately from UAPI_CN. These checks are not proof of phone authentication.
-V8 diagnostics additionally classify that official US account service; all
+V9 diagnostics additionally classify that official US account service; all
 identity values and signing material remain redacted. Retain the original API
 Center discovery behavior, treating only a cached UAPI exactly equal to the
-observed obsolete backup URL as an original cache miss. Other configurations
+observed obsolete backup URL, or an exact known two-key error envelope with string
+`err` and numeric integer `ret`101/515, as an original cache miss. Other configurations
 remain the identical object; malformed/oversized/unavailable JSON parsing retains
 the original cache. No preference, account or document is deleted. The two scoped
 lookup hooks use the existing fetch/persist flow, not a login retry. Do not select the withdrawn fallback or offline

@@ -1,6 +1,9 @@
 package app.pigfoot.patches
 
 import app.pigfoot.patches.camscanner.*
+import app.morphe.patcher.patch.ApkArchitecture
+import app.morphe.patcher.patch.InstallerType
+import app.morphe.patcher.patch.PatchAvailability
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -28,10 +31,21 @@ class CamScannerSigningTest {
     }
 
     @Test fun signingDoesNotEnableLegacyRouteSubstitutionOrOfflineMode() {
-        assertFalse(camscannerSigningPatch.default)
+        assertTrue(camscannerSigningPatch.default)
         assertTrue(camscannerSigningPatch.dependencies.contains(camscannerSideloadStartupPatch))
         assertTrue(camscannerSigningPatch.dependencies.contains(camscannerLoginDiagnosticsPatch))
         assertFalse(camscannerSigningPatch.dependencies.contains(camscannerAccountServicePatch))
         assertFalse(camscannerSigningPatch.dependencies.contains(camscannerOfflinePatch))
+    }
+
+    @Test fun supportedReSignedInstallsRequireSigningWithoutQualifyingRootMount() {
+        for (installer in listOf(InstallerType.STANDARD, InstallerType.SHIZUKU)) {
+            assertEquals(PatchAvailability.REQUIRED,
+                camscannerSigningPatch.availability!!.resolve(installer, ApkArchitecture.ARM64_V8A))
+        }
+        assertEquals(PatchAvailability.UNAVAILABLE,
+            camscannerSigningPatch.availability!!.resolve(InstallerType.MOUNT, ApkArchitecture.ARM64_V8A))
+        assertFalse(camscannerSigningPatch.dependencies.contains(camscannerWordDiagnosticsPatch))
+        assertFalse(camscannerOfflinePatch.dependencies.contains(camscannerSigningPatch))
     }
 }

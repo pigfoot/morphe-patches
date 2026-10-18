@@ -42,14 +42,14 @@ private val signingResources = resourcePatch {
 
 val camscannerSigningPatch = bytecodePatch(
     name = "CamScanner account service signing compatibility",
-    description = "Experimental local re-signing compatibility: preserve original native request-signing computation and refresh only the exact obsolete account-service cache or known error-only API Center envelopes through original API Center discovery. Includes temporary V9 diagnostics. No forced host, global signature spoofing, authentication or server-result changes. Phone login unverified.",
-    default = false
+    description = "Required compatibility for supported re-signed standard/Shizuku installs: preserve original request signing and recover exact obsolete/error-only API Center caches. Includes V9 diagnostics. No forced host, global signature spoofing, authentication-result changes or INTERNET grant. Root mount is not qualified.",
+    default = true
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
         targets = listOf(AppTarget(CAM_VERSION, versionCodes = mapOf(SupportedAbi.ARM64_V8A to 72651,
             SupportedAbi.ARMEABI_V7A to 72651), isExperimental = true))))
     availability { installer, _ ->
-        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED
+        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.REQUIRED
     }
     // Diagnostics owns pristine EmailLoginViewModel validation before its own
     // handler instrumentation. The two cache-lookup methods remain untouched.
