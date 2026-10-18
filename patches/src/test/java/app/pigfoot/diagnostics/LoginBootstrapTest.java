@@ -26,6 +26,9 @@ public class LoginBootstrapTest {
         }
         assertEquals("bad", WordTrace.refreshLoginApis("bad"));
         assertTrue(details().contains("BOOT_CACHE=PRESERVED_INVALID"));
+        assertNull(WordTrace.refreshLoginApis("{\"err\":\"PRIVATE\",\"ret\":101}"));
+        assertTrue(details().contains("BOOT_CACHE=ERROR_ENVELOPE_MISS"));
+        assertFalse(details().contains("PRIVATE"));
     }
     @Test public void preparedButNeverReturnedIsNotSuccessAndEmptySignIsDistinct() {
         WordTrace.refreshLoginApis(null);

@@ -17,7 +17,7 @@ public final class WordTrace {
     private static final ThreadLocal<String[]> bootstrap = new ThreadLocal<>();
     private WordTrace() {}
 
-    /** Treat only the observed obsolete UAPI cache as an original cache miss.
+    /** Treat only the observed obsolete UAPI or exact known error envelope as a cache miss.
      * No identity, payload, preference or diagnostic record is retained. */
     public static String refreshLoginApis(String cached) {
         bootstrap.set(new String[]{Long.toString(System.nanoTime()), "ABSENT", "CACHE", "UNOBSERVED", "UNOBSERVED"});
@@ -28,6 +28,15 @@ public final class WordTrace {
             Class<?> json = Class.forName("org.json.JSONObject");
             Object object = json.getConstructor(String.class).newInstance(cached);
             Object uapi = json.getMethod("opt", String.class).invoke(object, "UAPI");
+            Object ret = json.getMethod("opt", String.class).invoke(object, "ret");
+            Object err = json.getMethod("opt", String.class).invoke(object, "err");
+            boolean knownError = ((Number) json.getMethod("length").invoke(object)).intValue() == 2 &&
+                    err instanceof String && ret instanceof Number &&
+                    ("101".equals(ret.toString()) || "515".equals(ret.toString()));
+            if (knownError) {
+                bootstrap.get()[1] = "ERROR_ENVELOPE_MISS";
+                return null;
+            }
             boolean obsolete = "https://api-cs-bak.intsig.net/user/cs".equals(uapi);
             bootstrap.get()[1] = obsolete ? "OBSOLETE_MISS" : "PRESERVED_" + bootstrapHost(uapi);
             return obsolete ? null : cached;

@@ -4,6 +4,20 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class LoginApiCacheTest {
+    @Test public void knownErrorOnlyCenterResponsesCannotRemainAConfigurationCacheHit() {
+        for (int code : new int[]{101, 515}) {
+            assertNull(WordTrace.refreshLoginApis("{\"err\":\"PRIVATE_SERVER_MESSAGE\",\"ret\":" + code + "}"));
+        }
+    }
+
+    @Test public void mixedUnknownOrAmbiguousEnvelopesAreNotCleared() {
+        for (String cached : new String[]{"{\"err\":\"x\",\"ret\":201}",
+                "{\"err\":\"x\",\"ret\":\"101\"}", "{\"err\":\"x\",\"ret\":101.0}",
+                "{\"ret\":101}", "{\"err\":42,\"ret\":101}",
+                "{\"err\":\"x\",\"ret\":101,\"UAPI\":\"https://api-cs-us.intsig.net/user/cs\"}",
+                "{\"err\":\"x\",\"ret\":515,\"SAPI\":\"PRIVATE\"}"})
+            assertSame(cached, WordTrace.refreshLoginApis(cached));
+    }
     @Test public void onlyTheExactObsoleteUapiTriggersOriginalCacheMiss() {
         assertNull(WordTrace.refreshLoginApis("{\"UAPI\":\"https://api-cs-bak.intsig.net/user/cs\"}"));
         String escaped = "{\"UAPI\":\"https:\\/\\/api-cs-bak.intsig.net\\/user\\/cs\",\"SAPI\":\"PRIVATE_CONFIG\"}";
