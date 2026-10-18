@@ -55,13 +55,23 @@ The CamScanner patches are independently listed and disabled by default:
 - **CamScanner scanner initialization compatibility**: separately opt-in, qualified ARM scanner library patches only.
 - **CamScanner Word export diagnostics**: temporary diagnostic-only labels on three Word result-103 dialogs and recent numeric HTTP observations. It does not bypass limits or change conversion outcomes.
 
-### No-ADB Word diagnostic v3 (experimental)
+### No-ADB Word diagnostic v4 (experimental)
 
 The first diagnostic covered only WordListPresenter. Other Word UI paths can
-show the same quota confirmation dialog. V3 qualifies pristine fingerprints
+show the same quota confirmation dialog. V4 qualifies pristine fingerprints
 for WordListPresenter, ImageToWordFragment, BaseJsonDocConverterFacade and
 Json2WordCallable before mutation; all three dialog sites receive distinct
-`CS-DIAG-V3` path labels, retaining the original result-103 condition and button.
+`CS-DIAG-V4` path labels, retaining the original result-103 condition and button.
+
+V4 passively observes the original Word SAPI getter's returned service base:
+only fixed service classes are retained, never raw hosts/URLs/query strings.
+`GENERAL_CONFIG_AT_OBSERVATION` distinguishes a matching configured SAPI,
+absent, different, invalid, or unavailable configuration snapshot. This is an
+observation-time comparison, not proof of historical configuration provenance.
+It also reads the actual numeric HTTP status from the same existing Response,
+separately from the application's `X-IS-Error-Code` business error (for example103).
+These observations add no network requests and do not force a service host.
+The working account-service signing/cache recovery behavior remains unchanged.
 
 One small Java helper keeps a bounded in-memory history of Word preparation and
 numeric HTTP error-header observations. V3 also reads optional

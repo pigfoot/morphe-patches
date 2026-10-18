@@ -375,6 +375,53 @@ public final class WordTrace {
         catch (Throwable ignored) { }
     }
 
+    /** Observe only the service base already selected by the original getter. */
+    public static void wordService(String selected) {
+        Object configured = null;
+        boolean observed = false;
+        try {
+            Class<?> hosts = Class.forName("com.intsig.CsHosts");
+            java.lang.reflect.Field field = hosts.getDeclaredField("〇o00〇〇Oo");
+            field.setAccessible(true);
+            Object info = field.get(null);
+            configured = info == null ? null : info.getClass().getField("SAPI").get(info);
+            observed = true;
+        } catch (Throwable ignored) { }
+        try { record(wordServiceDetails(selected, configured, observed)); }
+        catch (Throwable ignored) { }
+    }
+
+    static String wordServiceDetails(String selected, Object configured, boolean observed) {
+        String service = "UNAVAILABLE";
+        try {
+            if (selected != null && selected.length() <= 2048) {
+                java.net.URI uri = new java.net.URI(selected);
+                String host = uri.getHost();
+                if (!"https".equalsIgnoreCase(uri.getScheme()) || host == null ||
+                        uri.getRawUserInfo() != null || uri.getPort() != -1 ||
+                        uri.getRawQuery() != null || uri.getRawFragment() != null) service = "INVALID";
+                else if (!"/sync".equals(uri.getRawPath())) service = "OTHER_PATH";
+                else {
+                    host = host.toLowerCase(java.util.Locale.ROOT);
+                    switch (host) {
+                        case "cs-bak.intsig.net": service = "BACKUP"; break;
+                        case "cs.intsig.net": service = "MAIN"; break;
+                        case "cs-us.intsig.net": service = "US"; break;
+                        case "cs-eu.intsig.net": service = "EU"; break;
+                        case "cs-bak-sandbox.intsig.net": service = "SANDBOX_BACKUP"; break;
+                        case "cs-sandbox.intsig.net": service = "SANDBOX"; break;
+                        default: service = host.matches("d[0-9]{1,6}\\.intsig\\.net") ? "DATA_NODE" :
+                                host.matches("[a-z0-9-]+\\.intsig\\.net") ? "OFFICIAL_OTHER" : "OTHER";
+                    }
+                }
+            }
+        } catch (Throwable ignored) { service = "INVALID"; }
+        String config = !observed ? "UNAVAILABLE" : configured == null ? "ABSENT" :
+                !(configured instanceof String) ? "INVALID" : ((String) configured).trim().isEmpty() ? "ABSENT" :
+                configured.equals(selected) ? "MATCH" : "DIFFERENT";
+        return "WORD_SERVICE=" + service + "; GENERAL_CONFIG_AT_OBSERVATION=" + config;
+    }
+
     public static void header(String value) {
         try {
             // Retain ONLY a bounded numeric error code, never arbitrary header text.
@@ -391,6 +438,11 @@ public final class WordTrace {
 
     /** Observe metadata only. Never consume the body or retain arbitrary text. */
     public static void response(Object response) {
+        try {
+            Object status = response.getClass().getMethod("Oo08").invoke(response);
+            record("WORD_HTTP_STATUS=" + (status instanceof Integer && (Integer) status >= 100 &&
+                    (Integer) status <= 599 ? status.toString() : "UNAVAILABLE"));
+        } catch (Throwable ignored) { record("WORD_HTTP_STATUS=UNAVAILABLE"); }
         try {
             // Exact qualified app version's public Response.header(name, default).
             java.lang.reflect.Method getter = response.getClass().getMethod(
@@ -452,7 +504,7 @@ public final class WordTrace {
         try {
             String label = "PRESENTER".equals(path) || "IMAGE2WORD".equals(path) ||
                     "JSONDOC".equals(path) ? path : "UNKNOWN";
-            StringBuilder out = new StringBuilder("Free usage limit reached.\nCS-DIAG-V3 ")
+            StringBuilder out = new StringBuilder("Free usage limit reached.\nCS-DIAG-V4 ")
                     .append(label).append(" result=103\nRecent process events; not document-correlated:");
             long now = System.nanoTime();
             boolean found = false;
@@ -466,7 +518,7 @@ public final class WordTrace {
             if (!found) out.append("\nUNKNOWN: no recent instrumented Word observation");
             return out.toString();
         } catch (Throwable ignored) {
-            return "CS-DIAG-V3 result=103; observations unavailable";
+            return "CS-DIAG-V4 result=103; observations unavailable";
         }
     }
 }

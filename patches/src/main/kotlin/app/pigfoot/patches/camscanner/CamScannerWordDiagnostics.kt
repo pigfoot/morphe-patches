@@ -29,7 +29,7 @@ internal val camscannerDiagnosticExtensionPatch = bytecodePatch {
 
 val camscannerWordDiagnosticsPatch = bytecodePatch(
     name = "CamScanner Word export diagnostics",
-    description = "Temporary v3 diagnostics: three Word result-103 dialogs, numeric error headers and fixed error-message word hints only. Recent process events are not document-correlated. Does not change quotas, requests or results.",
+    description = "Temporary v4 Word diagnostics: selected service class/general-config match, actual HTTP status, business headers and fixed hints. No raw URLs or credentials. Recent process events are not document-correlated. No quota, login, request or result changes.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
@@ -100,6 +100,15 @@ val camscannerWordDiagnosticsPatch = bytecodePatch(
         inputs.sortedByDescending { it.first }.forEach { (index, observer, register) ->
             core.addInstructions(index, "invoke-static {v$register}, $TRACE->$observer(Ljava/lang/String;)V")
         }
+        val serviceIns = requireNotNull(core.implementation).instructions.toList()
+        val service = serviceIns.indices.single {
+            (serviceIns[it] as? ReferenceInstruction)?.reference.toString() ==
+                "Lcom/intsig/CsHosts;->〇0000OOO()Ljava/lang/String;"
+        }
+        require(serviceIns[service + 1].opcode == Opcode.MOVE_RESULT_OBJECT &&
+            (serviceIns[service + 1] as OneRegisterInstruction).registerA == 5)
+        core.addInstructions(service + 2,
+            "invoke-static {v5}, $TRACE->wordService(Ljava/lang/String;)V")
         val parser = mutableClassDefBy(CALLABLE).methods.single {
             it.name == "〇o〇" && it.signature() == "(Lokhttp3/Response;)I"
         }
