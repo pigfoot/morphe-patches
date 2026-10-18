@@ -42,7 +42,7 @@ private val signingResources = resourcePatch {
 
 val camscannerSigningPatch = bytecodePatch(
     name = "CamScanner account service signing compatibility",
-    description = "Experimental local re-signing compatibility: preserve original native request-signing computation and refresh only the exact obsolete account-service cache through original API Center discovery. Includes temporary V8 diagnostics. No forced host, global signature spoofing, authentication or server-result changes. Phone login unverified.",
+    description = "Experimental local re-signing compatibility: preserve original native request-signing computation and refresh only the exact obsolete account-service cache through original API Center discovery. Includes temporary V9 diagnostics. No forced host, global signature spoofing, authentication or server-result changes. Phone login unverified.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,

@@ -14,18 +14,99 @@ public final class WordTrace {
     private static final long[] linkedTimes = new long[16];
     private static int linkedNext;
     private static final ThreadLocal<String[]> pendingLogin = new ThreadLocal<>();
+    private static final ThreadLocal<String[]> bootstrap = new ThreadLocal<>();
     private WordTrace() {}
 
     /** Treat only the observed obsolete UAPI cache as an original cache miss.
      * No identity, payload, preference or diagnostic record is retained. */
     public static String refreshLoginApis(String cached) {
-        if (cached == null || cached.isEmpty() || cached.length() > 32768) return cached;
+        bootstrap.set(new String[]{Long.toString(System.nanoTime()), "ABSENT", "CACHE", "UNOBSERVED", "UNOBSERVED"});
+        if (cached == null || cached.isEmpty()) return cached;
+        bootstrap.get()[1] = "PRESERVED_INVALID";
+        if (cached.length() > 32768) return cached;
         try {
             Class<?> json = Class.forName("org.json.JSONObject");
             Object object = json.getConstructor(String.class).newInstance(cached);
             Object uapi = json.getMethod("opt", String.class).invoke(object, "UAPI");
-            return "https://api-cs-bak.intsig.net/user/cs".equals(uapi) ? null : cached;
+            boolean obsolete = "https://api-cs-bak.intsig.net/user/cs".equals(uapi);
+            bootstrap.get()[1] = obsolete ? "OBSOLETE_MISS" : "PRESERVED_" + bootstrapHost(uapi);
+            return obsolete ? null : cached;
         } catch (Throwable ignored) { return cached; }
+    }
+
+    /** Bounded same-thread context, explicitly not cross-thread/request linkage. */
+    public static void bootstrapBegin() {
+        try {
+            String[] state = bootstrap.get();
+            String cache = state == null || !bootstrapFresh(state, System.nanoTime()) ? "UNOBSERVED" : state[1];
+            bootstrap.set(new String[]{Long.toString(System.nanoTime()), cache, "FETCH_ENTERED", "UNOBSERVED", "UNOBSERVED"});
+        } catch (Throwable ignored) { bootstrap.remove(); }
+    }
+
+    public static void bootstrapQuery(String query) {
+        try {
+            String[] state = bootstrap.get();
+            if (state == null || !bootstrapFresh(state, System.nanoTime())) return;
+            state[2] = "REQUEST_PREPARED";
+            state[3] = "INVALID";
+            if (query == null || !query.startsWith("?") || query.length() > 32768) return;
+            int count = 0;
+            String status = "ABSENT";
+            for (String part : query.substring(1).split("&", -1)) {
+                int eq = part.indexOf('=');
+                if (eq < 0) continue;
+                String name = java.net.URLDecoder.decode(part.substring(0, eq), "UTF-8");
+                if (!"sign".equals(name)) continue;
+                count++;
+                String value = java.net.URLDecoder.decode(part.substring(eq + 1), "UTF-8");
+                status = value.isEmpty() ? "EMPTY" : value.matches("[0-9a-fA-F]{32}") ? "PRESENT" : "INVALID";
+            }
+            state[3] = count > 1 ? "INVALID" : status;
+        } catch (Throwable ignored) { }
+    }
+
+    public static void bootstrapResult(String result) {
+        try {
+            String[] state = bootstrap.get();
+            if (state == null || !bootstrapFresh(state, System.nanoTime())) return;
+            state[2] = "FETCH_RETURNED";
+            state[4] = "ABSENT";
+            if (result == null || result.isEmpty()) return;
+            state[4] = "INVALID";
+            if (result.length() > 32768) return;
+            Class<?> json = Class.forName("org.json.JSONObject");
+            Object object = json.getConstructor(String.class).newInstance(result);
+            Object uapi = json.getMethod("opt", String.class).invoke(object, "UAPI");
+            Object ret = json.getMethod("opt", String.class).invoke(object, "ret");
+            String numeric = ret instanceof Number && ret.toString().matches("-?[0-9]{1,8}") ? ret.toString() : "MISSING";
+            state[4] = bootstrapHost(uapi) + ";RET=" + numeric;
+        } catch (Throwable ignored) { }
+    }
+
+    private static String bootstrapHost(Object value) {
+        if (!(value instanceof String)) return "NO_UAPI";
+        switch ((String) value) {
+            case "https://api-cs-bak.intsig.net/user/cs": return "BACKUP";
+            case "https://api-cs-us.intsig.net/user/cs": return "US";
+            case "https://api-cs.intsig.net/user/cs": return "CN";
+            case "https://api-cs-bak-sandbox.intsig.net/user/cs": return "SANDBOX";
+            default: return "OTHER";
+        }
+    }
+
+    private static boolean bootstrapFresh(String[] state, long now) {
+        long age = now - Long.parseLong(state[0]);
+        return age >= 0 && age <= 30000000000L;
+    }
+
+    static String bootstrapDetailsAt(long now) {
+        try {
+            String[] state = bootstrap.get();
+            if (state != null && bootstrapFresh(state, now)) return "BOOT_CONTEXT=RECENT_SAME_THREAD\nBOOT_CACHE=" + state[1] +
+                    "\nBOOT_PHASE=" + state[2] + "\nBOOT_SIGN=" + state[3] + "\nBOOT_RESULT=" + state[4];
+        } catch (Throwable ignored) { }
+        bootstrap.remove();
+        return "BOOT_CONTEXT=UNAVAILABLE";
     }
 
     // Only sanitized strings survive these calls; keys never strongly retain
@@ -69,7 +150,7 @@ public final class WordTrace {
                 details = "HTTP_STATUS=500\nERROR_HEADER=" + state +
                         "\nERROR_MESSAGE_PRESENT=" + (message != null && !message.isEmpty());
             } catch (Throwable ignored) { }
-            details += "\n" + loginQueryRoute(error.getMessage());
+            details += "\n" + bootstrapDetailsAt(System.nanoTime()) + "\n" + loginQueryRoute(error.getMessage());
             linkAt(error, code, details, System.nanoTime());
         } catch (Throwable ignored) { }
     }
@@ -88,7 +169,7 @@ public final class WordTrace {
                 details = "ERROR_ORIGIN=HTTP_406_BUSINESS\nHTTP_STATUS=406\nERROR_HEADER=" + state +
                         "\nERROR_MESSAGE_PRESENT=" + (message != null && !message.isEmpty());
             } catch (Throwable ignored) { }
-            details += "\n" + loginQueryRoute(requestUrl == null ? null : requestUrl + " errorHeadCode:");
+            details += "\n" + bootstrapDetailsAt(System.nanoTime()) + "\n" + loginQueryRoute(requestUrl == null ? null : requestUrl + " errorHeadCode:");
             linkAt(error, code, details, System.nanoTime());
         } catch (Throwable ignored) { }
     }
@@ -194,7 +275,7 @@ public final class WordTrace {
         try {
             String details = takeLinkedAt(event, code, System.nanoTime());
             if (message == null || message.contains("CS-LOGIN-DIAG")) return message;
-            return message + "\nCS-LOGIN-DIAG-V8 code=" + code +
+            return message + "\nCS-LOGIN-DIAG-V9 code=" + code +
                     (details == null ? "\nUNLINKED_ERROR" : "\nERROR_OBJECT_LINKED\n" + details);
         } catch (Throwable ignored) { return message; }
     }

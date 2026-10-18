@@ -18,7 +18,7 @@ private const val LOGIN_API = "Lcom/intsig/tianshu/TianShuAPI;"
 
 val camscannerLoginDiagnosticsPatch = bytecodePatch(
     name = "CamScanner email login diagnostics",
-    description = "Temporary v8 email diagnostics (including the official US account service): exact error linkage, HTTP-500 and HTTP-406/application-201 provenance, redacted account route/client and encrypted-email presence. No credentials, request edits or authentication bypass. Not a login fix.",
+    description = "Temporary v9 email diagnostics: exact error linkage plus bounded same-thread API Center cache/fetch/sign-presence/result observations. No credentials, signatures, raw responses, extra requests or authentication changes. Not a login fix.",
     default = false
 ) {
     compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
@@ -95,6 +95,23 @@ val camscannerLoginDiagnosticsPatch = bytecodePatch(
                 }
         }
         require(business406 < http500)
+        val center = mutableClassDefBy(LOGIN_API).methods.single {
+            it.name == "〇o0O0O8" && it.signature() ==
+                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"
+        }
+        val centerCode = requireNotNull(center.implementation).instructions.toList()
+        require(center.implementation!!.registerCount == 8)
+        val centerRequest = centerCode.indices.single {
+            (centerCode[it] as? ReferenceInstruction)?.reference.toString() ==
+                "$LOGIN_API->O〇Oo(Ljava/lang/String;Lcom/intsig/tianshu/TianShuAPI\$Ope;I)V"
+        }
+        require((centerCode[centerRequest] as? FiveRegisterInstruction)?.let {
+            it.registerCount == 3 && it.registerC == 5 && it.registerD == 6 && it.registerE == 7
+        } == true)
+        val centerReturn = centerCode.indices.single { centerCode[it].opcode == Opcode.RETURN_OBJECT }
+        require(centerReturn > centerRequest &&
+            (centerCode[centerReturn] as OneRegisterInstruction).registerA == 4 &&
+            centerCode[centerReturn - 1].opcode == Opcode.AGET_OBJECT)
         val method = mutableClassDefBy(EMAIL_SCENE).methods.single {
             it.name == "〇O〇80o08O" && it.signature() == "($EMAIL_SCENE$LOGIN_ERROR)Lkotlin/Unit;"
         }
@@ -110,6 +127,12 @@ val camscannerLoginDiagnosticsPatch = bytecodePatch(
             code[getter + 1].opcode == Opcode.MOVE_RESULT &&
             (code[getter + 1] as OneRegisterInstruction).registerA == 1)
         // All original classes and insertion sites have now been validated.
+        center.addInstructions(centerReturn,
+            "invoke-static {v4}, Lapp/pigfoot/diagnostics/WordTrace;->bootstrapResult(Ljava/lang/String;)V")
+        center.addInstructions(centerRequest,
+            "invoke-static {v5}, Lapp/pigfoot/diagnostics/WordTrace;->bootstrapQuery(Ljava/lang/String;)V")
+        center.addInstructions(0,
+            "invoke-static {}, Lapp/pigfoot/diagnostics/WordTrace;->bootstrapBegin()V")
         api.addInstructions(http500 + 1,
             "invoke-static {v1, v11, v8}, Lapp/pigfoot/diagnostics/WordTrace;->loginHttp500(Ljava/lang/Throwable;Ljava/lang/Object;I)V")
         api.addInstructions(business406 + 1,
