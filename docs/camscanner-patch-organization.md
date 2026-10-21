@@ -5,9 +5,10 @@
 
 # CamScanner patch organization and qualification
 
-**Status: experimental candidate qualified for phone testing; not phone-accepted.**
+**Status: V12 two-version candidate; APK checks and pending device acceptance are
+recorded in the [version-porting report](camscanner-version-porting.md).**
 
-The source now implements the six-entry surface below, with no shipped diagnostic
+The source now implements the five-entry surface below, with no shipped diagnostic
 patches. It retains the existing native signing/cache recovery strategy, not a
 certificate-spoof replacement. Do not treat a build as phone acceptance.
 
@@ -17,7 +18,7 @@ certificate-spoof replacement. Do not treat a build as phone acceptance.
 - **Recommended / default=true:** CamScanner local premium features; CamScanner
   reduce telemetry and app logging. These remain individually deselectable.
 - **Not recommended / default=false:** CamScanner disable ads; CamScanner offline
-  mode; CamScanner scanner initialization compatibility.
+  mode.
 - Folder limit defaults to original0, not5000. Ads and INTERNET remain in the
   recommended online/ad-support composition. Mount stays unavailable.
 
@@ -122,12 +123,12 @@ Before hiding or deleting any diagnostic entry:
 
 Required signing remains harmlessly present in the offline composition; it does
 not grant INTERNET or perform authentication. Root mount remains unavailable until
-independently qualified. Exclusive CLI diagnostic controls may omit core deliberately,
-but must be documented as isolation tools rather than recommended installations.
+independently qualified. Historical diagnostic isolation controls are not part of
+the shipped feature catalog.
 
 ## Ads: remove the ambiguous bool, not the safety contract
 
-### Current meaning
+### Historical meaning before reorganization
 
 | Current selection | Actual behavior |
 | --- | --- |
@@ -187,7 +188,7 @@ the new broader policy. Source controls remain modular for regression isolation.
   exit0 alone as selection success; reload the new MPP and reset Recommended, or
   use exactly the new CLI names and inspect the applied list. This limitation
   remains documented rather than re-exposing withdrawn/debug choices.
-- Scanner opt-in, root-mount rejection and modified-input rejection remain.
+- Scanner is retired; root-mount and modified-input rejection remain.
 - Do not manually edit generated patch lists, Manager metadata or version numbers.
   Regenerate through the official build only after source implementation.
 
@@ -204,7 +205,7 @@ the new broader policy. Source controls remain modular for regression isolation.
 | Privacy and migration | Fixed documented scope, unrelated Firebase preserved; old narrower configs rejected or explicitly reselected, not broadened silently. |
 | No shipped debugging | Neither normal nor Advanced lists export diagnostics; core works with no diagnostic UI/helper history. Retained tests cover any later isolated instrumentation without altering auth/quota/results. |
 | Combined features | Shared validation/edit/helper deduplication, method/branch/register preservation, asset/module/class inventory and exact native changes. |
-| Scanner advanced | No scanner edit in core; explicit scanner selection retains original ABI/hash guards. |
+| No scanner experiment | No exported scanner choice and no scanner library changes in any supported composition. |
 | RailsGo regression | Existing dependency/rename/reward/helper contracts unchanged. |
 
 Use Java21/SDK36 and the official build/patch-list generation, then pristine-input
@@ -214,8 +215,7 @@ with phone startup, login persistence, ad behavior or zero telemetry.
 ## How the online ad-support composition differs from a donor APK
 
 To retain ads, choose compatibility plus the desired local/privacy features,
-leave disable ads/offline unselected, and opt into scanner support only when
-needed. “Ad-support” is a composition, not another bundled preset to select.
+leave disable ads/offline unselected. “Ad-support” is a composition, not another bundled preset to select.
 
 - Same intended outcome for ordinary login, with reported success, but different
   mechanisms: donor Application/bin.ghost/libyrf signature spoofing versus the
@@ -231,7 +231,7 @@ needed. “Ad-support” is a composition, not another bundled preset to select.
   candidate or the reported ad-support baseline. This is not a local entitlement
   promise, nor proof that both fail for the same backend reason.
 
-## Current evidence and implementation boundary
+## Historical V11 evidence and implementation boundary
 
 Behavior source `c3d2ec8` passed official Verify39611793715 and Release39611787533:
 91 tests, zero failures/errors/skips. The extracted cache policy also passed six

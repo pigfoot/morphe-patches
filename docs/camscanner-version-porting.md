@@ -9,9 +9,8 @@ remain; recommended defaults remain trust, local premium and privacy.
 
 Success requires official CI, actual APK applications to both pristine targets,
 exact allowed method/native/manifest deltas, and modified/wrong-input rejection.
-A compiled bundle alone is not phone/login/cloud validation. Qualification results
-will be recorded after the actual matrix finishes; this is not yet an acceptance
-claim. No stable release or merge is implied.
+A compiled bundle alone is not phone/login/cloud validation. Phone acceptance is still pending. APK qualification results are recorded below
+separately from device/runtime acceptance. No stable release or merge is implied.
 
 ## Reviewed differences for 72701
 
@@ -78,3 +77,47 @@ Reports contain code and local input evidence; keep them private by default.
 
 The scanner experiment and its old tests are in
 `docs/historical/camscanner-scanner/` as text, never compiled or shipped.
+
+## CLI pitfalls to retain in future ports
+
+- Options belong to the selected patch, not the whole invocation. For an explicit
+  combined privacy/premium case, use `-e "CamScanner reduce telemetry and app logging"
+  -e "CamScanner local premium features" -O folderLimit=5000`. Check the result
+  JSON actually reports 5000 and verify the generated method constant. An APK
+  produced with folderLimit=0 does not qualify the 5000 option case.
+- Negative tests require the expected guard reason and normal CLI error exit,
+  plus no output. Process termination, OOM or an unrelated tool error is not a
+  rejection pass. Serialize large APK jobs on memory-constrained workers; retained
+  inputs and per-case checkpoints allow resumption without re-downloading.
+- Reuse evidence only when the relevant bytes match: identical native signing
+  library hashes permit reusing the reviewed native edit, but do not waive new
+  application class, hook-register, manifest or APK regression qualification.
+
+## V12 qualification checkpoint
+
+Behavior source `349c48c` passed official Verify39635657765 and Release39635650829
+(Java 21 / SDK 36): 91 tests, zero failures/errors/skips. Generated metadata contains
+exactly five CamScanner names, three recommended defaults, and both exact targets.
+CI MPP SHA256: `c2643b411d26a3cdf55fbbd865b30683951dd3552c2d23e5a4e4f669a88fc492`.
+
+Seven independently verified APK cases: new core, new real CLI defaults, new ads,
+new offline, new explicit folder5000, old defaults and direct new-APKM defaults. Each preserves identity,
+all original input classes/assets/native except the exact two signing edits,
+and adds only LoginApiPolicy. Scanner libraries are unchanged in every case.
+The original login instruction/register/branch/handler graphs retain only two
+scoped cache hooks. Across 109 target classes, 2,586 other original method graphs
+retain their bodies with only exact selected policy prefixes (0 core, 53 defaults,
+165 ads/offline, 54 folder5000). Four Word class pins and nine request/security
+class pins remain unchanged per input. No diagnostic helper/overlay markers ship.
+
+Reapply, earlier-modified input, forced wrong-version and forced packed72751 cases
+reject for the expected input guard with exit1 and no APK output. Interrupted
+local tasks do not count as guard passes. The legacy unknown-name CLI limitation
+remains; use fresh selections and inspect the applied list.
+
+Preflight itself was exercised on equal inputs (zero deltas), the new target
+(8 target-class / 17 method changes, 2 unrelated upstream libapp changes), packed
+input (109 targets missing, exit2), and malformed input (nonzero, no report).
+
+Direct APKM reconstruction also passed against its independently merged baseline. No phone startup/login persistence, reward
+callback/grant, cloud Word or universal crop behavior is claimed by these checks.
