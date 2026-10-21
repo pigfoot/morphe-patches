@@ -97,7 +97,7 @@ The reorganized candidate has five named patches:
 | CamScanner restore trust on re-signed builds | Required for standard/Shizuku; mount unavailable. |
 | CamScanner local premium features | Recommended; local status only, no server subscription/credit guarantee. Folder limit stays original by default. |
 | CamScanner reduce telemetry and app logging | Recommended; fixed qualified Firebase/app/local logging suppression, not a zero-telemetry guarantee. |
-| CamScanner disable ads | Optional, not recommended by default. Includes rewarded videos; watch-to-reward is unavailable, existing balances not erased. |
+| CamScanner disable ads | Optional, not recommended by default. Blocks rewarded videos by default; optional online 7.27.0-only lottery skip experiment, no guaranteed server grant. |
 | CamScanner offline mode | Optional, not recommended by default. Includes ads/core and removes all app INTERNET declarations. |
 
 No debugging entries or overlays are included, in normal or Advanced selections.
@@ -113,3 +113,6 @@ without uninstalling or clearing user data.
 See [organization, option migration and qualification](docs/camscanner-patch-organization.md)
 and [implementation history](docs/camscanner-implementation.md). No cloud Word,
 server quota, repeat-reward, all-device crop or zero-telemetry claim.
+
+The optional [lottery video experiment](docs/camscanner-reward-video-experiment.md)
+is separate from ordinary ad blocking and does not promise server rewards.

@@ -226,12 +226,31 @@ private val adsManifestPatch = resourcePatch {
     execute { document("AndroidManifest.xml").use { removeAdComponents(it) } }
 }
 val camscannerAdsPatch = bytecodePatch(
-    name = "CamScanner disable ads", description = "Suppress qualified ad entry points, including rewarded videos, with reviewed manifest cleanup. Watch-to-reward is unavailable; existing balances are not erased. Fallback behavior requires device testing.", default = false
+    name = "CamScanner disable ads", description = "Suppress qualified ad entry points with reviewed manifest cleanup. Rewarded videos are blocked by default; an explicit 7.27.0-only lottery skip experiment can forward the original task/code flow without video. Server grants are not guaranteed or overridden.", default = false
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, camscannerSigningPatch, adsManifestPatch)
+    val rewardedVideos by stringOption(key = "rewardedVideos", default = "block", title = "Rewarded videos",
+        description = "Block by default. The lottery-only skip experiment requires online 7.27.0; it preserves actual server results, not guaranteed rewards.",
+        values = mapOf("Block videos (no reward flow)" to "block",
+            "Skip lottery video (experimental, 7.27.0 only)" to "skip-lottery"), required = true,
+        validator = { it in setOf("block", "skip-lottery") })
     execute {
+        if (rewardedVideos == "skip-lottery") {
+            requireRewardSkipVersion(packageMetadata.versionName, packageMetadata.versionCode)
+            for ((type, pin) in rewardSkipPins72701) {
+                val pool = DexPool(Opcodes.forDexVersion(39)); pool.internClass(classDefBy(type))
+                val store = MemoryDataStore(); pool.writeTo(store)
+                require(sha256(store.data) == pin) { "Unsupported or modified lottery callback path: $type" }
+            }
+            val control = mutableClassDefBy(WATCH_CONTROL)
+            val sites = RewardSkipSite.entries.map { site ->
+                val method = control.methods.single { it.name == site.methodName }
+                Triple(method, rewardSkipIndex(method, site), rewardSkipPrefix(site))
+            }
+            for ((method, index, prefix) in sites) method.addInstructions(index, prefix)
+        }
         for (t in adTargets) {
             val ret = t.descriptor.substringAfter(')')
             val code = when (ret) { "V" -> "return-void"; "Z", "I" -> "const/4 v0, 0\nreturn v0"; else -> error("Unqualified ad return type: $ret") }
@@ -246,7 +265,12 @@ val camscannerOfflinePatch = resourcePatch(
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, camscannerSigningPatch, camscannerAdsPatch)
-    execute { document("AndroidManifest.xml").use { removeInternet(it) } }
+    execute {
+        require(camscannerAdsPatch.options["rewardedVideos"].value == "block") {
+            "Lottery video skipping requires online mode; do not combine it with offline mode"
+        }
+        document("AndroidManifest.xml").use { removeInternet(it) }
+    }
 }
 
 val camscannerPrivacyPatch = bytecodePatch(

@@ -19,7 +19,7 @@ class CamScannerSelectionTest {
         for (internal in listOf(camscannerSideloadStartupPatch, camscannerFirebasePatch, camscannerLoggingPatch,
                 camscannerPolicyExtensionPatch)) assertNull(internal.name)
         assertTrue(camscannerPrivacyPatch.options.isEmpty())
-        assertTrue(camscannerAdsPatch.options.isEmpty())
+        assertNotNull(camscannerAdsPatch.options["rewardedVideos"])
     }
 
     @Test fun recommendedProfilePreservesAdsAndInternetWithoutForcedScannerEdits() {
