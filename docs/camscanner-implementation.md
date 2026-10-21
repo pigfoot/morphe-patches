@@ -7,8 +7,9 @@ additional optional compatibility/diagnostic entries and the original feature
 options; historical checkpoints below are not a current selection summary.
 For the source-verified inventory, proposed smaller feature menu, required
 compatibility core, ads-option semantics, migration and validation plan, read
-[patch organization proposal](camscanner-patch-organization.md). **That proposal
-is documentation only; it has not changed current patch behavior or artifacts.**
+[patch organization proposal](camscanner-patch-organization.md). The six-entry candidate is now implemented; see its current recommendation
+settings and qualification status there. Historical diagnostic/option descriptions
+below describe older artifacts, not the current candidate selection menu.
 
 ## Motivation and scope
 

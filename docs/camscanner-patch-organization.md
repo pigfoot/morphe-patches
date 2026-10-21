@@ -1,13 +1,28 @@
 # CamScanner patch organization proposal
 
-**Status: documentation/design only.** The implementation snapshot reviewed here is
-`bf369ef`. This document does not change a patch, option, generated patch list,
-MPP, APK or release. The proposed organization is not available in the current bundle.
-It preserves the official Gradle layout and leaves RailsGo unchanged.
+**Status: implemented candidate, qualification in progress.**
+
+The source now implements the six-entry surface below, with no shipped diagnostic
+patches. It retains the existing native signing/cache recovery strategy, not a
+certificate-spoof replacement. Do not treat a build as phone acceptance.
+
+## Candidate recommendation settings
+
+- **Required / default=true:** CamScanner restore trust on re-signed builds.
+- **Recommended / default=true:** CamScanner local premium features; CamScanner
+  reduce telemetry and app logging. These remain individually deselectable.
+- **Not recommended / default=false:** CamScanner disable ads; CamScanner offline
+  mode; CamScanner scanner initialization compatibility.
+- Folder limit defaults to original0, not5000. Ads and INTERNET remain in the
+  recommended online/ad-support composition. Mount stays unavailable.
+
+Recommended means the patch metadata default and standard/Shizuku ENABLED
+availability; only trust is REQUIRED. This is an experimental test recommendation,
+not a guarantee of all local premium, privacy, reward or scanner behavior.
 
 ## Motivation and success criteria
 
-The current bundle exposes twelve named CamScanner patches accumulated during
+The previous bundle exposed twelve named CamScanner patches accumulated during
 feature work and diagnosis. This mixes product choices, required repack support,
 withdrawn experiments and temporary observation tools. In particular:
 
@@ -28,15 +43,15 @@ Independent feature intents remain independent; the old donor variant names do
 not become three monolithic presets. Working request signing/discovery behavior,
 original identity/assets, input guards and honest server responses must survive.
 
-## Proposed normal selection surface
+## Candidate normal selection surface
 
 One locked startup/login fix and four optional feature choices:
 
 | Entry | Selection | Contract |
 | --- | --- | --- |
-| CamScanner fix startup and login | Required, no feature options | Qualified sideload startup handling, native request-sign computation and narrowly scoped API Center cache recovery. |
-| CamScanner local premium features | Optional, off by default | Existing local status behavior only. Keep `folderLimit` original by default; 5000 remains an explicit advanced choice, not unlimited folders. |
-| CamScanner reduce telemetry and app logging | Optional, off by default | Combine the current all-Firebase policy and qualified app-network/cache/local-log suppression. No everyday scope or inverted output bool. |
+| CamScanner restore trust on re-signed builds | Required, no feature options | Qualified sideload startup handling, native request-sign computation and narrowly scoped API Center cache recovery. |
+| CamScanner local premium features | Optional, recommended | Existing local status behavior only. Keep `folderLimit` original by default; 5000 remains an explicit advanced choice, not unlimited folders. |
+| CamScanner reduce telemetry and app logging | Optional, recommended | Combine the current all-Firebase policy and qualified app-network/cache/local-log suppression. No everyday scope or inverted output bool. |
 | CamScanner disable ads | Optional, off by default | One complete qualified ad-suppression policy, including reviewed manifest cleanup; no nested bool. Rewarded ads are not preserved by this policy. |
 | CamScanner offline mode | Optional, off by default | Depends on disable ads and removes every app INTERNET declaration. Does not imply local features or privacy/logging suppression. |
 
@@ -44,8 +59,7 @@ One locked startup/login fix and four optional feature choices:
 experimental. It is not known to be universally necessary and must not become an
 unconditional native edit just to shorten the list.
 
-The required entry uses the outcome-based display name **CamScanner fix startup
-and login**, not the abstract name “compatibility”. Its scope is the exact
+The required entry uses the outcome-based display name **CamScanner restore trust on re-signed builds**, not the abstract name “compatibility”. Its scope is the exact
 qualified repack paths, not every possible startup/authentication problem.
 **Local premium features** intentionally describes local subscription-gated
 features and does not imply a server subscription, cloud credit or Word entitlement.
@@ -56,7 +70,7 @@ patches are internal/unnamed. Do not assume an unnamed dependency can self-selec
 if no optional feature is selected, the required compatibility root must still be
 included by the supported installer. Verify the actual Manager and CLI behavior.
 
-No named patch or product description should call this a generic “spoof”: the
+The trust name describes its purpose, not a generic certificate “spoof”: the
 current native fix preserves original request-sign computation; it does not replace
 PackageManager certificates or globally patch signature checks. An Instagram trust
 wrapper or opaque donor bootstrap is not part of this reorganization.
@@ -221,7 +235,15 @@ a working cloud Word capability. Its phase is closed unresolved, not a new featu
 or a reason to keep Word diagnostics in every normal install. No server-side
 entitlement, quota, repeat-reward or universal scanner-fix promise is added here.
 
-Implementation order: extract functional policy from diagnostics, introduce the
-required core, reshape optional privacy/ads choices, add migration guards, then
-regenerate metadata and run the full qualification matrix. This PR update only
-records the design and corrects documentation; it ships no reorganized patch.
+The candidate extracts functional policy from diagnostics, introduces the
+required core and reshapes optional policies. Official metadata generation and
+qualification must use the actual final artifact. Previous implementation evidence
+is historical; the new output must be qualified separately. Old selection profiles
+are not a supported silent migration: rebuild from pristine input and select the
+new recommendation set. Do not infer that removed option keys are safely mapped.
+
+Historical diagnostic patch source is archived as text under
+[diagnostic source archive](historical/camscanner-diagnostics/). It is not compiled
+or exposed. The production extension contains only the stateless LoginApiPolicy;
+WordTrace is retained only in test sources, with old helper tests retained.
+

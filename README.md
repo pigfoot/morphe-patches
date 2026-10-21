@@ -86,37 +86,28 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 
 ## CamScanner experimental source
 
-The working branch adds independently selectable CamScanner patches for clean
-**7.26.5.2609160000 (72651) APKM**. Feature choices remain experimental and
-unselected by default; account-signing compatibility is REQUIRED for supported
-standard/Shizuku repacks (root mount is unqualified).
-See [implementation and validation](docs/camscanner-implementation.md).
+Clean **7.26.5.2609160000 (72651) APKM**, preserving original modules/OCR assets.
+The reorganized candidate has six named patches:
 
-A [patch organization proposal](docs/camscanner-patch-organization.md) documents
-a required compatibility core, four optional feature choices, separate advanced
-scanner support and no shipped debugging entries (including Advanced). **It is a design, not implemented
-behavior.** Current options below still apply until a separately qualified change.
+| Patch | Recommendation |
+| --- | --- |
+| CamScanner restore trust on re-signed builds | Required for standard/Shizuku; mount unavailable. |
+| CamScanner local premium features | Recommended; local status only, no server subscription/credit guarantee. Folder limit stays original by default. |
+| CamScanner reduce telemetry and app logging | Recommended; fixed qualified Firebase/app/local logging suppression, not a zero-telemetry guarantee. |
+| CamScanner disable ads | Optional, not recommended by default. Includes rewarded videos; watch-to-reward is unavailable, existing balances not erased. |
+| CamScanner offline mode | Optional, not recommended by default. Includes ads/core and removes all app INTERNET declarations. |
+| CamScanner scanner initialization compatibility | Optional advanced, not recommended by default; exact binary guards, not a universal crop fix. |
 
-- **CamScanner local premium features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
-- **CamScanner disable Firebase telemetry**: options select all Firebase telemetry or Analytics only. Unrelated Firebase functionality is retained. Stored/native reports and device traffic still require qualification.
-- **CamScanner disable app logging**: network event/re-enable/cache-replay boundaries; optional local app output suppression.
-- **CamScanner disable ads**: qualified SDK load/show entry points and optional ad-only manifest cleanup. Login, billing and WorkManager components are preserved. `manifestCleanup=false` keeps manifest entries but still disables ad entry points;
-  it does not enable ads or preserve rewarded ads. Async no-fill/fallback behavior
-  requires device validation.
-- **CamScanner offline mode**: includes ad suppression and removes every INTERNET declaration, without falsifying platform network state. External apps/services and online retry flows require device validation.
+No debugging entries or overlays are included, in normal or Advanced selections.
+Trust retains the narrow native request-sign computation fix and exact API Center
+cache policy; it does not globally spoof certificates or alter authentication results.
 
-Ad support means leaving ads/offline patches unselected; clean selects ads suppression;
-offline selects offline mode. Local-feature and telemetry patches remain independent.
-There is no repeat-ad-reward or all-device cropping-fix claim. No opaque donor bootstrap,
-signature spoofing payload or donor module/asset deletion is copied into this bundle.
+For an online ad-support composition, use the recommendation set and leave
+ads/offline unselected. Local premium/privacy can be deselected independently.
+The ads cleanup bool and low-level privacy options are removed. Do not reuse old
+selection profiles; reselect on pristine APKM and update with the same signing key,
+without uninstalling or clearing user data.
 
-**CamScanner scanner initialization compatibility** is a separate, unselected experimental
-patch. It changes only the known `verifyKeyV2` entry bytes in the two qualified scanner
-libraries and suppresses the local pirate-app dialog gate. Exact binary hashes and original
-entry bytes are required; unknown ABIs are rejected. This is not an all-device cropping fix
-and is not automatically included in offline mode. Re-signed startup/crop needs phone testing.
-
-For the distinction between donor paid-feature/native changes and this reimplementation,
-see [donor comparison](docs/camscanner-implementation.md#donor-comparison-what-paid-feature-and-native-changes-establish).
-Follow the [device qualification plan](docs/camscanner-implementation.md#next-step-device-qualification-before-mergerelease)
-before treating build/static results as working paid features or approving a stable release.
+See [organization, option migration and qualification](docs/camscanner-patch-organization.md)
+and [implementation history](docs/camscanner-implementation.md). No cloud Word,
+server quota, repeat-reward, all-device crop or zero-telemetry claim.

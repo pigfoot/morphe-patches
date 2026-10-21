@@ -6,5 +6,3 @@ android {
         proguardFiles("proguard-rules.pro")
     }
 }
-
-android { sourceSets.getByName("main").java.exclude("app/pigfoot/diagnostics/**") }
