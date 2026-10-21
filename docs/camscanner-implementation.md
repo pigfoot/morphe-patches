@@ -1,5 +1,15 @@
 # CamScanner implementation and validation frame
 
+## Current status and organization design
+
+The current implementation includes required account-signing compatibility,
+additional optional compatibility/diagnostic entries and the original feature
+options; historical checkpoints below are not a current selection summary.
+For the source-verified inventory, proposed smaller feature menu, required
+compatibility core, ads-option semantics, migration and validation plan, read
+[patch organization proposal](camscanner-patch-organization.md). **That proposal
+is documentation only; it has not changed current patch behavior or artifacts.**
+
 ## Motivation and scope
 
 Add independently selectable CamScanner feature patches to the existing Gradle bundle without changing RailsGo behavior. Target clean com.intsig.camscanner 7.26.5.2609160000 (72651). A full APKM input includes base, cloud feature modules and OCR assets. Donor variants are research references, not trusted merge baselines.

@@ -87,13 +87,22 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 ## CamScanner experimental source
 
 The working branch adds independently selectable CamScanner patches for clean
-**7.26.5.2609160000 (72651) APKM**. All are experimental and unselected by default.
+**7.26.5.2609160000 (72651) APKM**. Feature choices remain experimental and
+unselected by default; account-signing compatibility is REQUIRED for supported
+standard/Shizuku repacks (root mount is unqualified).
 See [implementation and validation](docs/camscanner-implementation.md).
+
+A [patch organization proposal](docs/camscanner-patch-organization.md) documents
+a required compatibility core, four optional feature choices, separate advanced
+scanner support and maintainer-only diagnostics. **It is a design, not implemented
+behavior.** Current options below still apply until a separately qualified change.
 
 - **CamScanner local premium features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
 - **CamScanner disable Firebase telemetry**: options select all Firebase telemetry or Analytics only. Unrelated Firebase functionality is retained. Stored/native reports and device traffic still require qualification.
 - **CamScanner disable app logging**: network event/re-enable/cache-replay boundaries; optional local app output suppression.
-- **CamScanner disable ads**: qualified SDK load/show entry points and optional ad-only manifest cleanup. Login, billing and WorkManager components are preserved. Async no-fill/fallback behavior requires device validation.
+- **CamScanner disable ads**: qualified SDK load/show entry points and optional ad-only manifest cleanup. Login, billing and WorkManager components are preserved. `manifestCleanup=false` keeps manifest entries but still disables ad entry points;
+  it does not enable ads or preserve rewarded ads. Async no-fill/fallback behavior
+  requires device validation.
 - **CamScanner offline mode**: includes ad suppression and removes every INTERNET declaration, without falsifying platform network state. External apps/services and online retry flows require device validation.
 
 Ad support means leaving ads/offline patches unselected; clean selects ads suppression;
