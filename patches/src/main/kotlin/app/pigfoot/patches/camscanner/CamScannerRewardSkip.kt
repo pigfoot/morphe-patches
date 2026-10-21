@@ -86,6 +86,12 @@ internal fun rewardSkipPrefix(site: RewardSkipSite): String {
         if-nez v0, :reward_skip_original
         if-eqz ${site.activity}, :reward_skip_cancel
         if-eqz ${site.fragment}, :reward_skip_cancel
+        invoke-virtual {${site.fragment}}, Landroidx/fragment/app/Fragment;->isDetached()Z
+        move-result v0
+        if-nez v0, :reward_skip_cancel
+        invoke-virtual {${site.fragment}}, Landroidx/fragment/app/Fragment;->isRemoving()Z
+        move-result v0
+        if-nez v0, :reward_skip_cancel
         invoke-virtual {${site.activity}}, Landroid/app/Activity;->isFinishing()Z
         move-result v0
         if-nez v0, :reward_skip_cancel

@@ -16,6 +16,7 @@ class CamScannerRewardSkipTest {
     data class Request(val action: String?, val id: String?)
     data class Life(val finishing: Boolean = false, val destroyed: Boolean = false)
     data class Manager(val left: Boolean)
+    data class ViewLife(val detached: Boolean = false, val removing: Boolean = false)
     private fun method(site: RewardSkipSite, registers: Int = site.registers): MutableMethod {
         val activity = "Landroid/app/Activity;"
         val fragment = "Lcom/intsig/webview/WebViewFragment;"
@@ -86,6 +87,8 @@ class CamScannerRewardSkipTest {
                         when {
                             "->equals(" in ref -> result = a == b
                             "->isEmpty()" in ref -> result = (a as String).isEmpty()
+                            "->isDetached()" in ref -> result = (a as? ViewLife)?.detached ?: false
+                            "->isRemoving()" in ref -> result = (a as? ViewLife)?.removing ?: false
                             "->isFinishing()" in ref -> result = (a as Life).finishing
                             "->isDestroyed()" in ref -> result = (a as Life).destroyed
                             "->〇〇888(" in ref -> { assertNull(b); completed++ }
@@ -127,8 +130,8 @@ class CamScannerRewardSkipTest {
             val vm = Vm(site, Request("watchad_lottery", "1"), life, Manager(true), Any()).execute()
             assertEquals(0, vm.original + vm.completed + vm.closed)
         }
-        for (site in RewardSkipSite.entries) {
-            val vm = Vm(site, Request("watchad_lottery", "1"), Life(), Manager(true), null).execute()
+        for (site in RewardSkipSite.entries) for (view in listOf(null, ViewLife(detached = true), ViewLife(removing = true))) {
+            val vm = Vm(site, Request("watchad_lottery", "1"), Life(), Manager(true), view).execute()
             assertEquals(0, vm.original + vm.completed + vm.closed)
         }
     }

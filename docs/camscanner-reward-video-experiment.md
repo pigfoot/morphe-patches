@@ -39,7 +39,8 @@ No credentialed requests or real reward claims were made during static inspectio
   original jump cannot skip it. Preserve original register/body/handler graphs.
 - Only the exact lottery action, LeftRewardVideoManager and nonempty request id
   are eligible. Unrelated/malformed requests retain the original behavior.
-- Null/destroyed/finishing activity or missing WebView cancels the shortcut.
+- Null/destroyed/finishing activity, or missing/detached/removing WebView cancels
+  the shortcut.
 - Construct the original listener with the original controller/activity/manager/
   WebView/request; signal its local completion once and close once, then return.
   The measured parent completion/close handlers are no-ops and accept the null ad
