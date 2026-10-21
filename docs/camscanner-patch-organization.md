@@ -1,6 +1,6 @@
-# CamScanner patch organization proposal
+# CamScanner patch organization and qualification
 
-**Status: implemented candidate, qualification in progress.**
+**Status: experimental candidate qualified for phone testing; not phone-accepted.**
 
 The source now implements the six-entry surface below, with no shipped diagnostic
 patches. It retains the existing native signing/cache recovery strategy, not a
@@ -23,7 +23,7 @@ not a guarantee of all local premium, privacy, reward or scanner behavior.
 ## Motivation and success criteria
 
 The previous bundle exposed twelve named CamScanner patches accumulated during
-feature work and diagnosis. This mixes product choices, required repack support,
+feature work and diagnosis. That mixed product choices, required repack support,
 withdrawn experiments and temporary observation tools. In particular:
 
 - Account signing compatibility is already REQUIRED for supported standard/Shizuku
@@ -75,7 +75,7 @@ current native fix preserves original request-sign computation; it does not repl
 PackageManager certificates or globally patch signature checks. An Instagram trust
 wrapper or opaque donor bootstrap is not part of this reorganization.
 
-## Current-to-proposed mapping
+## Previous-to-candidate mapping
 
 | Current named patch | Proposed disposition |
 | --- | --- |
@@ -175,10 +175,13 @@ the new broader policy. Source controls remain modular for regression isolation.
   patcher actually supports it; otherwise reject with a concrete replacement.
 - Firebase/logging partial policies and `manifestCleanup=false` cannot silently
   map to stronger new behavior. Require explicit reselection with a clear error.
-- Withdrawn forced-route selection must fail closed, never redirect to UAPI_CN.
-  If old names cannot be rejected before discovery, retain an unavailable legacy
-  tombstone temporarily in an advanced migration surface rather than silently
-  dropping CLI selections. Validate the patcher limitation before promising removal.
+- No forced route remains. Old patch names are unsupported, not automatically
+  migrated. Desktop1.18.1 was observed to ignore an unknown removed name in
+  exclusive mode, apply zero patches, emit an APK and return exit0. A bundle cannot
+  claim this is fail-closed name validation. Do not use old profiles or treat CLI
+  exit0 alone as selection success; reload the new MPP and reset Recommended, or
+  use exactly the new CLI names and inspect the applied list. This limitation
+  remains documented rather than re-exposing withdrawn/debug choices.
 - Scanner opt-in, root-mount rejection and modified-input rejection remain.
 - Do not manually edit generated patch lists, Manager metadata or version numbers.
   Regenerate through the official build only after source implementation.
@@ -225,10 +228,23 @@ needed. “Ad-support” is a composition, not another bundled preset to select.
 
 ## Current evidence and implementation boundary
 
-The latest implemented signing/cache behavior has reported email-login success.
-The current source snapshot passed91 CI tests and two diagnostic/combined APK
-qualifications with two modified-input rejection cases. These results validate
-the pre-reorganization code, not the proposed composition.
+Behavior source `c3d2ec8` passed official Verify39611793715 and Release39611787533:
+91 tests, zero failures/errors/skips. The extracted cache policy also passed six
+local Java tests. The exact CI MPP was applied to pristine merged input in five
+cases: trust-only; real default/recommended selection; ads-only; offline-only;
+scanner-only (each includes its dependencies). Modified/reapply and forced
+wrong-version input guards rejected without output.
+
+All five outputs preserve original identity/modules and contain only the new
+stateless helper; diagnostic markers and the four original Word-class mutations
+are absent. Login's332 original methods preserve graphs/registers/handlers except
+two qualified cache-hook insertions; native signing stays at4+2bytes. Eleven
+local/privacy classes canonically match the earlier qualified full policy.
+
+These APK/static results do not establish new phone acceptance. Earlier email-login
+success applies to the preceding signing/cache implementation; reopen persistence,
+actual ad callbacks/grants, scanner and all telemetry boundaries remain distinct
+manual qualification items.
 
 The examined Word route depends on server conversion; current tests do not show
 a working cloud Word capability. Its phase is closed unresolved, not a new feature
@@ -246,4 +262,3 @@ Historical diagnostic patch source is archived as text under
 [diagnostic source archive](historical/camscanner-diagnostics/). It is not compiled
 or exposed. The production extension contains only the stateless LoginApiPolicy;
 WordTrace is retained only in test sources, with old helper tests retained.
-

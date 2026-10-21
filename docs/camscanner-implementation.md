@@ -1,15 +1,12 @@
 # CamScanner implementation and validation frame
 
-## Current status and organization design
+## Current selection and reorganized candidate
 
-The current implementation includes required account-signing compatibility,
-additional optional compatibility/diagnostic entries and the original feature
-options; historical checkpoints below are not a current selection summary.
-For the source-verified inventory, proposed smaller feature menu, required
-compatibility core, ads-option semantics, migration and validation plan, read
-[patch organization proposal](camscanner-patch-organization.md). The six-entry candidate is now implemented; see its current recommendation
-settings and qualification status there. Historical diagnostic/option descriptions
-below describe older artifacts, not the current candidate selection menu.
+The current six-entry candidate combines required trust/startup/signing/cache
+compatibility and fixed optional local/privacy/ads/offline/scanner policies.
+See [organization and qualification](camscanner-patch-organization.md) for the
+actual recommended flags, removed options, no-debug architecture and current
+qualification. Earlier option and diagnostic descriptions below are historical.
 
 ## Motivation and scope
 
