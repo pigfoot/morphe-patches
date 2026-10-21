@@ -15,15 +15,14 @@ import com.android.tools.smali.dexlib2.writer.io.MemoryDataStore
 import java.security.MessageDigest
 
 internal const val CAM_PACKAGE = "com.intsig.camscanner"
-internal const val CAM_VERSION = "7.26.5.2609160000"
 private const val ACCOUNT = "Lcom/intsig/comm/account_data/AccountPreference;"
 private const val FABRIC = "Lcom/intsig/crashapm/log/FabricUtils;"
 private const val ANALYTICS = "Lcom/google/firebase/analytics/FirebaseAnalytics;"
 private const val CRASH = "Lcom/google/firebase/crashlytics/FirebaseCrashlytics;"
 private const val LOG = "Lcom/intsig/logagent/LogAgent;"
 private val target = Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
-    targets = listOf(AppTarget(CAM_VERSION, versionCodes = mapOf(SupportedAbi.ARM64_V8A to 72651,
-        SupportedAbi.ARMEABI_V7A to 72651), isExperimental = true)))
+    targets = camScannerVersions.map { AppTarget(it.name, versionCodes = mapOf(
+        SupportedAbi.ARM64_V8A to it.code.toInt(), SupportedAbi.ARMEABI_V7A to it.code.toInt()), isExperimental = true) })
 
 internal fun Method.signature() = "(" + parameterTypes.joinToString("") + ")" + returnType
 internal fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
@@ -31,10 +30,10 @@ internal fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").dig
 // One dependency validates pristine definitions before shared classes are mutated by any selected feature.
 internal val camscannerInputPatch = bytecodePatch {
     execute {
-        require(packageMetadata.packageName == CAM_PACKAGE && packageMetadata.versionName == CAM_VERSION &&
-            packageMetadata.versionCode == "72651") { "Unsupported CamScanner input" }
+        require(packageMetadata.packageName == CAM_PACKAGE) { "Unsupported CamScanner package" }
+        val version = qualifiedCamScannerVersion(packageMetadata.versionName, packageMetadata.versionCode)
         require(classDefByOrNull("Lbin/ghost/yrf;") == null) { "Already modified CamScanner input" }
-        for ((type, expected) in originalClassPins) {
+        for ((type, expected) in version.classPins) {
             val pool = DexPool(Opcodes.forDexVersion(39))
             pool.internClass(classDefBy(type))
             val store = MemoryDataStore()
@@ -88,9 +87,7 @@ val camscannerSigningPatch = bytecodePatch(
     description = "Required compatibility for supported re-signed standard/Shizuku installs: preserve original request signing and recover exact obsolete/error-only API Center caches. No diagnostic overlays. No forced host, global signature spoofing, authentication-result changes or INTERNET grant. Root mount is not qualified.",
     default = true
 ) {
-    compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
-        targets = listOf(AppTarget(CAM_VERSION, versionCodes = mapOf(SupportedAbi.ARM64_V8A to 72651,
-            SupportedAbi.ARMEABI_V7A to 72651), isExperimental = true))))
+    compatibleWith(target)
     availability { installer, _ ->
         if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.REQUIRED
     }
@@ -99,8 +96,9 @@ val camscannerSigningPatch = bytecodePatch(
     execute {
         val model = "Lcom/intsig/tsapp/account/viewmodel/EmailLoginViewModel;"
         val fetch = "Lcom/intsig/tsapp/account/viewmodel/EmailLoginViewModel\$fetchAndLoadApisByEmail\$2;"
+        val version = qualifiedCamScannerVersion(packageMetadata.versionName, packageMetadata.versionCode)
         // Validate both pristine definitions before any cache instrumentation.
-        for ((type, expected) in mapOf(model to "e2d0db1e14ccd538a167cf5db55ec360b6379d8f4fd37d3f8942048679cf8121",
+        for ((type, expected) in mapOf(model to version.modelPin,
             fetch to "73f649d182b3d4362ad9ded0a180b7a51db055df8a9ef164b566f7ee038e719a")) {
             val pool = DexPool(Opcodes.forDexVersion(39))
             pool.internClass(classDefBy(type))
@@ -111,7 +109,7 @@ val camscannerSigningPatch = bytecodePatch(
         }
         }
         val sites = listOf(
-            Triple(model, "〇O888o0o", listOf(10, 2, 8)),
+            Triple(model, "〇O888o0o", listOf(10, version.cacheResultRegister, 8)),
             Triple(fetch, "invokeSuspend", listOf(5, 4, 4))
         ).map { (type, name, registers) ->
             val method = mutableClassDefBy(type).methods.single { it.name == name }
@@ -249,24 +247,6 @@ val camscannerOfflinePatch = resourcePatch(
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, camscannerSigningPatch, camscannerAdsPatch)
     execute { document("AndroidManifest.xml").use { removeInternet(it) } }
-}
-
-private val scannerNativePatch = resourcePatch {
-    dependsOn(camscannerInputPatch)
-    execute {
-        val libs = listApkEntries("lib/").filter { it.endsWith("/libscannercs.so") }
-        require(libs.isNotEmpty() && libs.all { it in scannerEdits }) { "Unqualified scanner ABI" }
-        // Validate every ABI before writing any library.
-        val replacements = libs.associateWith { editScanner(get(it).readBytes(), scannerEdits.getValue(it)) }
-        replacements.forEach { (path, bytes) -> get(path).writeBytes(bytes) }
-    }
-}
-val camscannerStartupPatch = bytecodePatch(
-    name = "CamScanner scanner initialization compatibility", description = "Experimental scanner initialization compatibility for exact qualified native binaries. Includes local sideload startup compatibility. Not an all-device crop fix.", default = false
-) {
-    compatibleWith(target)
-    availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, camscannerSigningPatch, scannerNativePatch)
 }
 
 val camscannerPrivacyPatch = bytecodePatch(

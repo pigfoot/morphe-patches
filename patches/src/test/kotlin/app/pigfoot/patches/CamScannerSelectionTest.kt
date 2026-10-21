@@ -9,12 +9,12 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 class CamScannerSelectionTest {
     private val publicPatches = listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch,
-        camscannerPrivacyPatch, camscannerAdsPatch, camscannerOfflinePatch, camscannerStartupPatch)
+        camscannerPrivacyPatch, camscannerAdsPatch, camscannerOfflinePatch)
 
-    @Test fun productSurfaceHasSixNamesAndNoDebugOrWithdrawnFeature() {
+    @Test fun productSurfaceHasFiveNamesAndNoScannerDebugOrWithdrawnFeature() {
         assertEquals(setOf("CamScanner restore trust on re-signed builds", "CamScanner local premium features",
             "CamScanner reduce telemetry and app logging", "CamScanner disable ads",
-            "CamScanner offline mode", "CamScanner scanner initialization compatibility"),
+            "CamScanner offline mode"),
             publicPatches.map { it.name }.toSet())
         for (internal in listOf(camscannerSideloadStartupPatch, camscannerFirebasePatch, camscannerLoggingPatch,
                 camscannerPolicyExtensionPatch)) assertNull(internal.name)
@@ -24,13 +24,12 @@ class CamScannerSelectionTest {
 
     @Test fun recommendedProfilePreservesAdsAndInternetWithoutForcedScannerEdits() {
         for (patch in listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch, camscannerPrivacyPatch)) assertTrue(patch.default)
-        for (patch in listOf(camscannerAdsPatch, camscannerOfflinePatch, camscannerStartupPatch)) assertFalse(patch.default)
+        for (patch in listOf(camscannerAdsPatch, camscannerOfflinePatch)) assertFalse(patch.default)
         for (patch in publicPatches.filter { it != camscannerSigningPatch })
             assertTrue(patch.dependencies.contains(camscannerSigningPatch))
         for (patch in listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch, camscannerPrivacyPatch)) {
             assertFalse(patch.dependencies.contains(camscannerAdsPatch))
             assertFalse(patch.dependencies.contains(camscannerOfflinePatch))
-            assertFalse(patch.dependencies.contains(camscannerStartupPatch))
         }
     }
 

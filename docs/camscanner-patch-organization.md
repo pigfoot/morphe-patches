@@ -1,3 +1,8 @@
+> V12 update: the scanner initialization choice is retired, with its implementation
+> archived outside compiled sources. The public catalog has five entries. Neither
+> trust nor any other feature silently applies scanner edits. The previous V11
+> qualification below remains historical evidence, not V12 acceptance.
+
 # CamScanner patch organization and qualification
 
 **Status: experimental candidate qualified for phone testing; not phone-accepted.**
@@ -55,9 +60,9 @@ One locked startup/login fix and four optional feature choices:
 | CamScanner disable ads | Optional, off by default | One complete qualified ad-suppression policy, including reviewed manifest cleanup; no nested bool. Rewarded ads are not preserved by this policy. |
 | CamScanner offline mode | Optional, off by default | Depends on disable ads and removes every app INTERNET declaration. Does not imply local features or privacy/logging suppression. |
 
-**Advanced, separate:** scanner initialization compatibility remains optional and
-experimental. It is not known to be universally necessary and must not become an
-unconditional native edit just to shorten the list.
+**Retired:** scanner initialization compatibility is not in the shipped catalog.
+Its necessity was not demonstrated; archive the experiment without forcing its
+native edits into the required trust root.
 
 The required entry uses the outcome-based display name **CamScanner restore trust on re-signed builds**, not the abstract name “compatibility”. Its scope is the exact
 qualified repack paths, not every possible startup/authentication problem.
@@ -86,7 +91,7 @@ wrapper or opaque donor bootstrap is not part of this reorganization.
 | disable app logging | Merge into that same privacy choice; local-output policy becomes explicit documented behavior, not a bool. |
 | disable ads | Keep independently selectable; remove consumer `manifestCleanup` option. |
 | offline mode | Keep independently selectable, with ads/core dependencies only. |
-| scanner initialization compatibility | Keep advanced/experimental; do not force into core. |
+| scanner initialization compatibility | Retire from compiled sources/catalog; archive only, never force into core. |
 | startup warning diagnostics | Remove from normal feature catalog; retire from shipped catalogs, retain source/tests. |
 | email login diagnostics | Remove functional dependency and normal listing; retire from shipped catalogs, retain source/tests. |
 | Word export diagnostics | Remove from normal feature catalog; retire from shipped catalogs, retain source/tests. |

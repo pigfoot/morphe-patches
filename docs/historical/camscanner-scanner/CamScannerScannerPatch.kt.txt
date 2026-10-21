@@ -1,0 +1,18 @@
+private val scannerNativePatch = resourcePatch {
+    dependsOn(camscannerInputPatch)
+    execute {
+        val libs = listApkEntries("lib/").filter { it.endsWith("/libscannercs.so") }
+        require(libs.isNotEmpty() && libs.all { it in scannerEdits }) { "Unqualified scanner ABI" }
+        // Validate every ABI before writing any library.
+        val replacements = libs.associateWith { editScanner(get(it).readBytes(), scannerEdits.getValue(it)) }
+        replacements.forEach { (path, bytes) -> get(path).writeBytes(bytes) }
+    }
+}
+val camscannerStartupPatch = bytecodePatch(
+    name = "CamScanner scanner initialization compatibility", description = "Experimental scanner initialization compatibility for exact qualified native binaries. Includes local sideload startup compatibility. Not an all-device crop fix.", default = false
+) {
+    compatibleWith(target)
+    availability { installer, _ -> noNetwork(installer) }
+    dependsOn(camscannerInputPatch, camscannerSigningPatch, scannerNativePatch)
+}
+

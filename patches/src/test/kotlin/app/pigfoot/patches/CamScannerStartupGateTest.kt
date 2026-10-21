@@ -102,7 +102,7 @@ class CamScannerStartupGateTest {
         assertNull(camscannerSideloadStartupPatch.name)
         assertTrue(camscannerSigningPatch.dependencies.contains(camscannerSideloadStartupPatch))
         for (patch in listOf(camscannerLocalFeaturesPatch, camscannerPrivacyPatch,
-                camscannerAdsPatch, camscannerOfflinePatch, camscannerStartupPatch)) {
+                camscannerAdsPatch, camscannerOfflinePatch)) {
             assertTrue(patch.dependencies.contains(camscannerSigningPatch))
         }
     }

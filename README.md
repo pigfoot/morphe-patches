@@ -86,8 +86,11 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 
 ## CamScanner experimental source
 
-Clean **7.26.5.2609160000 (72651) APKM**, preserving original modules/OCR assets.
-The reorganized candidate has six named patches:
+New target candidate: see [version-porting workflow](docs/camscanner-version-porting.md).
+Build/actual-APK qualification and phone acceptance are separate checkpoints.
+
+Clean **7.26.5.2609160000 (72651)** and **7.27.0.2609220000 (72701) APKM**, preserving original modules/OCR assets.
+The reorganized candidate has five named patches:
 
 | Patch | Recommendation |
 | --- | --- |
@@ -96,7 +99,6 @@ The reorganized candidate has six named patches:
 | CamScanner reduce telemetry and app logging | Recommended; fixed qualified Firebase/app/local logging suppression, not a zero-telemetry guarantee. |
 | CamScanner disable ads | Optional, not recommended by default. Includes rewarded videos; watch-to-reward is unavailable, existing balances not erased. |
 | CamScanner offline mode | Optional, not recommended by default. Includes ads/core and removes all app INTERNET declarations. |
-| CamScanner scanner initialization compatibility | Optional advanced, not recommended by default; exact binary guards, not a universal crop fix. |
 
 No debugging entries or overlays are included, in normal or Advanced selections.
 Trust retains the narrow native request-sign computation fix and exact API Center
