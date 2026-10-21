@@ -1,3 +1,8 @@
+> New optional behavior must be independently ported too: the
+> [lottery skip experiment](camscanner-reward-video-experiment.md) has extra
+> callback-path pins and supports only 72701. Do not automatically extend its
+> eligibility when adding another general CamScanner target.
+
 # CamScanner version-porting workflow
 
 ## Current change and validation frame

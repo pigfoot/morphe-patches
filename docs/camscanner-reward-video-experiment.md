@@ -6,7 +6,8 @@ The existing disable-ads policy intentionally blocks rewarded video entry points
 A failed video-load dialog is consistent with that policy, not a login regression.
 A new explicit request is to skip the video while still allowing the original
 lottery/task reward flow. A local completion is not proof of a server credit.
-This is a candidate experiment; CI, APK checks and device acceptance are distinct.
+This is a CI/APK-qualified experiment for phone testing; real reward receipt is
+still unverified. CI, APK checks and device acceptance are distinct.
 
 Keep five public patch names. Under **CamScanner disable ads**, `rewardedVideos`
 provides meaningful behavior choices rather than a low-level manifest-cleanup bool:
@@ -63,3 +64,37 @@ login/Word/helper/native/manifest inventories, and retain old block behavior.
 Reject unsupported versions, altered callback paths, offline conflict and reapply.
 Only a phone test can establish that this experiment reaches the task screen and
 that a real reward is granted; a callback/status or compilation is insufficient.
+
+## Qualified test artifact
+
+Source **1af3ed1** passed official Verify39647427001 / Release39647419853:
+95 tests, zero failures/errors/skips, including the assembled-prefix branch tests.
+Exact MPP SHA256:
+`306df074885fc84690206adf086b865f527cd58f2b430391a4ab325768203a14`.
+Generated metadata retains five names, three recommendation defaults and the
+`rewardedVideos=block` option default.
+
+Four actual APK cases passed: 72701 block, 72701 skip-only, 72701 combined
+local-premium/privacy/ads-skip, and 72651 block regression. The block outputs'
+canonical target fingerprints equal previously qualified golden outputs.
+
+- Skip modifies exactly the two dispatch methods; their original instruction,
+  register, branch and handler graphs remain intact outside the guarded prefix.
+  Original completion/close, server-code request/response and JS callbacks remain
+  bytecode-identical. The inserted route constructs one correctly bound original
+  listener and signals completion/close once, with no ad-load/show call or loop.
+- 336 new-target / 332 old-target login methods preserve their two existing cache
+  hooks; 2,586 other guarded method graphs retain only expected policy prefixes
+  (165 block/skip-only, 218 combined). Four original Word class pins are unchanged.
+- Identity/classes/assets/native inventories are preserved except the existing
+  exact two signing edits and one existing stateless helper. No new helper class,
+  diagnostic overlay or scanner edit is introduced.
+- Old-version skip, offline+skip, a targeted callback-constructor NOP mutation and
+  reapply reject for the expected reason, CLI exit1, no APK. The mutation retains
+  all 109 base guarded definitions, proving the extra callback guard is exercised.
+
+No account credentials or real reward requests were used for these checks.
+**Phone acceptance must verify actual reward receipt, not just a status callback.**
+Enter the page without pressing first to check for unintended automatic behavior;
+then invoke one lottery action and inspect the actual reward/history/balance. The
+native action is scoped, but it is not proof of a user gesture or server idempotency.

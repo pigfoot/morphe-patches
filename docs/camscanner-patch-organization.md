@@ -1,3 +1,8 @@
+> V13 optional experiment: see [lottery video skipping](camscanner-reward-video-experiment.md).
+> The catalog still has five names. Ad blocking defaults to the existing `block`
+> policy; `skip-lottery` is an explicit online 72701-only behavior, not a silent
+> change to every rewarded placement or a promise of server rewards.
+
 > V12 update: the scanner initialization choice is retired, with its implementation
 > archived outside compiled sources. The public catalog has five entries. Neither
 > trust nor any other feature silently applies scanner edits. The previous V11
@@ -58,7 +63,7 @@ One locked startup/login fix and four optional feature choices:
 | CamScanner restore trust on re-signed builds | Required, no feature options | Qualified sideload startup handling, native request-sign computation and narrowly scoped API Center cache recovery. |
 | CamScanner local premium features | Optional, recommended | Existing local status behavior only. Keep `folderLimit` original by default; 5000 remains an explicit advanced choice, not unlimited folders. |
 | CamScanner reduce telemetry and app logging | Optional, recommended | Combine the current all-Firebase policy and qualified app-network/cache/local-log suppression. No everyday scope or inverted output bool. |
-| CamScanner disable ads | Optional, off by default | One complete qualified ad-suppression policy, including reviewed manifest cleanup; no nested bool. Rewarded ads are not preserved by this policy. |
+| CamScanner disable ads | Optional, off by default | Reviewed ad suppression/cleanup, no nested cleanup bool. Rewarded videos block by default; the explicit lottery skip experiment has its own contract. |
 | CamScanner offline mode | Optional, off by default | Depends on disable ads and removes every app INTERNET declaration. Does not imply local features or privacy/logging suppression. |
 
 **Retired:** scanner initialization compatibility is not in the shipped catalog.
@@ -136,8 +141,10 @@ the shipped feature catalog.
 | selected, manifestCleanup=true | Suppress qualified ad entry points and remove reviewed ad-only manifest components. |
 | selected, manifestCleanup=false | Still suppress ad entry points, but keep those manifest components. |
 
-The proposed public choice has only selected/unselected states. Reviewed cleanup
-is an internal part of the selected policy. A retained-manifest A/B is useful only
+The base ad-block choice remains selected/unselected, with reviewed cleanup
+internal to that policy. The explicit `rewardedVideos` enum now adds the requested
+lottery-only skip experiment; unlike the removed cleanup bool, it represents a
+meaningful behavior choice. A retained-manifest A/B is useful only
 in maintainer experiments, not as a misleading nested “disable” choice. If a removed
 component causes a real non-ad regression, fix the allowlist/dependency model; do
 not hide the defect behind an unexplained consumer bool.
@@ -149,7 +156,10 @@ automatically hidden or existing server-awarded balances are erased. The product
 description must explicitly say it includes rewarded ads. A separate
 “keep voluntary rewarded ads” mode requires its own verified load/show, genuine
 completion/cancel/failure and server-grant behavior before being offered. Never
-synthesize completion, repeat rewards, credits or successful server responses.
+synthesize server grants, repeat rewards, credits or successful server responses.
+The explicitly selected lottery skip experiment does signal one local completion
+without a video, as requested by its new scope; the actual task/code response and
+subsequent reward acceptance stay authoritative, not a fabricated prize result.
 
 Preserve non-ad login/share, Billing, WorkManager and retained modules/assets.
 No-fill, cancellation, fallback UI and missing-provider paths must terminate
