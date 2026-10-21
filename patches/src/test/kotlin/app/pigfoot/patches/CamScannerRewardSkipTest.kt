@@ -91,8 +91,8 @@ class CamScannerRewardSkipTest {
                             "->isRemoving()" in ref -> result = (a as? ViewLife)?.removing ?: false
                             "->isFinishing()" in ref -> result = (a as Life).finishing
                             "->isDestroyed()" in ref -> result = (a as Life).destroyed
-                            "->〇〇888(" in ref -> { assertNull(b); completed++ }
-                            "->〇O8o08O(" in ref -> { assertNull(b); closed++ }
+                            "->〇〇888(" in ref -> { assertTrue("Dalvik null callback argument", b == null || b == 0); completed++ }
+                            "->〇O8o08O(" in ref -> { assertTrue("Dalvik null callback argument", b == null || b == 0); closed++ }
                             else -> error("Unexpected call $ref")
                         }
                     }
