@@ -33,8 +33,7 @@ class CamScannerSigningTest {
     @Test fun signingDoesNotEnableLegacyRouteSubstitutionOrOfflineMode() {
         assertTrue(camscannerSigningPatch.default)
         assertTrue(camscannerSigningPatch.dependencies.contains(camscannerSideloadStartupPatch))
-        assertTrue(camscannerSigningPatch.dependencies.contains(camscannerLoginDiagnosticsPatch))
-        assertFalse(camscannerSigningPatch.dependencies.contains(camscannerAccountServicePatch))
+        assertTrue(camscannerSigningPatch.dependencies.contains(camscannerPolicyExtensionPatch))
         assertFalse(camscannerSigningPatch.dependencies.contains(camscannerOfflinePatch))
     }
 
@@ -45,7 +44,6 @@ class CamScannerSigningTest {
         }
         assertEquals(PatchAvailability.UNAVAILABLE,
             camscannerSigningPatch.availability!!.resolve(InstallerType.MOUNT, ApkArchitecture.ARM64_V8A))
-        assertFalse(camscannerSigningPatch.dependencies.contains(camscannerWordDiagnosticsPatch))
-        assertFalse(camscannerOfflinePatch.dependencies.contains(camscannerSigningPatch))
+        assertTrue(camscannerOfflinePatch.dependencies.contains(camscannerSigningPatch))
     }
 }

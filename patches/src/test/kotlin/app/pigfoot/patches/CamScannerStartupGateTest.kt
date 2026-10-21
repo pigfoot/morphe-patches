@@ -97,25 +97,13 @@ class CamScannerStartupGateTest {
         }
     }
 
-    @Test fun featureSelectionsCannotOmitTheSharedLocalStartupGate() {
+    @Test fun namedFeaturesShareTheRequiredTrustRootNotASeparateStartupChoice() {
         assertEquals(setOf(camscannerInputPatch), camscannerSideloadStartupPatch.dependencies)
-        for (patch in listOf(camscannerLocalFeaturesPatch, camscannerFirebasePatch, camscannerLoggingPatch,
+        assertNull(camscannerSideloadStartupPatch.name)
+        assertTrue(camscannerSigningPatch.dependencies.contains(camscannerSideloadStartupPatch))
+        for (patch in listOf(camscannerLocalFeaturesPatch, camscannerPrivacyPatch,
                 camscannerAdsPatch, camscannerOfflinePatch, camscannerStartupPatch)) {
-            assertTrue(patch.dependencies.contains(camscannerSideloadStartupPatch))
+            assertTrue(patch.dependencies.contains(camscannerSigningPatch))
         }
-        for (diagnostic in listOf(camscannerWordDiagnosticsPatch, camscannerStartupDiagnosticsPatch,
-                camscannerLoginDiagnosticsPatch)) {
-            assertFalse(diagnostic.dependencies.contains(camscannerSideloadStartupPatch))
-        }
-    }
-
-    @Test fun independentDiagnosticsRemainPossibleButMountStaysUnavailable() {
-        assertFalse(camscannerSideloadStartupPatch.default)
-        for (installer in listOf(InstallerType.STANDARD, InstallerType.SHIZUKU)) {
-            assertEquals(PatchAvailability.DISABLED, camscannerSideloadStartupPatch.availability!!
-                .resolve(installer, ApkArchitecture.ARM64_V8A))
-        }
-        assertEquals(PatchAvailability.UNAVAILABLE, camscannerSideloadStartupPatch.availability!!
-            .resolve(InstallerType.MOUNT, ApkArchitecture.ARM64_V8A))
     }
 }

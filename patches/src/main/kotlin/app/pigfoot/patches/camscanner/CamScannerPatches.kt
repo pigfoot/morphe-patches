@@ -6,6 +6,7 @@ import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
@@ -50,11 +51,7 @@ private fun BytecodePatchContext.stop(type: String, name: String, descriptor: St
 private fun noNetwork(installer: InstallerType) = if (installer == InstallerType.MOUNT)
     PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED
 
-val camscannerSideloadStartupPatch = bytecodePatch(
-    name = "CamScanner sideload startup compatibility",
-    description = "Local re-signed startup compatibility. Replaces the qualified pirate-app dialog and Toast entries only; does not spoof signatures or unlock server services.",
-    default = false
-) {
+internal val camscannerSideloadStartupPatch = bytecodePatch {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch)
@@ -72,12 +69,82 @@ val camscannerSideloadStartupPatch = bytecodePatch(
     }
 }
 
+private val signingResources = resourcePatch {
+    dependsOn(camscannerInputPatch)
+    execute {
+        val libs = listApkEntries("lib/").filter { it.endsWith("/libnative-encrypt.so") }
+        require(libs.isNotEmpty() && libs.all { it in signingEdits }) { "Unqualified native signing ABI" }
+        val replacements = libs.associateWith { editSigning(get(it).readBytes(), signingEdits.getValue(it)) }
+        replacements.forEach { (path, bytes) -> get(path).writeBytes(bytes) }
+    }
+}
+
+internal val camscannerPolicyExtensionPatch = bytecodePatch {
+    extendWith("extensions/camscanner-policy.mpe")
+}
+
+val camscannerSigningPatch = bytecodePatch(
+    name = "CamScanner restore trust on re-signed builds",
+    description = "Required compatibility for supported re-signed standard/Shizuku installs: preserve original request signing and recover exact obsolete/error-only API Center caches. No diagnostic overlays. No forced host, global signature spoofing, authentication-result changes or INTERNET grant. Root mount is not qualified.",
+    default = true
+) {
+    compatibleWith(Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
+        targets = listOf(AppTarget(CAM_VERSION, versionCodes = mapOf(SupportedAbi.ARM64_V8A to 72651,
+            SupportedAbi.ARMEABI_V7A to 72651), isExperimental = true))))
+    availability { installer, _ ->
+        if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.REQUIRED
+    }
+    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch,
+        camscannerPolicyExtensionPatch, signingResources)
+    execute {
+        val model = "Lcom/intsig/tsapp/account/viewmodel/EmailLoginViewModel;"
+        val fetch = "Lcom/intsig/tsapp/account/viewmodel/EmailLoginViewModel\$fetchAndLoadApisByEmail\$2;"
+        // Validate both pristine definitions before any cache instrumentation.
+        for ((type, expected) in mapOf(model to "e2d0db1e14ccd538a167cf5db55ec360b6379d8f4fd37d3f8942048679cf8121",
+            fetch to "73f649d182b3d4362ad9ded0a180b7a51db055df8a9ef164b566f7ee038e719a")) {
+            val pool = DexPool(Opcodes.forDexVersion(39))
+            pool.internClass(classDefBy(type))
+            val store = MemoryDataStore()
+            pool.writeTo(store)
+            require(sha256(store.data) == expected) {
+                "Unsupported or already modified login API cache coroutine"
+        }
+        }
+        val sites = listOf(
+            Triple(model, "〇O888o0o", listOf(10, 2, 8)),
+            Triple(fetch, "invokeSuspend", listOf(5, 4, 4))
+        ).map { (type, name, registers) ->
+            val method = mutableClassDefBy(type).methods.single { it.name == name }
+            val impl = requireNotNull(method.implementation)
+            val code = impl.instructions.toList()
+            require(impl.registerCount == registers[0]) { "Unsupported login API cache registers" }
+            val index = code.indices.single {
+                (code[it] as? ReferenceInstruction)?.reference.toString() ==
+                    "Lcom/intsig/tianshu/utils/UserInfoSettingUtil;->O8(Ljava/lang/String;)Ljava/lang/String;"
+            }
+            require((code[index] as? FiveRegisterInstruction)?.let {
+                it.registerCount == 1 && it.registerC == registers[2]
+            } == true && code[index + 1].opcode == Opcode.MOVE_RESULT_OBJECT &&
+                (code[index + 1] as OneRegisterInstruction).registerA == registers[1]) {
+                "Unsupported login API cache lookup"
+            }
+            Triple(method, index + 2, registers[1])
+        }
+        // Validate both original cache sites before adding the passive policy.
+        // A null result follows the existing cache-miss fetch/persist path.
+        for ((method, index, result) in sites) method.addInstructions(index, """
+            invoke-static {v$result}, Lapp/pigfoot/camscanner/LoginApiPolicy;->refreshLoginApis(Ljava/lang/String;)Ljava/lang/String;
+            move-result-object v$result
+        """.trimIndent())
+    }
+}
+
 val camscannerLocalFeaturesPatch = bytecodePatch(
-    name = "CamScanner local premium features", description = "Experimental local account-status features. Does not unlock server credits or cloud quotas.", default = false
+    name = "CamScanner local premium features", description = "Experimental local account-status features. Does not unlock server credits or cloud quotas.", default = true
 ) {
     compatibleWith(target)
-    availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch)
+    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED }
+    dependsOn(camscannerInputPatch, camscannerSigningPatch)
     val folderLimit by intOption(key = "folderLimit", default = 0, title = "Folder limit",
         values = mapOf("Keep original limit" to 0, "5000 folders" to 5000), required = true,
         validator = { it == 0 || it == 5000 })
@@ -92,16 +159,13 @@ val camscannerLocalFeaturesPatch = bytecodePatch(
     }
 }
 
-private val firebaseScope = stringOption(key = "scope", default = "all", title = "Telemetry scope", required = true,
-    values = mapOf("All Firebase telemetry" to "all", "Analytics only" to "analytics"),
-    validator = { it in setOf("all", "analytics") })
 private val firebaseManifestPatch = resourcePatch {
     dependsOn(camscannerInputPatch)
     execute {
         document("AndroidManifest.xml").use { doc ->
             metadata(doc, "firebase_analytics_collection_deactivated", "true")
             metadata(doc, "firebase_analytics_collection_enabled", "false")
-            if (firebaseScope.value == "all") {
+            run {
                 metadata(doc, "firebase_crashlytics_collection_enabled", "false")
                 metadata(doc, "firebase_performance_collection_deactivated", "true")
                 metadata(doc, "firebase_sessions_enabled", "false")
@@ -109,17 +173,14 @@ private val firebaseManifestPatch = resourcePatch {
         }
     }
 }
-val camscannerFirebasePatch = bytecodePatch(
-    name = "CamScanner disable Firebase telemetry", description = "Experimental Analytics or Analytics/Crashlytics/Performance/Sessions suppression. Preserve unrelated Firebase functionality.", default = false
-) {
+internal val camscannerFirebasePatch = bytecodePatch {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, firebaseManifestPatch)
-    val scope by firebaseScope()
     execute {
         stop(ANALYTICS, "〇o〇", "(Z)V")
         stop(ANALYTICS, "〇o00〇〇Oo", "(Ljava/lang/String;Landroid/os/Bundle;)V")
-        val all = scope == "all"
+        val all = true
         val candidates = mutableClassDefBy(FABRIC).methods.filter { it.name != "<init>" && it.name != "<clinit>" &&
             it.name in setOf("O8", "OO0o〇〇〇〇0", "Oo08", "oO80", "o〇0", "〇080", "〇80〇808〇O", "〇o00〇〇Oo", "〇o〇", "〇〇888") }
         require(candidates.size == 10)
@@ -146,37 +207,32 @@ val camscannerFirebasePatch = bytecodePatch(
     }
 }
 
-val camscannerLoggingPatch = bytecodePatch(
-    name = "CamScanner disable app logging", description = "Experimental network logger/replay suppression with optional local Logcat/file output suppression. Not every third-party SDK log.", default = false
-) {
+internal val camscannerLoggingPatch = bytecodePatch {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch)
-    val local by booleanOption(key = "localOutput", default = true, title = "Disable local app logs", required = true)
     execute {
         stop("Lcom/intsig/log/LogAgentHelper;", "oO", "()Z", "const/4 v0, 1\nreturn v0")
         for (m in mutableClassDefBy(LOG).methods.filter { it.returnType == "V" && it.name in setOf("record", "dispatchLogData", "readLogDataFromCache", "onConnected", "run", "action", "pageView", "trace") }) m.addInstructions(0, "return-void")
         stop(LOG, "setEnableConnect", "(Z)V", "const/4 p0, 0")
         stop(LOG, "setEnableConnectImpl", "(Z)V", "const/4 p1, 0")
-        if (local == true) {
+        run {
             for (m in mutableClassDefBy("Lcom/intsig/log/LogUtils;").methods.filter { it.returnType == "V" && !it.name.startsWith("<") }) m.addInstructions(0, "return-void")
             stop("Lcom/intsig/log4a/Logger;", "〇〇888", "(Lcom/intsig/log4a/Level;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V")
         }
     }
 }
 
-private val adsCleanup = booleanOption(key = "manifestCleanup", default = true, title = "Remove ad-only manifest components", required = true)
 private val adsManifestPatch = resourcePatch {
     dependsOn(camscannerInputPatch)
-    execute { if (adsCleanup.value == true) document("AndroidManifest.xml").use { removeAdComponents(it) } }
+    execute { document("AndroidManifest.xml").use { removeAdComponents(it) } }
 }
 val camscannerAdsPatch = bytecodePatch(
-    name = "CamScanner disable ads", description = "Experimental suppression of qualified ad SDK load/show entry points and optional ad-only manifest cleanup. Ad callbacks and app fallback require device testing.", default = false
+    name = "CamScanner disable ads", description = "Suppress qualified ad entry points, including rewarded videos, with reviewed manifest cleanup. Watch-to-reward is unavailable; existing balances are not erased. Fallback behavior requires device testing.", default = false
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, adsManifestPatch)
-    val cleanup by adsCleanup()
+    dependsOn(camscannerInputPatch, camscannerSigningPatch, adsManifestPatch)
     execute {
         for (t in adTargets) {
             val ret = t.descriptor.substringAfter(')')
@@ -191,7 +247,7 @@ val camscannerOfflinePatch = resourcePatch(
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, camscannerAdsPatch)
+    dependsOn(camscannerInputPatch, camscannerSigningPatch, camscannerAdsPatch)
     execute { document("AndroidManifest.xml").use { removeInternet(it) } }
 }
 
@@ -210,5 +266,15 @@ val camscannerStartupPatch = bytecodePatch(
 ) {
     compatibleWith(target)
     availability { installer, _ -> noNetwork(installer) }
-    dependsOn(camscannerInputPatch, camscannerSideloadStartupPatch, scannerNativePatch)
+    dependsOn(camscannerInputPatch, camscannerSigningPatch, scannerNativePatch)
+}
+
+val camscannerPrivacyPatch = bytecodePatch(
+    name = "CamScanner reduce telemetry and app logging",
+    description = "Suppress qualified Firebase Analytics/Crashlytics/Performance/Sessions and app network/cache/local logging. Preserve unrelated Firebase services. Not a guarantee of zero telemetry.",
+    default = true
+) {
+    compatibleWith(target)
+    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED }
+    dependsOn(camscannerInputPatch, camscannerSigningPatch, camscannerFirebasePatch, camscannerLoggingPatch)
 }

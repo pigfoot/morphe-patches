@@ -1,1 +1,1 @@
--keep class app.pigfoot.diagnostics.WordTrace { *; }
+-keep class app.pigfoot.camscanner.LoginApiPolicy { *; }

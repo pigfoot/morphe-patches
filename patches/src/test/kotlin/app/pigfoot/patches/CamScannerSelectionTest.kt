@@ -8,40 +8,47 @@ import java.io.ByteArrayInputStream
 import javax.xml.parsers.DocumentBuilderFactory
 
 class CamScannerSelectionTest {
-    @Test fun wordDiagnosticsRemainIndependentAndOptIn() {
-        assertFalse(camscannerWordDiagnosticsPatch.default)
-        assertEquals(setOf(camscannerInputPatch, camscannerDiagnosticExtensionPatch), camscannerWordDiagnosticsPatch.dependencies)
-        for (patch in listOf(camscannerLocalFeaturesPatch, camscannerAdsPatch, camscannerOfflinePatch)) {
-            assertFalse(patch.dependencies.contains(camscannerWordDiagnosticsPatch))
+    private val publicPatches = listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch,
+        camscannerPrivacyPatch, camscannerAdsPatch, camscannerOfflinePatch, camscannerStartupPatch)
+
+    @Test fun productSurfaceHasSixNamesAndNoDebugOrWithdrawnFeature() {
+        assertEquals(setOf("CamScanner restore trust on re-signed builds", "CamScanner local premium features",
+            "CamScanner reduce telemetry and app logging", "CamScanner disable ads",
+            "CamScanner offline mode", "CamScanner scanner initialization compatibility"),
+            publicPatches.map { it.name }.toSet())
+        for (internal in listOf(camscannerSideloadStartupPatch, camscannerFirebasePatch, camscannerLoggingPatch,
+                camscannerPolicyExtensionPatch)) assertNull(internal.name)
+        assertTrue(camscannerPrivacyPatch.options.isEmpty())
+        assertTrue(camscannerAdsPatch.options.isEmpty())
+    }
+
+    @Test fun recommendedProfilePreservesAdsAndInternetWithoutForcedScannerEdits() {
+        for (patch in listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch, camscannerPrivacyPatch)) assertTrue(patch.default)
+        for (patch in listOf(camscannerAdsPatch, camscannerOfflinePatch, camscannerStartupPatch)) assertFalse(patch.default)
+        for (patch in publicPatches.filter { it != camscannerSigningPatch })
+            assertTrue(patch.dependencies.contains(camscannerSigningPatch))
+        for (patch in listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch, camscannerPrivacyPatch)) {
+            assertFalse(patch.dependencies.contains(camscannerAdsPatch))
+            assertFalse(patch.dependencies.contains(camscannerOfflinePatch))
+            assertFalse(patch.dependencies.contains(camscannerStartupPatch))
         }
     }
-    @Test fun startupTraceIsIndependentAndSharesOnlyTheDiagnosticExtension() {
-        assertFalse(camscannerStartupDiagnosticsPatch.default)
-        assertEquals(setOf(camscannerInputPatch, camscannerDiagnosticExtensionPatch), camscannerStartupDiagnosticsPatch.dependencies)
-        assertFalse(camscannerWordDiagnosticsPatch.dependencies.contains(camscannerStartupDiagnosticsPatch))
-        assertFalse(camscannerStartupDiagnosticsPatch.dependencies.contains(camscannerStartupPatch))
-        for (patch in listOf(camscannerStartupPatch, camscannerLocalFeaturesPatch, camscannerAdsPatch, camscannerOfflinePatch)) {
-            assertFalse(patch.dependencies.contains(camscannerStartupDiagnosticsPatch))
-        }
-    }
-    @Test fun offlinePullsInAdsButNotPremiumOrTelemetry() {
+
+    @Test fun privacyIsOneFixedPolicyAndOfflineDoesNotForceItOrPremium() {
+        assertTrue(camscannerPrivacyPatch.dependencies.containsAll(listOf(camscannerFirebasePatch, camscannerLoggingPatch)))
         assertTrue(camscannerOfflinePatch.dependencies.contains(camscannerAdsPatch))
-        for (patch in listOf(camscannerLocalFeaturesPatch, camscannerFirebasePatch, camscannerLoggingPatch, camscannerAdsPatch, camscannerOfflinePatch)) assertFalse(patch.default)
+        assertFalse(camscannerOfflinePatch.dependencies.contains(camscannerPrivacyPatch))
         assertFalse(camscannerOfflinePatch.dependencies.contains(camscannerLocalFeaturesPatch))
-        assertFalse(camscannerOfflinePatch.dependencies.contains(camscannerFirebasePatch))
         assertFalse(camscannerAdsPatch.dependencies.contains(camscannerOfflinePatch))
-        assertTrue(camscannerFirebasePatch.dependencies.contains(camscannerInputPatch))
     }
-    @Test fun scopeAndFolderOptionsRejectUnknownPolicies() {
-        val scope = camscannerFirebasePatch.options["scope"]
+
+    @Test fun folderOptionPreservesOriginalByDefaultAndRejectsInvalidLimits() {
         val limit = camscannerLocalFeaturesPatch.options["folderLimit"]
         try {
-            for (s in listOf("all", "analytics")) camscannerFirebasePatch.options["scope"] = s
-            assertThrows(OptionException.ValueValidationException::class.java) { camscannerFirebasePatch.options["scope"] = "unknown" }
-            assertThrows(OptionException.ValueRequiredException::class.java) { camscannerFirebasePatch.options.set<String>("scope", null) }
+            assertEquals(0, limit.value)
             for (n in listOf(0, 5000)) camscannerLocalFeaturesPatch.options["folderLimit"] = n
             assertThrows(OptionException.ValueValidationException::class.java) { camscannerLocalFeaturesPatch.options["folderLimit"] = -1 }
-        } finally { scope.reset(); limit.reset() }
+        } finally { limit.reset() }
     }
     private fun document(xml: String) = DocumentBuilderFactory.newInstance().newDocumentBuilder()
         .parse(ByteArrayInputStream(xml.toByteArray()))
