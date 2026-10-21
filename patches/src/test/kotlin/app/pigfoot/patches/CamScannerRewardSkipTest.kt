@@ -41,7 +41,8 @@ class CamScannerRewardSkipTest {
             m.addInstructions(0, rewardSkipPrefix(site))
             val control = Any()
             expected = listOf(control, life, manager, fragment, request)
-            val args = if (site == RewardSkipSite.MAIN) expected else listOf(control, request, manager, life, fragment)
+            val args = if (site == RewardSkipSite.MAIN) listOf(control, life, fragment, manager, request)
+                else listOf(control, request, manager, life, fragment)
             args.forEachIndexed { n, value -> registers[site.registers - 5 + n] = value }
         }
         fun execute(): Vm {
