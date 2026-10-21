@@ -30,12 +30,12 @@ original identity/assets, input guards and honest server responses must survive.
 
 ## Proposed normal selection surface
 
-One locked compatibility entry and four optional feature choices:
+One locked startup/login fix and four optional feature choices:
 
 | Entry | Selection | Contract |
 | --- | --- | --- |
-| CamScanner compatibility | Required, no feature options | Qualified sideload startup handling, native request-sign computation and narrowly scoped API Center cache recovery. |
-| CamScanner local features | Optional, off by default | Existing local status behavior only. Keep `folderLimit` original by default; 5000 remains an explicit advanced choice, not unlimited folders. |
+| CamScanner fix startup and login | Required, no feature options | Qualified sideload startup handling, native request-sign computation and narrowly scoped API Center cache recovery. |
+| CamScanner local premium features | Optional, off by default | Existing local status behavior only. Keep `folderLimit` original by default; 5000 remains an explicit advanced choice, not unlimited folders. |
 | CamScanner reduce telemetry and app logging | Optional, off by default | Combine the current all-Firebase policy and qualified app-network/cache/local-log suppression. No everyday scope or inverted output bool. |
 | CamScanner disable ads | Optional, off by default | One complete qualified ad-suppression policy, including reviewed manifest cleanup; no nested bool. Rewarded ads are not preserved by this policy. |
 | CamScanner offline mode | Optional, off by default | Depends on disable ads and removes every app INTERNET declaration. Does not imply local features or privacy/logging suppression. |
@@ -44,7 +44,13 @@ One locked compatibility entry and four optional feature choices:
 experimental. It is not known to be universally necessary and must not become an
 unconditional native edit just to shorten the list.
 
-The compatibility entry is not another toggle users must discover. Manager should
+The required entry uses the outcome-based display name **CamScanner fix startup
+and login**, not the abstract name “compatibility”. Its scope is the exact
+qualified repack paths, not every possible startup/authentication problem.
+**Local premium features** intentionally describes local subscription-gated
+features and does not imply a server subscription, cloud credit or Word entitlement.
+
+The startup/login fix is not another toggle users must discover. Manager should
 resolve it as REQUIRED and display it locked, if displayed at all. Its component
 patches are internal/unnamed. Do not assume an unnamed dependency can self-select:
 if no optional feature is selected, the required compatibility root must still be
@@ -117,7 +123,10 @@ component causes a real non-ad regression, fix the allowlist/dependency model; d
 not hide the defect behind an unexplained consumer bool.
 
 The current target list and cleanup include rewarded-ad paths. Do not rename this
-policy “remove intrusive ads” or promise watch-to-reward still works. A separate
+policy “remove intrusive ads” or promise watch-to-reward still works. This means
+watch-to-reward opportunities stop working, not that reward/task buttons are
+automatically hidden or existing server-awarded balances are erased. The product
+description must explicitly say it includes rewarded ads. A separate
 “keep voluntary rewarded ads” mode requires its own verified load/show, genuine
 completion/cancel/failure and server-grant behavior before being offered. Never
 synthesize completion, repeat rewards, credits or successful server responses.
