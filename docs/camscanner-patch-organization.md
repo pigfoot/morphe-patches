@@ -67,9 +67,9 @@ wrapper or opaque donor bootstrap is not part of this reorganization.
 | disable ads | Keep independently selectable; remove consumer `manifestCleanup` option. |
 | offline mode | Keep independently selectable, with ads/core dependencies only. |
 | scanner initialization compatibility | Keep advanced/experimental; do not force into core. |
-| startup warning diagnostics | Remove from normal feature catalog; maintainer-only diagnostics. |
-| email login diagnostics | Remove functional dependency and normal listing; maintainer-only diagnostics. |
-| Word export diagnostics | Remove from normal feature catalog; maintainer-only diagnostics. |
+| startup warning diagnostics | Remove from normal feature catalog; retire from shipped catalogs, retain source/tests. |
+| email login diagnostics | Remove functional dependency and normal listing; retire from shipped catalogs, retain source/tests. |
+| Word export diagnostics | Remove from normal feature catalog; retire from shipped catalogs, retain source/tests. |
 | account API fallback compatibility (withdrawn) | No functional replacement. Remove normal listing; preserve actionable stale-selection rejection during migration. |
 
 Keep implementation modules and tests separate where useful. A smaller selection
@@ -90,8 +90,10 @@ Before hiding or deleting any diagnostic entry:
    the current reliance on login diagnostics to validate pristine definitions.
 5. Attach all normal features to one required core. Confirm selection is idempotent:
    explicit plus transitive core selection never applies the same edit twice.
-6. Only then move passive login/startup/Word instrumentation behind a separate
-   maintainer diagnostic profile/bundle, not three consumer feature choices.
+6. Only then remove passive login/startup/Word instrumentation from the shipped
+   bundle. There is no Debug or Advanced debugging entry, switch or overlay.
+   Retain source/tests and historical artifacts for a future concrete investigation;
+   do not create a separate diagnostic profile/bundle as a product deliverable.
 
 Required signing remains harmlessly present in the offline composition; it does
 not grant INTERNET or perform authentication. Root mount remains unavailable until
@@ -141,8 +143,10 @@ the new broader policy. Source controls remain modular for regression isolation.
 
 - Release installations should retain ordinary app messages, not CS-DIAG caller
   traces or error overlays. Preserve historical diagnostic artifacts as controls.
-- A maintainer diagnostic profile can enable startup/login/Word observations as
-  one explicit investigation capability; it must not add a functional dependency.
+- Do not ship debugging in an Advanced menu either. Source/tests can be retained
+  without exporting named patches, options or injected diagnostic extension code.
+  A future real issue may justify an isolated temporary investigation build; that
+  is not a planned user-facing feature or current deliverable.
 - Keep compatibility adapters only for safe equivalents. Old startup/signing
   selections can normalize to one core in a versioned migration layer if the
   patcher actually supports it; otherwise reject with a concrete replacement.
@@ -167,7 +171,7 @@ the new broader policy. Source controls remain modular for regression isolation.
 | Input/reapply/ABI guards | Original targets pass; modified/donor/wrong-version/unknown ABI/repeated edits reject without output. |
 | Ads selected/unselected | Deterministic entry/manifest changes and preserved non-ad components; actual completion/cancel/no-fill/failure/fallback device behavior checked. |
 | Privacy and migration | Fixed documented scope, unrelated Firebase preserved; old narrower configs rejected or explicitly reselected, not broadened silently. |
-| Maintainer diagnostics | Core works without diagnostic UI; optional observations do not alter requests, authentication, quota or result codes. |
+| No shipped debugging | Neither normal nor Advanced lists export diagnostics; core works with no diagnostic UI/helper history. Retained tests cover any later isolated instrumentation without altering auth/quota/results. |
 | Combined features | Shared validation/edit/helper deduplication, method/branch/register preservation, asset/module/class inventory and exact native changes. |
 | Scanner advanced | No scanner edit in core; explicit scanner selection retains original ABI/hash guards. |
 | RailsGo regression | Existing dependency/rename/reward/helper contracts unchanged. |
@@ -175,6 +179,26 @@ the new broader policy. Source controls remain modular for regression isolation.
 Use Java21/SDK36 and the official build/patch-list generation, then pristine-input
 APK qualification and guarded negative cases. Do not equate unit/static validation
 with phone startup, login persistence, ad behavior or zero telemetry.
+
+## How the online ad-support composition differs from a donor APK
+
+To retain ads, choose compatibility plus the desired local/privacy features,
+leave disable ads/offline unselected, and opt into scanner support only when
+needed. “Ad-support” is a composition, not another bundled preset to select.
+
+- Same intended outcome for ordinary login, with reported success, but different
+  mechanisms: donor Application/bin.ghost/libyrf signature spoofing versus the
+  narrow native request-signing/cache compatibility repair. Not full equivalence.
+- Modular source-selected local/privacy behavior rather than an opaque fixed APK.
+  No donor credit/update/validation bootstrap is copied. Whole donor runtime side
+  effects and telemetry silence have not been completely reconstructed.
+- Build from pristine full APKM and preserve original modules/OCR assets, rather
+  than using the modified donor as a trusted baseline.
+- Keeping ads does not prove rewarded callbacks or server grants work; original
+  task/reward behavior still requires scoped qualification.
+- Server-backed Word has no demonstrated working output in either the current
+  candidate or the reported ad-support baseline. This is not a local entitlement
+  promise, nor proof that both fail for the same backend reason.
 
 ## Current evidence and implementation boundary
 

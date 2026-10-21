@@ -94,7 +94,7 @@ See [implementation and validation](docs/camscanner-implementation.md).
 
 A [patch organization proposal](docs/camscanner-patch-organization.md) documents
 a required compatibility core, four optional feature choices, separate advanced
-scanner support and maintainer-only diagnostics. **It is a design, not implemented
+scanner support and no shipped debugging entries (including Advanced). **It is a design, not implemented
 behavior.** Current options below still apply until a separately qualified change.
 
 - **CamScanner local premium features**: local status candidates; folder limit can remain original or become 5000. No server-credit/cloud-quota guarantee.
