@@ -126,3 +126,25 @@ input (109 targets missing, exit2), and malformed input (nonzero, no report).
 
 Direct APKM reconstruction also passed against its independently merged baseline. No phone startup/login persistence, reward
 callback/grant, cloud Word or universal crop behavior is claimed by these checks.
+
+## Patcher engine / DEX writer qualification
+
+An app-version match is insufficient to qualify a new patcher engine. Morphe
+Patcher 2.0 changes the smali writer and therefore most standalone DexPool byte
+hashes, even when the input APK and decoded method graphs are identical. The
+reported DataCollectionArbiter guard rejection was reproduced on pristine input
+with Desktop1.19/Patcher2.0, independently of patch selection.
+
+The class guard accepts only the existing digest or its exact reviewed alternate
+writer encoding, keyed by that existing digest. Both retained pristine versions
+were compared under both readers/writers; 2,826 decoded method graphs per input
+were identical. The 125 distinct alternate digests do not expand supported app
+versions. Wrong class/profile substitutions and arbitrary mutations remain
+rejected. Native binary hashes are not aliases and remain byte-exact.
+
+For a future engine update, retain the old artifact and pristine inputs, reproduce
+single and combined selections, compare class/method output under both engines,
+and independently exercise modified-input/reapply rejection. Do not replace pins
+blindly, accept an entire engine version, or disable guards to fix a serializer
+mismatch. Do not count a Desktop-only test on an older patcher as Manager2.0
+qualification. Full APKM application is a separate integration case.

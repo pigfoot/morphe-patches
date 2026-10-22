@@ -38,7 +38,7 @@ internal val camscannerInputPatch = bytecodePatch {
             pool.internClass(classDefBy(type))
             val store = MemoryDataStore()
             pool.writeTo(store)
-            require(sha256(store.data) == expected) { "Unsupported or already modified class: $type" }
+            require(matchesCamScannerClassPin(expected, sha256(store.data))) { "Unsupported or already modified class: $type" }
         }
     }
 }
@@ -104,7 +104,7 @@ val camscannerSigningPatch = bytecodePatch(
             pool.internClass(classDefBy(type))
             val store = MemoryDataStore()
             pool.writeTo(store)
-            require(sha256(store.data) == expected) {
+            require(matchesCamScannerClassPin(expected, sha256(store.data))) {
                 "Unsupported or already modified login API cache coroutine"
         }
         }
@@ -242,7 +242,7 @@ val camscannerAdsPatch = bytecodePatch(
             for ((type, pin) in rewardSkipPins72701) {
                 val pool = DexPool(Opcodes.forDexVersion(39)); pool.internClass(classDefBy(type))
                 val store = MemoryDataStore(); pool.writeTo(store)
-                require(sha256(store.data) == pin) { "Unsupported or modified lottery callback path: $type" }
+                require(matchesCamScannerClassPin(pin, sha256(store.data))) { "Unsupported or modified lottery callback path: $type" }
             }
             val control = mutableClassDefBy(WATCH_CONTROL)
             val sites = RewardSkipSite.entries.map { site ->
