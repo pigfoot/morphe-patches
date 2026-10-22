@@ -7,7 +7,8 @@ A failed video-load dialog is consistent with that policy, not a login regressio
 A new explicit request is to skip the video while still allowing the original
 lottery/task reward flow. A local completion is not proof of a server credit.
 This is a CI/APK-qualified experiment for phone testing; real reward receipt is
-still unverified. CI, APK checks and device acceptance are distinct.
+not accepted: a phone report shows an exhausted dialog before drawing. CI, APK
+checks and device acceptance are distinct. See the investigation below.
 
 Keep five public patch names. Under **CamScanner disable ads**, `rewardedVideos`
 provides meaningful behavior choices rather than a low-level manifest-cleanup bool:
@@ -98,3 +99,32 @@ No account credentials or real reward requests were used for these checks.
 Enter the page without pressing first to check for unintended automatic behavior;
 then invoke one lottery action and inspect the actual reward/history/balance. The
 native action is scoped, but it is not proof of a user gesture or server idempotency.
+
+## Pre-draw failure investigation and preload guard
+
+The official `/lottery/relottery` route loads `RelotteryView-I2SNRQ5F.js` from the
+`camscanner-mo` static application. Do not conflate it with the separate
+`/integral/intergralTurntable` page. Its `mounted()` calls `watchad_lottery` with
+`prestrain: 1` before a draw. An actual claim's `getGift()` calls the same bridge
+with `prestrain: 0`, after the draw returns its verification token.
+
+V13 scoped by action, manager and request id, but omitted the original preload
+predicate. A generated request id does not establish a user gesture. The corrected
+prefix calls the pinned original `WatchAdControl.〇O888o0o(String)` predicate and
+returns without loading an ad, constructing a listener or signaling completion
+when it reports preload/cancellation. Both UI-thread dispatches use this guard.
+
+Offline replay of the fetched actual component object established that entering
+it invokes one preload without a click. Its quota refresh independently converts
+`watchad_vip_chance` with unary `+`: numeric 3 permits drawing, whereas both 0 and
+null immediately show the exhausted dialog. The API adapter maps a missing chance
+to null. This proves an error/zero ambiguity, not the device's actual API response.
+The native completion callback also selects status from the completion flag,
+without requiring a non-null server code. These are separate issues, not evidence
+that the backend consumed a chance or granted a reward.
+
+Validation must cover preload with a valid bridge-generated id on both register
+layouts, original-parser cancellation, normal active requests and existing
+unrelated/lifecycle guards. Preserve all original methods outside the prefixes.
+Phone recovery, real quota and reward receipt remain unverified. Do not fabricate
+quota, verification tokens, codes or server success to mask the failure.

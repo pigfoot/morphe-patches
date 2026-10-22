@@ -13,7 +13,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CamScannerRewardSkipTest {
-    data class Request(val action: String?, val id: String?)
+    // The pinned original JSON parser owns parsing. Tokens model its return at the call boundary.
+    enum class ParsedData { ACTIVE, PRELOAD, MALFORMED, EMPTY }
+    data class Request(val action: String?, val id: String?, val data: ParsedData? = ParsedData.ACTIVE)
     data class Life(val finishing: Boolean = false, val destroyed: Boolean = false)
     data class Manager(val left: Boolean)
     data class ViewLife(val detached: Boolean = false, val removing: Boolean = false)
@@ -68,12 +70,23 @@ class CamScannerRewardSkipTest {
                     Opcode.IGET_OBJECT -> {
                         val req = registers[two!!.registerB] as Request
                         val name = (i as ReferenceInstruction).reference.toString()
-                        registers[two.registerA] = if ("->action:" in name) req.action else req.id
+                        registers[two.registerA] = when {
+                            "->action:" in name -> req.action
+                            "->data:" in name -> req.data
+                            else -> req.id
+                        }
                     }
                     Opcode.INSTANCE_OF -> registers[two!!.registerA] = (registers[two.registerB] as? Manager)?.left == true
                     Opcode.MOVE_RESULT -> registers[one!!] = result
                     Opcode.MOVE_OBJECT -> registers[two!!.registerA] = registers[two.registerB]
                     Opcode.NEW_INSTANCE -> registers[one!!] = "new-listener"
+                    Opcode.INVOKE_DIRECT -> {
+                        val call = i as FiveRegisterInstruction
+                        val ref = (i as ReferenceInstruction).reference.toString()
+                        assertEquals("$WATCH_CONTROL->〇O888o0o(Ljava/lang/String;)Z", ref)
+                        assertSame(expected[0], registers[call.registerC])
+                        result = registers[call.registerD] != ParsedData.ACTIVE
+                    }
                     Opcode.INVOKE_DIRECT_RANGE -> {
                         val call = i as RegisterRangeInstruction
                         val args = (call.startRegister until call.startRegister + call.registerCount).map { registers[it] }
@@ -110,6 +123,15 @@ class CamScannerRewardSkipTest {
             val vm = Vm(site, Request("watchad_lottery", "request-1"), Life(), Manager(true), Any()).execute()
             assertEquals(0, vm.original); assertEquals(1, vm.constructed)
             assertEquals(1, vm.completed); assertEquals(1, vm.closed)
+        }
+    }
+    @Test fun pageEntryPreloadAndCanceledDataNeverConstructOrCompleteAReward() {
+        for (site in RewardSkipSite.entries) for (data in listOf(ParsedData.PRELOAD,
+                ParsedData.MALFORMED, ParsedData.EMPTY, null)) {
+            // Include a valid id: a bridge-generated id must not turn preload into a gesture.
+            val vm = Vm(site, Request("watchad_lottery", "page-entry-id", data),
+                Life(), Manager(true), ViewLife()).execute()
+            assertEquals(0, vm.original + vm.constructed + vm.completed + vm.closed)
         }
     }
     @Test fun malformedUnrelatedAndNonLotteryRequestsRetainOriginalPath() {

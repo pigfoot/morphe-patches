@@ -79,6 +79,12 @@ internal fun rewardSkipPrefix(site: RewardSkipSite): String {
         invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
         move-result v0
         if-eqz v0, :reward_skip_original
+        # Page mounted() sends prestrain=1. Never treat a preload as reward completion.
+        # Reuse the pinned original parser, including its malformed/empty cancellation.
+        iget-object v0, ${site.data}, Lcom/intsig/camscanner/attention/CallAppData;->data:Ljava/lang/String;
+        invoke-direct {${site.control}, v0}, $WATCH_CONTROL->〇O888o0o(Ljava/lang/String;)Z
+        move-result v0
+        if-nez v0, :reward_skip_cancel
         iget-object v0, ${site.data}, Lcom/intsig/camscanner/attention/CallAppData;->id:Ljava/lang/String;
         if-eqz v0, :reward_skip_original
         invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
