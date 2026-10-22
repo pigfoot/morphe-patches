@@ -35,7 +35,8 @@ modules/route/hash fail without a read. Do not press draw during this diagnosis.
 
 The temporary `CS-QUOTA-V16` box reports route class, genuine count versus
 null/missing/false/error, a bounded request count and credential-presence booleans.
-It never prints credentials, identifiers, names, full URLs, response bodies or
+It may report a strictly bounded public module build tag if a different version is loaded.
+It never prints credentials, account/device identifiers, names, full URLs, response bodies or
 exception messages. Presence is not evidence of valid authentication.
 
 A passive XHR observer reports only numeric HTTP/business codes and the relevant

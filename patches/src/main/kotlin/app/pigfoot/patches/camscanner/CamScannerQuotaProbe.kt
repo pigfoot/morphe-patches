@@ -122,7 +122,22 @@ internal val quotaProbeScript = """
     try {
       var loaded = false;
       for (var attempt = 0; attempt < 10 && !done; attempt++) {
-        loaded = performance.getEntriesByType("resource").some(function(e) { return e.name === url; });
+        var entries = performance.getEntriesByType("resource");
+        var folder = legacy ? "/camscanner-mo/static/" : "/camscanner-integral-mo/static/";
+        var base = legacy ? "pc-api-" : "config-";
+        report.MODULE_TAG = "NONE";
+        entries.forEach(function(entry) {
+          try {
+            var asset = new URL(entry.name);
+            var file = asset.pathname.slice(folder.length);
+            var tag = file.slice(base.length,-3);
+            var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+            if (asset.origin === "https://static-cdn.camscanner.com" && asset.pathname.startsWith(folder) &&
+                file.startsWith(base) && file.endsWith(".js") && tag.length >= 8 && tag.length <= 12 &&
+                Array.from(tag).every(function(c) { return alphabet.includes(c); })) report.MODULE_TAG = file;
+          } catch (_) {}
+        });
+        loaded = entries.some(function(e) { return e.name === url; });
         if (loaded) break;
         await new Promise(function(resolve) { setTimeout(resolve,100); });
       }

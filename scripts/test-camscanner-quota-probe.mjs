@@ -42,7 +42,7 @@ function fixture(options = {}) {
   const context = {
     location, URL, URLSearchParams, Uint8Array, Reflect, Date, Number, Object, String,
     XMLHttpRequest:Xhr,
-    performance:{getEntriesByType(type) { assert.equal(type,'resource'); return options.moduleAbsent ? [] : [{name:loaded}]; }},
+    performance:{getEntriesByType(type) { assert.equal(type,'resource'); return options.moduleAbsent ? [] : [{name:options.moduleUnknown ? loaded.replace(modern ? 'Dyz9RPJ4' : 'BrpmLW-U','ABCDEFGH') : loaded}]; }},
     setTimeout(fn,delay) { const id = ++timerId; timers.set(id,{fn,delay}); return id; },
     clearTimeout(id) { timers.delete(id); },
     MutationObserver:class { constructor(fn) { mutation=fn; } observe() {} disconnect() {} },
@@ -95,3 +95,5 @@ test('HTTP/business/network failure does not print error messages or credentials
 });
 test('timeout does not retry or abort the original request',async()=>{const f=fixture({pending:true});await f.flush();f.timeout();await f.flush();assert.equal(f.queryCalls,1);assert.match(f.report(),/QUERY=TIMEOUT_NO_RETRY/);assert.equal(f.context.XMLHttpRequest.prototype.open,f.originalOpen);f.assertPrivate();});
 test('concurrent observed reads are labeled rather than claimed to be correlated',async()=>{const f=fixture({multiple:true});await f.flush();assert.match(f.report(),/OBSERVED_READS=2/);assert.match(f.report(),/QUOTA_READS=1/);assert.equal(f.queryCalls,1);f.assertPrivate();});
+
+test('unqualified public module build tag is reported without import or quota read',async()=>{const f=fixture({moduleUnknown:true});await f.flush();assert.match(f.report(),/MODULE_TAG=pc-api-ABCDEFGH.js/);assert.match(f.report(),/QUERY=MODULE_NOT_LOADED/);assert.equal(f.queryCalls,0);assert.equal(f.imports,0);assert.equal(f.publicFetches,0);f.assertPrivate();});
