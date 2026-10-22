@@ -7,6 +7,8 @@ package app.pigfoot.patches.camscanner
  * Native byte hashes are never routed through this compatibility function.
  */
 private val runtime2ClassPins = mapOf(
+    // Temporary quota probe client, independently measured on pristine72701.
+    "424a01b5ab60296ce8794c67b559992f6c76545b0a19fe0e19d2061e94341fcb" to "e5ff5a7b1762abaf68ec714da5e1932940881164cc4d55ae17e25ab526b9238a",
     // Lcom/bytedance/sdk/openadsdk/ykq/ra$1;
     "06c417140a659f783554082dd6f9ee037b600956b01e6068b758d34350fefb66" to "cb59504e22bec08e63bf34c33538ae309554e036c2636a4d0a409d738f175f9b",
     // Lcom/google/ads/mediation/mintegral/rtb/MintegralRtbAppOpenAd;
