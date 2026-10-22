@@ -148,3 +148,14 @@ and independently exercise modified-input/reapply rejection. Do not replace pins
 blindly, accept an entire engine version, or disable guards to fix a serializer
 mismatch. Do not count a Desktop-only test on an older patcher as Manager2.0
 qualification. Full APKM application is a separate integration case.
+
+Desktop1.19 also changes verification plumbing independently of the patch:
+
+- Its result JSON uses `success`/`failedPatches` and string entries in
+  `appliedPatches`; it no longer reports per-patch option values. Validate the
+  observed APK behavior/prefixes, not only the command's option text.
+- Its default native keep-list excludes legacy `armeabi`. For a strict comparison
+  preserving every input ABI, pass `--striplibs arm64-v8a,armeabi-v7a,armeabi,x86,x86_64`.
+  Do not count a default-stripped output as an all-ABI inventory pass, or attribute
+  the CLI's ABI filtering to a CamScanner patch. Inspect the retained arm64 ABI
+  separately when qualifying default desktop/device output.
