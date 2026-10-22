@@ -43,7 +43,9 @@ A passive XHR observer reports only numeric HTTP/business codes and the relevant
 count-field classification. `_OBS` fields are observations, not guaranteed
 request-correlated results; `OBSERVED_READS>1` explicitly exposes concurrency.
 No XHR result/arguments are replaced, and its wrapper is restored after completion
-or a10-second deadline. No capture is labeled NO_CAPTURE, not a fabricated HTTP
+or a10-second deadline when it still owns the property. Later SDK wrappers are
+not overwritten; even if one retains the diagnostic wrapper, it adds no further
+observers after cleanup. No capture is labeled NO_CAPTURE, not a fabricated HTTP
 result. The original request is not aborted on timeout. Non-target page watching
 is bounded30seconds. One diagnostic read per document prevents finish-event
 replay; returning later in the same SPA document does not trigger a second read.

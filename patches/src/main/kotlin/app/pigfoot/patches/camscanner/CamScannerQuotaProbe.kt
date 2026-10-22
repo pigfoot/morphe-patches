@@ -86,7 +86,7 @@ internal val quotaProbeScript = """
     if (typeof XMLHttpRequest === "undefined") return;
     var original = XMLHttpRequest.prototype.open;
     function open(method, url) {
-      if (scope(url, method, legacy)) {
+      if (!done && scope(url, method, legacy)) {
         this.addEventListener("loadend", function() {
           if (done) return;
           report.OBSERVED_READS++; report.HTTP_OBS = code(this.status);
