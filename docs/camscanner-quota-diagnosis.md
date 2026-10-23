@@ -1,5 +1,32 @@
 # Temporary lottery quota diagnosis
 
+## V19 passive page-state comparison
+
+V18 live output returned three in a successful separate query while the wheel
+still displayed zero. The diagnostic intentionally does not synchronize Vue data;
+this is not proof that the page's earlier request returned three or that the
+failure is a particular auth, initialization, timing or parameter bug.
+
+The current official component initializes its count to zero. Offline execution
+of the actual view and public quota function reproduces both a failed earlier
+query followed by a successful separate query, and a route credential parsed as
+an array rather than a string. Either can leave the display at zero; neither is
+established as the device cause. A normal page query returning three updates the
+component to three.
+
+V19 adds **passive** snapshots before and after the same single diagnostic read.
+A bounded traversal of the production Vue root locates one component with the
+measured lottery data/method shape. Only count/readiness/timezone-presence/modal
+booleans, credential types/equality booleans, capped query-key occurrence counts
+and bridge-ready boolean are reported. Credentials, usernames, URLs and arbitrary
+objects are never output. Missing, ambiguous, cyclic or oversized trees are
+classified conservatively. No component method is called; no UI field, route
+parameter or server response is rewritten, and no refresh or extra query is added.
+
+`UI_BEFORE` / `UI_AFTER` describe observed state, not a reconstructed history.
+`TZ_EMPTY` or `READY_NO` alone does not prove why initialization failed.
+Current labels are `CS-Q19:HOOK` / `CS-QUOTA-V19`.
+
 ## V18 exact public-module profile correction
 
 V17 device output confirms the native hook, main JavaScript and legacy lottery
@@ -85,7 +112,7 @@ modules/route/hash fail without a read. Do not press draw during this diagnosis.
 
 ## Output and limits
 
-The temporary `CS-QUOTA-V18` box reports route class, genuine count versus
+The temporary `CS-QUOTA-V19` box reports route class, genuine count versus
 null/missing/false/error, a bounded request count and credential-presence booleans.
 It may report a strictly bounded public module build tag if a different version is loaded.
 It never prints credentials, account/device identifiers, names, full URLs, response bodies or

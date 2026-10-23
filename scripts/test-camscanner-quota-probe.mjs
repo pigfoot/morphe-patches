@@ -29,6 +29,15 @@ function fixture(options = {}) {
     finish() { for (const fn of this.listeners) fn.call(this); }
   }
   const originalOpen = Xhr.prototype.open;
+  const uiData = options.uiData;
+  if (uiData) {
+    function vnode(data) { return {component:{data,type:{methods:{queryLotteryTime(){throw Error("UI method forbidden");},startlottery(){throw Error("Draw forbidden");},banLottery(){throw Error("UI write forbidden");}}},subTree:null}}; }
+    const tree = vnode(uiData);
+    if (options.uiMultiple) tree.children=[vnode({...uiData})];
+    if (options.uiCycle) tree.children=[tree,{component:tree.component}];
+    if (options.uiLimit) tree.children=Array.from({length:401},()=>({}));
+    nodes.set('app',{_vnode:tree});
+  }
   const quota = async (args) => {
     queryCalls++;
     assert.equal(queryCalls,1,'no retry or second quota read');
@@ -67,7 +76,7 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v18')?.textContent || ''; }
+  function report() { return nodes.get('cs-quota-probe-v19')?.textContent || ''; }
   return {context,flush,report,get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
     repeat(){vm.runInContext(script,context);mutation?.();},
     bootstrap(){vm.runInContext(bootstrap,context);},
@@ -140,4 +149,23 @@ test('phone build still rejects changed bytes, absent export and unknown build w
 });
 test('multiple qualified legacy module builds fail closed before fetch import or read',async()=>{
   const f=fixture({ambiguous:true});await f.flush();assert.match(f.report(),/QUERY=MODULE_AMBIGUOUS_NO_READ/);assert.equal(f.queryCalls,0);assert.equal(f.imports,0);assert.equal(f.publicFetches,0);f.assertPrivate();
+});
+
+
+test('passive original Vue state remains zero while independent quota read returns three',async()=>{
+  const data=Object.freeze({lotteryChance:0,canReady:false,showChance:false,timezone:'8',intsig_key:canary,encrypt_uid:canary});const before=JSON.stringify(data);
+  const f=fixture({phone:true,uiData:data});await f.flush();assert.match(f.report(),/UI_BEFORE=COUNT_0\/READY_NO\/TZ_SET\/EXHAUSTED_NO/);assert.match(f.report(),/UI_AFTER=COUNT_0\/READY_NO\/TZ_SET\/EXHAUSTED_NO/);assert.match(f.report(),/UI_KEY_TYPE=STRING/);assert.match(f.report(),/UI_KEY_MATCH=YES/);assert.match(f.report(),/QUERY=COUNT_3/);assert.equal(JSON.stringify(data),before);assert.equal(f.queryCalls,1);f.assertPrivate();
+});
+test('array and mismatched UI credentials are classified without values or normalization',async()=>{
+  const key=Object.freeze([canary,canary]),data=Object.freeze({lotteryChance:0,canReady:true,showChance:false,timezone:'',intsig_key:key,encrypt_uid:'OTHER_PRIVATE_VALUE'});
+  const f=fixture({uiData:data,location:'https://mo.camscanner.com/lottery/relottery?intsig_key='+canary+'&intsig_key='+canary+'&encrypt_uid='+canary});await f.flush();assert.match(f.report(),/KEY_PARAMS=2/);assert.match(f.report(),/UI_KEY_TYPE=ARRAY/);assert.match(f.report(),/UI_KEY_MATCH=NOT_STRING/);assert.match(f.report(),/UI_UID_MATCH=NO/);assert.match(f.report(),/TZ_EMPTY/);assert.ok(!f.report().includes('OTHER_PRIVATE_VALUE'));assert.equal(data.intsig_key,key);f.assertPrivate();
+});
+test('missing ambiguous and oversized Vue trees do not expose arbitrary component data',async()=>{
+  const data={lotteryChance:3,canReady:true,intsig_key:canary,encrypt_uid:canary};
+  for(const [opts,wanted] of [[{},'NO_ROOT'],[{uiData:data,uiMultiple:true},'AMBIGUOUS'],[{uiData:data,uiLimit:true},'LIMIT']]) {
+    const f=fixture(opts);await f.flush();assert.match(f.report(),new RegExp('UI_BEFORE='+wanted));assert.equal(f.queryCalls,1);f.assertPrivate();
+  }
+});
+test('cyclic Vue trees are bounded and repeated finish cannot invoke component methods or read twice',async()=>{
+  const data=Object.freeze({lotteryChance:3,canReady:true,showChance:false,timezone:'8',intsig_key:canary,encrypt_uid:canary});const f=fixture({uiData:data,uiCycle:true});await f.flush();f.repeat();await f.flush();assert.match(f.report(),/UI_AFTER=COUNT_3/);assert.equal(f.queryCalls,1);f.assertPrivate();
 });

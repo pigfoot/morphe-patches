@@ -19,9 +19,9 @@ internal fun quotaProbePrefix(): String {
     return """
         if-eqz p1, :quota_probe_original
         const/4 v3, 0x0
-        const-string v1, "CS-Q18:HOOK NO_PAGE_URL"
+        const-string v1, "CS-Q19:HOOK NO_PAGE_URL"
         if-eqz p2, :quota_probe_toast
-        const-string v1, "CS-Q18:HOOK HOST_OUT_OF_SCOPE"
+        const-string v1, "CS-Q19:HOOK HOST_OUT_OF_SCOPE"
         const-string v0, "https://mo.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
@@ -32,7 +32,7 @@ internal fun quotaProbePrefix(): String {
         if-eqz v0, :quota_probe_toast
         :quota_probe_host
         const/4 v3, 0x1
-        const-string v1, "CS-Q18:HOOK SCOPED"
+        const-string v1, "CS-Q19:HOOK SCOPED"
         :quota_probe_toast
         invoke-virtual {p1}, Landroid/view/View;->getContext()Landroid/content/Context;
         move-result-object v0
@@ -55,10 +55,10 @@ internal fun quotaProbePrefix(): String {
 internal val quotaBootstrapScript = """
 (function() {
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (!document.documentElement || document.getElementById("cs-quota-probe-v18")) return;
-  var box = document.createElement("pre"); box.id = "cs-quota-probe-v18";
+  if (!document.documentElement || document.getElementById("cs-quota-probe-v19")) return;
+  var box = document.createElement("pre"); box.id = "cs-quota-probe-v19";
   box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;pointer-events:none;border:2px solid #39c7b3";
-  box.textContent = "CS-QUOTA-V18\nSTAGE=JS_BOOTSTRAP";
+  box.textContent = "CS-QUOTA-V19\nSTAGE=JS_BOOTSTRAP";
   document.documentElement.appendChild(box);
 })();
 """.trimIndent()
@@ -68,9 +68,9 @@ internal val quotaProbeScript = """
 (function(importer) {
   "use strict";
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (window.__csQuotaProbeV18) return;
-  window.__csQuotaProbeV18 = true;
-  var done = false, started = false, observer, watchTimer, timer, restore = function() {};
+  if (window.__csQuotaProbeV19) return;
+  window.__csQuotaProbeV19 = true;
+  var done = false, started = false, observer, watchTimer, timer, uiQuery, restore = function() {};
   var report = {STAGE:"MAIN_ENTERED", ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
   function code(v) {
     if (typeof v !== "number" && typeof v !== "string") return "UNKNOWN";
@@ -84,22 +84,71 @@ internal val quotaProbeScript = """
     if (typeof v === "string" && v.trim() !== "" && Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 100) return "COUNT_" + Number(v);
     return "INVALID_TYPE";
   }
+  // Passive Vue inspection: no methods, setters, credentials or objects are output.
+  function uiSnapshot(q) {
+    try {
+      var root = document.getElementById("app");
+      if (!root || !root._vnode) return {state:"NO_ROOT"};
+      var queue = [root._vnode], seen = new Set(), found = [];
+      while (queue.length && seen.size < 200) {
+        var node = queue.shift();
+        if (!node || typeof node !== "object" || seen.has(node)) continue;
+        seen.add(node);
+        var instance = node.component;
+        if (instance) {
+          var data = instance.data, methods = instance.type && instance.type.methods;
+          if (data && methods && typeof methods.queryLotteryTime === "function" &&
+              typeof methods.startlottery === "function" && typeof methods.banLottery === "function" &&
+              Object.prototype.hasOwnProperty.call(data,"lotteryChance") &&
+              Object.prototype.hasOwnProperty.call(data,"canReady") &&
+              Object.prototype.hasOwnProperty.call(data,"intsig_key") &&
+              Object.prototype.hasOwnProperty.call(data,"encrypt_uid") && !found.includes(data)) found.push(data);
+          if (instance.subTree) queue.push(instance.subTree);
+        }
+        [node.children,node.dynamicChildren].forEach(function(list) {
+          if (Array.isArray(list)) {
+            for (var i=0; i<list.length && queue.length<=400; i++) queue.push(list[i]);
+          }
+        });
+        if (queue.length > 400) return {state:"LIMIT"};
+      }
+      if (queue.length) return {state:"LIMIT"};
+      if (found.length !== 1) return {state:found.length ? "AMBIGUOUS" : "NO_COMPONENT"};
+      var d = found[0];
+      function kind(v) { return Array.isArray(v) ? "ARRAY" : typeof v === "string" ? "STRING" : "OTHER"; }
+      function flag(v) { return v === true ? "YES" : v === false ? "NO" : "UNKNOWN"; }
+      return {state:count(d.lotteryChance,true)+"/READY_"+flag(d.canReady)+
+          "/TZ_"+(typeof d.timezone === "string" && d.timezone ? "SET" : "EMPTY")+
+          "/EXHAUSTED_"+flag(d.showChance),
+        keyKind:kind(d.intsig_key), uidKind:kind(d.encrypt_uid),
+        keyMatch:typeof d.intsig_key === "string" ? (d.intsig_key === q.get("intsig_key") ? "YES" : "NO") : "NOT_STRING",
+        uidMatch:typeof d.encrypt_uid === "string" ? (d.encrypt_uid === q.get("encrypt_uid") ? "YES" : "NO") : "NOT_STRING"};
+    } catch (_) { return {state:"UNAVAILABLE"}; }
+  }
+  function captureUi(label) {
+    if (!uiQuery) return;
+    var ui = uiSnapshot(uiQuery); report[label] = ui.state;
+    if (ui.keyKind) {
+      report.UI_KEY_TYPE = ui.keyKind; report.UI_UID_TYPE = ui.uidKind;
+      report.UI_KEY_MATCH = ui.keyMatch; report.UI_UID_MATCH = ui.uidMatch;
+    }
+  }
   function render() {
     try {
-      var box = document.getElementById("cs-quota-probe-v18");
+      var box = document.getElementById("cs-quota-probe-v19");
       if (!box) {
-        box = document.createElement("pre"); box.id = "cs-quota-probe-v18";
+        box = document.createElement("pre"); box.id = "cs-quota-probe-v19";
         box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;pointer-events:none;border:2px solid #39c7b3";
         document.documentElement.appendChild(box);
       }
-      box.textContent = "CS-QUOTA-V18 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
+      box.textContent = "CS-QUOTA-V19 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
     } catch (_) {}
   }
   function finish(state) {
     if (done) return;
     if (state) report.QUERY = state;
     done = true; clearTimeout(timer); clearTimeout(watchTimer);
-    if (observer) observer.disconnect(); restore(); render();
+    if (observer) observer.disconnect(); restore(); captureUi("UI_AFTER"); render();
   }
   function scope(url, method, legacy) {
     try {
@@ -135,7 +184,11 @@ internal val quotaProbeScript = """
   }
   async function run(legacy) {
     report.ROUTE = legacy ? "LEGACY_WATCHAD_VIP" : "MODERN_DAY_COUNT";
-    var q = new URLSearchParams(location.search);
+    var q = new URLSearchParams(location.search); uiQuery = q;
+    captureUi("UI_BEFORE");
+    report.KEY_PARAMS = Math.min(q.getAll("intsig_key").length,9);
+    report.UID_PARAMS = Math.min(q.getAll("encrypt_uid").length,9);
+    report.BRIDGE_READY = window.jsapi_ready === true ? "YES" : window.jsapi_ready === false ? "NO" : "UNKNOWN";
     report.KEY_PRESENT = q.has("intsig_key") && !!q.get("intsig_key") ? "YES" : "NO";
     report.UID_PRESENT = q.has("encrypt_uid") && !!q.get("encrypt_uid") ? "YES" : "NO";
     render();
