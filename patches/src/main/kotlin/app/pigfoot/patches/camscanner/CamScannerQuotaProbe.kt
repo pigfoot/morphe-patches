@@ -19,9 +19,9 @@ internal fun quotaProbePrefix(): String {
     return """
         if-eqz p1, :quota_probe_original
         const/4 v3, 0x0
-        const-string v1, "CS-Q17:HOOK NO_PAGE_URL"
+        const-string v1, "CS-Q18:HOOK NO_PAGE_URL"
         if-eqz p2, :quota_probe_toast
-        const-string v1, "CS-Q17:HOOK HOST_OUT_OF_SCOPE"
+        const-string v1, "CS-Q18:HOOK HOST_OUT_OF_SCOPE"
         const-string v0, "https://mo.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
@@ -32,7 +32,7 @@ internal fun quotaProbePrefix(): String {
         if-eqz v0, :quota_probe_toast
         :quota_probe_host
         const/4 v3, 0x1
-        const-string v1, "CS-Q17:HOOK SCOPED"
+        const-string v1, "CS-Q18:HOOK SCOPED"
         :quota_probe_toast
         invoke-virtual {p1}, Landroid/view/View;->getContext()Landroid/content/Context;
         move-result-object v0
@@ -55,10 +55,10 @@ internal fun quotaProbePrefix(): String {
 internal val quotaBootstrapScript = """
 (function() {
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (!document.documentElement || document.getElementById("cs-quota-probe-v17")) return;
-  var box = document.createElement("pre"); box.id = "cs-quota-probe-v17";
+  if (!document.documentElement || document.getElementById("cs-quota-probe-v18")) return;
+  var box = document.createElement("pre"); box.id = "cs-quota-probe-v18";
   box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;pointer-events:none;border:2px solid #39c7b3";
-  box.textContent = "CS-QUOTA-V17\nSTAGE=JS_BOOTSTRAP";
+  box.textContent = "CS-QUOTA-V18\nSTAGE=JS_BOOTSTRAP";
   document.documentElement.appendChild(box);
 })();
 """.trimIndent()
@@ -68,8 +68,8 @@ internal val quotaProbeScript = """
 (function(importer) {
   "use strict";
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (window.__csQuotaProbeV17) return;
-  window.__csQuotaProbeV17 = true;
+  if (window.__csQuotaProbeV18) return;
+  window.__csQuotaProbeV18 = true;
   var done = false, started = false, observer, watchTimer, timer, restore = function() {};
   var report = {STAGE:"MAIN_ENTERED", ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
   function code(v) {
@@ -86,13 +86,13 @@ internal val quotaProbeScript = """
   }
   function render() {
     try {
-      var box = document.getElementById("cs-quota-probe-v17");
+      var box = document.getElementById("cs-quota-probe-v18");
       if (!box) {
-        box = document.createElement("pre"); box.id = "cs-quota-probe-v17";
+        box = document.createElement("pre"); box.id = "cs-quota-probe-v18";
         box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;pointer-events:none;border:2px solid #39c7b3";
         document.documentElement.appendChild(box);
       }
-      box.textContent = "CS-QUOTA-V17 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
+      box.textContent = "CS-QUOTA-V18 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
     } catch (_) {}
   }
   function finish(state) {
@@ -140,11 +140,17 @@ internal val quotaProbeScript = """
     report.UID_PRESENT = q.has("encrypt_uid") && !!q.get("encrypt_uid") ? "YES" : "NO";
     render();
     timer = setTimeout(function() { finish("TIMEOUT_NO_RETRY"); }, 10000);
-    var url = legacy ?
-      "https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-BrpmLW-U.js" :
-      "https://static-cdn.camscanner.com/camscanner-integral-mo/static/config-Dyz9RPJ4.js";
-    var hash = legacy ? "be6d3ff01592d1e952392801b2f5536cda89486f451cc90d1d060c219c23b636" :
-      "29cb6e0058ef876d76b6dd60f611d54cc8cb62ab6a6a637578c1d34b5978c646";
+    // Exact, independently reviewed public builds; never import a reported tag blindly.
+    var profiles = legacy ? [
+      {url:"https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-BrpmLW-U.js",
+       hash:"be6d3ff01592d1e952392801b2f5536cda89486f451cc90d1d060c219c23b636", entry:"queryLottery"},
+      {url:"https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-DWt5-aHp.js",
+       hash:"cb0dd1b74bc22ab7710971fdd2d78ee1d108bf6189f9eda74d0e80049f910cce", entry:"i"}
+    ] : [
+      {url:"https://static-cdn.camscanner.com/camscanner-integral-mo/static/config-Dyz9RPJ4.js",
+       hash:"29cb6e0058ef876d76b6dd60f611d54cc8cb62ab6a6a637578c1d34b5978c646", entry:"I"}
+    ];
+    var profile;
     var phase = "MODULE";
     try {
       var loaded = false;
@@ -164,12 +170,16 @@ internal val quotaProbeScript = """
                 Array.from(tag).every(function(c) { return alphabet.includes(c); })) report.MODULE_TAG = file;
           } catch (_) {}
         });
-        loaded = entries.some(function(e) { return e.name === url; });
+        var matches = profiles.filter(function(p) { return entries.some(function(e) { return e.name === p.url; }); });
+        if (matches.length > 1) return finish("MODULE_AMBIGUOUS_NO_READ");
+        profile = matches[0]; loaded = !!profile;
         if (loaded) break;
         await new Promise(function(resolve) { setTimeout(resolve,100); });
       }
       if (done) return;
       if (!loaded) return finish("MODULE_NOT_LOADED");
+      var url = profile.url;
+      report.MODULE_TAG = url.slice(url.lastIndexOf("/") + 1);
       if (!window.crypto || !window.crypto.subtle) return finish("NO_HASH_API");
       var response = await fetch(url, {credentials:"omit"});
       if (done) return;
@@ -179,10 +189,10 @@ internal val quotaProbeScript = """
       var digest = await crypto.subtle.digest("SHA-256", bytes);
       var actual = Array.from(new Uint8Array(digest)).map(function(n) { return n.toString(16).padStart(2,"0"); }).join("");
       if (done) return;
-      if (actual !== hash) return finish("MODULE_HASH_REJECTED");
+      if (actual !== profile.hash) return finish("MODULE_HASH_REJECTED");
       var mod = await importer(url);
       if (done) return;
-      var fn = legacy ? mod.queryLottery : mod.I;
+      var fn = mod[profile.entry];
       if (typeof fn !== "function") return finish("FUNCTION_MISSING");
       observe(legacy);
       report.QUERY = "PENDING_ONE_READ"; render();

@@ -10,6 +10,8 @@ const script = raw.replace('function(url) { return import(url); }', '__importer'
 assert.notEqual(raw, script);
 const canary = 'PRIVATE_ACCOUNT_TOKEN_NOT_FOR_DISPLAY';
 const legacyUrl = 'https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-BrpmLW-U.js';
+const phoneUrl = 'https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-DWt5-aHp.js';
+const phoneHash = 'cb0dd1b74bc22ab7710971fdd2d78ee1d108bf6189f9eda74d0e80049f910cce';
 const modernUrl = 'https://static-cdn.camscanner.com/camscanner-integral-mo/static/config-Dyz9RPJ4.js';
 const legacyHash = 'be6d3ff01592d1e952392801b2f5536cda89486f451cc90d1d060c219c23b636';
 const modernHash = '29cb6e0058ef876d76b6dd60f611d54cc8cb62ab6a6a637578c1d34b5978c646';
@@ -17,7 +19,7 @@ const modernHash = '29cb6e0058ef876d76b6dd60f611d54cc8cb62ab6a6a637578c1d34b5978
 function fixture(options = {}) {
   const modern = !!options.modern, nodes = new Map(), timers = new Map();
   let timerId = 0, queryCalls = 0, imports = 0, publicFetches = 0, mutation;
-  const loaded = modern ? modernUrl : legacyUrl;
+  const loaded = modern ? modernUrl : options.phone ? phoneUrl : legacyUrl;
   const location = new URL(options.location || `https://mo.camscanner.com/${modern ? 'integral/intergralTurntable' : 'lottery/relottery'}?intsig_key=${canary}&encrypt_uid=${canary}&client_app=CamScanner&version=new`);
   class Xhr {
     constructor() { this.listeners = []; this.status = options.http ?? 200; this.responseType = ''; this.responseText = JSON.stringify(options.rawBody || {ret:'200',data:{[modern ? 'day_count' : 'watchad_vip_chance']:3, token:canary}}); }
@@ -43,18 +45,18 @@ function fixture(options = {}) {
   const context = {
     location, URL, URLSearchParams, Uint8Array, Reflect, Date, Number, Object, String,
     XMLHttpRequest:Xhr,
-    performance:{getEntriesByType(type) { assert.equal(type,'resource'); return options.moduleAbsent ? [] : [{name:options.moduleUnknown ? loaded.replace(modern ? 'Dyz9RPJ4' : 'BrpmLW-U','ABCDEFGH') : loaded}]; }},
+    performance:{getEntriesByType(type) { assert.equal(type,'resource'); return options.moduleAbsent ? [] : options.ambiguous ? [{name:legacyUrl},{name:phoneUrl}] : [{name:options.moduleUnknown ? loaded.replace(modern ? 'Dyz9RPJ4' : options.phone ? 'DWt5-aHp' : 'BrpmLW-U','ABCDEFGH') : loaded}]; }},
     setTimeout(fn,delay) { const id = ++timerId; timers.set(id,{fn,delay}); return id; },
     clearTimeout(id) { timers.delete(id); },
     MutationObserver:class { constructor(fn) { mutation=fn; } observe() {} disconnect() {} },
     document:{documentElement:{appendChild(node) { nodes.set(node.id,node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {style:{}}; }, querySelector() { return options.wheel ? {} : null; }},
     fetch:async (url,config) => { publicFetches++; assert.equal(url,loaded); assert.equal(config.credentials,'omit'); return {ok:options.fetchOk!==false,arrayBuffer:async()=>new Uint8Array([1,2,3]).buffer}; },
-    __importer:async url => { imports++; assert.equal(url,loaded); if(options.importError) throw Error(canary); return options.functionMissing ? {} : modern ? {I:quota,c:{macro:{token:options.noToken?'':canary}}} : {queryLottery:quota}; },
+    __importer:async url => { imports++; assert.equal(url,loaded); if(options.importError) throw Error(canary); return options.functionMissing ? {} : modern ? {I:quota,c:{macro:{token:options.noToken?'':canary}}} : options.phone ? {i:quota} : {queryLottery:quota}; },
   };
   context.window={crypto:{subtle:{async digest(algorithm,bytes) {
     assert.equal(algorithm,'SHA-256'); assert.deepEqual([...new Uint8Array(bytes)],[1,2,3]);
     // Model the browser's digest boundary; the real public-source hashes were independently measured.
-    return Uint8Array.from(Buffer.from(options.hashMismatch ? '00'.repeat(32) : modern ? modernHash : legacyHash,'hex')).buffer;
+    return Uint8Array.from(Buffer.from(options.hashMismatch ? '00'.repeat(32) : modern ? modernHash : options.phone ? phoneHash : legacyHash,'hex')).buffer;
   }}}};
   context.crypto=context.window.crypto;
   vm.createContext(context); vm.runInContext(script,context);
@@ -65,7 +67,7 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v17')?.textContent || ''; }
+  function report() { return nodes.get('cs-quota-probe-v18')?.textContent || ''; }
   return {context,flush,report,get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
     repeat(){vm.runInContext(script,context);mutation?.();},
     bootstrap(){vm.runInContext(bootstrap,context);},
@@ -122,4 +124,20 @@ test('delayed SPA route transitions from visible pending to one qualified read',
   const f=fixture({location:'https://mo.camscanner.com/task/index'});assert.match(f.report(),/ROUTE=PENDING/);
   f.navigate('https://mo.camscanner.com/lottery/relottery?intsig_key='+canary+'&encrypt_uid='+canary);await f.flush();assert.match(f.report(),/QUERY=COUNT_3/);assert.equal(f.queryCalls,1);
   f.bootstrap();f.repeat();await f.flush();assert.equal(f.queryCalls,1);assert.match(f.report(),/QUERY=COUNT_3/);f.assertPrivate();
+});
+
+
+test('phone build selects its exact hash and minified original quota export',async()=>{
+  for(const [result,wanted] of [[{data:{watchad_vip_chance:0}},'COUNT_0'],[{data:{watchad_vip_chance:3}},'COUNT_3'],[{data:{watchad_vip_chance:null}},'NULL'],[{data:false},'QUERY_FALSE']]) {
+    const f=fixture({phone:true,result});await f.flush();assert.match(f.report(),/MODULE_TAG=pc-api-DWt5-aHp.js/);assert.match(f.report(),new RegExp(`QUERY=${wanted}\\n`));assert.equal(f.queryCalls,1);assert.equal(f.imports,1);f.assertPrivate();
+    f.repeat();await f.flush();assert.equal(f.queryCalls,1);
+  }
+});
+test('phone build still rejects changed bytes, absent export and unknown build without a quota read',async()=>{
+  for(const opts of [{hashMismatch:true},{functionMissing:true},{moduleUnknown:true}]) {
+    const f=fixture({phone:true,...opts});await f.flush();assert.equal(f.queryCalls,0);if(opts.moduleUnknown) {assert.equal(f.imports,0);assert.equal(f.publicFetches,0);}f.assertPrivate();
+  }
+});
+test('multiple qualified legacy module builds fail closed before fetch import or read',async()=>{
+  const f=fixture({ambiguous:true});await f.flush();assert.match(f.report(),/QUERY=MODULE_AMBIGUOUS_NO_READ/);assert.equal(f.queryCalls,0);assert.equal(f.imports,0);assert.equal(f.publicFetches,0);f.assertPrivate();
 });

@@ -1,5 +1,28 @@
 # Temporary lottery quota diagnosis
 
+## V18 exact public-module profile correction
+
+V17 device output confirms the native hook, main JavaScript and legacy lottery
+route execute, but the already-loaded `pc-api-DWt5-aHp.js` differs from the pinned
+legacy build. `MODULE_NOT_LOADED` with zero quota reads is a diagnostic
+compatibility failure, not proof of backend zero or authentication failure.
+
+V18 retains the liveness stages and adds only this independently reviewed
+URL/SHA256/export profile. The new module exports the original `queryLottery`
+function as `i`, not the earlier named export. An exact loaded profile is selected
+before a credential-free source fetch, hash verification and import; multiple
+qualified legacy profiles in one document fail closed without fetching or reading.
+Unknown build tags never become import URLs. The original read function, argument
+scope, once-per-document guard, no-retry/no-write policy and normal modes remain.
+
+The original public module was executed offline with synthetic cryptography and
+transport boundaries: zero, three, missing and HTTP/business errors; exactly one
+PAPI GET `/query_property` with `property_id=watchad_vip`, no write calls. This
+checks code semantics, not live credentials or device quota. Screenshot credential
+presence booleans still do not establish valid authentication.
+
+Current markers are `CS-Q18:HOOK` and `CS-QUOTA-V18`.
+
 ## V17 liveness correction
 
 V16 was selected explicitly on the phone but no diagnostic box appeared.
@@ -50,16 +73,19 @@ page/session context. It never calls draw, claim, reward or task-completion APIs
 changes responses, rewrites counters, or retries the quota request. Unknown
 modules/route/hash fail without a read. Do not press draw during this diagnosis.
 
-- Legacy module: `pc-api-BrpmLW-U.js`, SHA256
+- Earlier legacy module: `pc-api-BrpmLW-U.js`, SHA256
   `be6d3ff01592d1e952392801b2f5536cda89486f451cc90d1d060c219c23b636`,
   original `queryLottery` → PAPI `query_property` / `watchad_vip`.
+- Current legacy module: `pc-api-DWt5-aHp.js`, SHA256
+  `cb0dd1b74bc22ab7710971fdd2d78ee1d108bf6189f9eda74d0e80049f910cce`,
+  original `queryLottery` exported as `i` → same read-only PAPI query.
 - Modern module: `config-Dyz9RPJ4.js`, SHA256
   `29cb6e0058ef876d76b6dd60f611d54cc8cb62ab6a6a637578c1d34b5978c646`,
   original export `I` → UAPI GET `/reward/big_lottery`.
 
 ## Output and limits
 
-The temporary `CS-QUOTA-V17` box reports route class, genuine count versus
+The temporary `CS-QUOTA-V18` box reports route class, genuine count versus
 null/missing/false/error, a bounded request count and credential-presence booleans.
 It may report a strictly bounded public module build tag if a different version is loaded.
 It never prints credentials, account/device identifiers, names, full URLs, response bodies or
