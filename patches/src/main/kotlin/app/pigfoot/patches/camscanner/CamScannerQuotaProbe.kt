@@ -15,10 +15,13 @@ internal fun requireQuotaProbeMethod(method: Method) {
 }
 
 internal fun quotaProbePrefix(): String {
-    val literal = quotaProbeScript.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+    fun literal(script: String) = script.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
     return """
         if-eqz p1, :quota_probe_original
-        if-eqz p2, :quota_probe_original
+        const/4 v3, 0x0
+        const-string v1, "CS-Q17:HOOK NO_PAGE_URL"
+        if-eqz p2, :quota_probe_toast
+        const-string v1, "CS-Q17:HOOK HOST_OUT_OF_SCOPE"
         const-string v0, "https://mo.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
@@ -26,25 +29,49 @@ internal fun quotaProbePrefix(): String {
         const-string v0, "https://www.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
-        if-eqz v0, :quota_probe_original
+        if-eqz v0, :quota_probe_toast
         :quota_probe_host
-        const-string v0, "$literal"
+        const/4 v3, 0x1
+        const-string v1, "CS-Q17:HOOK SCOPED"
+        :quota_probe_toast
+        invoke-virtual {p1}, Landroid/view/View;->getContext()Landroid/content/Context;
+        move-result-object v0
+        const/4 v2, 0x1
+        invoke-static {v0, v1, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+        move-result-object v0
+        invoke-virtual {v0}, Landroid/widget/Toast;->show()V
+        if-eqz v3, :quota_probe_original
+        const-string v0, "${literal(quotaBootstrapScript)}"
         const/4 v1, 0x0
+        invoke-virtual {p1, v0, v1}, Landroid/webkit/WebView;->evaluateJavascript(Ljava/lang/String;Landroid/webkit/ValueCallback;)V
+        const-string v0, "${literal(quotaProbeScript)}"
         invoke-virtual {p1, v0, v1}, Landroid/webkit/WebView;->evaluateJavascript(Ljava/lang/String;Landroid/webkit/ValueCallback;)V
         :quota_probe_original
         nop
     """.trimIndent()
 }
 
+/** Independent, query-free liveness marker; never overwrites an existing report. */
+internal val quotaBootstrapScript = """
+(function() {
+  if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
+  if (!document.documentElement || document.getElementById("cs-quota-probe-v17")) return;
+  var box = document.createElement("pre"); box.id = "cs-quota-probe-v17";
+  box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;pointer-events:none;border:2px solid #39c7b3";
+  box.textContent = "CS-QUOTA-V17\nSTAGE=JS_BOOTSTRAP";
+  document.documentElement.appendChild(box);
+})();
+""".trimIndent()
+
 /** Explicit temporary diagnosis only. Never draws, grants or rewrites a server response. */
 internal val quotaProbeScript = """
 (function(importer) {
   "use strict";
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (window.__csQuotaProbeV16) return;
-  window.__csQuotaProbeV16 = true;
+  if (window.__csQuotaProbeV17) return;
+  window.__csQuotaProbeV17 = true;
   var done = false, started = false, observer, watchTimer, timer, restore = function() {};
-  var report = {ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
+  var report = {STAGE:"MAIN_ENTERED", ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
   function code(v) {
     if (typeof v !== "number" && typeof v !== "string") return "UNKNOWN";
     var n = Number(v);
@@ -59,13 +86,13 @@ internal val quotaProbeScript = """
   }
   function render() {
     try {
-      var box = document.getElementById("cs-quota-probe-v16");
+      var box = document.getElementById("cs-quota-probe-v17");
       if (!box) {
-        box = document.createElement("pre"); box.id = "cs-quota-probe-v16";
+        box = document.createElement("pre"); box.id = "cs-quota-probe-v17";
         box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;pointer-events:none;border:2px solid #39c7b3";
         document.documentElement.appendChild(box);
       }
-      box.textContent = "CS-QUOTA-V16 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
+      box.textContent = "CS-QUOTA-V17 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
     } catch (_) {}
   }
   function finish(state) {
@@ -190,9 +217,10 @@ internal val quotaProbeScript = """
       started = true; report.ROUTE = "OTHER_LOTTERY"; finish("UNQUALIFIED_PAGE_NO_READ");
     }
   }
+  render();
   observer = new MutationObserver(check);
   observer.observe(document.documentElement, {childList:true,subtree:true});
-  watchTimer = setTimeout(function() { if (observer) observer.disconnect(); }, 30000);
+  watchTimer = setTimeout(function() { if (!started) { started = true; report.ROUTE = "UNRECOGNIZED"; finish("ROUTE_NOT_RECOGNIZED_NO_READ"); } }, 30000);
   check();
 })(function(url) { return import(url); });
 """.trimIndent()

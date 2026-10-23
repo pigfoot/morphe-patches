@@ -1,5 +1,31 @@
 # Temporary lottery quota diagnosis
 
+## V17 liveness correction
+
+V16 was selected explicitly on the phone but no diagnostic box appeared.
+Its route matcher could silently wait and then disconnect without any report;
+there was no independent evidence that the native hook or JavaScript had run.
+The actual phone failure branch is still unknown; neither UI zero nor absent
+output proves a backend quota/authentication result.
+
+Only the existing explicit temporary mode adds these markers:
+- A native `CS-Q17:HOOK` Toast classifies SCOPED, HOST_OUT_OF_SCOPE or NO_PAGE_URL.
+  It never includes the actual URL or an identifier. Watch for it on page entry.
+- A separate query-free JavaScript bootstrap creates `CS-QUOTA-V17` with
+  `STAGE=JS_BOOTSTRAP`; it cannot overwrite an existing report.
+- The main script immediately renders `STAGE=MAIN_ENTERED`, even while waiting
+  for the route. An unrecognized route ends after30seconds with
+  `ROUTE_NOT_RECOGNIZED_NO_READ`, not a silent disconnect.
+
+The two JavaScript evaluations remain limited to the same official HTTPS hosts;
+actual quota reads retain the original strict route/module/hash/once guards.
+A Toast without a box narrows the investigation to evaluation/host/page execution;
+a bootstrap-only box separates bootstrap execution from main-script execution.
+These are liveness observations, not proof of a fixed phone or awarded reward.
+No new helper class, public patch or default is added. Normal modes have neither
+Toast nor diagnostic scripts. Both scripts execute on the existing UI callback;
+all original WebView method bodies and parameter registers are preserved.
+
 ## Motivation and status
 
 The Patcher2.0 input-fingerprint fix installs on the reported phone, but the
@@ -33,7 +59,7 @@ modules/route/hash fail without a read. Do not press draw during this diagnosis.
 
 ## Output and limits
 
-The temporary `CS-QUOTA-V16` box reports route class, genuine count versus
+The temporary `CS-QUOTA-V17` box reports route class, genuine count versus
 null/missing/false/error, a bounded request count and credential-presence booleans.
 It may report a strictly bounded public module build tag if a different version is loaded.
 It never prints credentials, account/device identifiers, names, full URLs, response bodies or
@@ -47,7 +73,7 @@ or a10-second deadline when it still owns the property. Later SDK wrappers are
 not overwritten; even if one retains the diagnostic wrapper, it adds no further
 observers after cleanup. No capture is labeled NO_CAPTURE, not a fabricated HTTP
 result. The original request is not aborted on timeout. Non-target page watching
-is bounded30seconds. One diagnostic read per document prevents finish-event
+is bounded30seconds and ends with an explicit no-read classification. One diagnostic read per document prevents finish-event
 replay; returning later in the same SPA document does not trigger a second read.
 
 ## Validation before delivery

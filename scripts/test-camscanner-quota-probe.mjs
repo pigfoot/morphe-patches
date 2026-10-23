@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../patches/src/main/kotlin/app/pigfoot/patches/camscanner/CamScannerQuotaProbe.kt', import.meta.url), 'utf8');
 const raw = source.split('internal val quotaProbeScript = """')[1].split('""".trimIndent()')[0];
+const bootstrap = source.split('internal val quotaBootstrapScript = """')[1].split('""".trimIndent()')[0];
 const script = raw.replace('function(url) { return import(url); }', '__importer');
 assert.notEqual(raw, script);
 const canary = 'PRIVATE_ACCOUNT_TOKEN_NOT_FOR_DISPLAY';
@@ -64,9 +65,12 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v16')?.textContent || ''; }
+  function report() { return nodes.get('cs-quota-probe-v17')?.textContent || ''; }
   return {context,flush,report,get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
     repeat(){vm.runInContext(script,context);mutation?.();},
+    bootstrap(){vm.runInContext(bootstrap,context);},
+    routeTimeout(){const entry=[...timers].find(([,t])=>t.delay===30000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
+    navigate(url){context.location=new URL(url); mutation?.();},
     timeout(){const entry=[...timers].find(([,t])=>t.delay===10000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
     assertPrivate(){assert.ok(!report().includes(canary));assert.ok(!report().includes('https://'));},
   };
@@ -99,3 +103,23 @@ test('concurrent observed reads are labeled rather than claimed to be correlated
 test('unqualified public module build tag is reported without import or quota read',async()=>{const f=fixture({moduleUnknown:true});await f.flush();assert.match(f.report(),/MODULE_TAG=pc-api-ABCDEFGH.js/);assert.match(f.report(),/QUERY=MODULE_NOT_LOADED/);assert.equal(f.queryCalls,0);assert.equal(f.imports,0);assert.equal(f.publicFetches,0);f.assertPrivate();});
 
 test('cleanup preserves a later SDK wrapper and leaves no new observers after timeout',async()=>{const f=fixture({pending:true});await f.flush();const owned=f.context.XMLHttpRequest.prototype.open;function sdk(){return Reflect.apply(owned,this,arguments);}f.context.XMLHttpRequest.prototype.open=sdk;f.timeout();assert.equal(f.context.XMLHttpRequest.prototype.open,sdk);const xhr=new f.context.XMLHttpRequest();assert.equal(xhr.open('GET','https://api-cs.intsig.net/query_property?property_id=watchad_vip'),73);assert.equal(xhr.listeners.length,0);assert.equal(f.queryCalls,1);});
+
+
+test('unrecognized official route is visible immediately and ends with no-read classification',async()=>{
+  const f=fixture({location:'https://mo.camscanner.com/task/index'});
+  assert.match(f.report(),/STAGE=MAIN_ENTERED/);assert.match(f.report(),/ROUTE=PENDING/);
+  assert.equal(f.queryCalls,0);f.routeTimeout();await f.flush();
+  assert.match(f.report(),/QUERY=ROUTE_NOT_RECOGNIZED_NO_READ/);assert.equal(f.queryCalls,0);f.assertPrivate();
+  f.navigate('https://mo.camscanner.com/lottery/relottery');await f.flush();assert.equal(f.queryCalls,0);
+});
+test('independent bootstrap is query-free and cannot overwrite main report',async()=>{
+  const f=fixture({location:'https://mo.camscanner.com/task/index'});const before=f.report();f.bootstrap();assert.equal(f.report(),before);assert.equal(f.queryCalls,0);
+  f.context.document.getElementById=()=>null;
+  f.bootstrap();assert.match(f.report(),/STAGE=JS_BOOTSTRAP/);assert.equal(f.queryCalls,0);f.assertPrivate();
+  const wrong=fixture({location:'https://mo.camscanner.com.evil.invalid/lottery/relottery'});wrong.bootstrap();assert.equal(wrong.report(),'');assert.equal(wrong.queryCalls,0);
+});
+test('delayed SPA route transitions from visible pending to one qualified read',async()=>{
+  const f=fixture({location:'https://mo.camscanner.com/task/index'});assert.match(f.report(),/ROUTE=PENDING/);
+  f.navigate('https://mo.camscanner.com/lottery/relottery?intsig_key='+canary+'&encrypt_uid='+canary);await f.flush();assert.match(f.report(),/QUERY=COUNT_3/);assert.equal(f.queryCalls,1);
+  f.bootstrap();f.repeat();await f.flush();assert.equal(f.queryCalls,1);assert.match(f.report(),/QUERY=COUNT_3/);f.assertPrivate();
+});
