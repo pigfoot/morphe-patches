@@ -258,6 +258,14 @@ val camscannerAdsPatch = bytecodePatch(
                 if (rewardedVideos == "inspect-lottery") installQuotaProbe(pageFinished)
                 else pageFinished.addInstructions(0, lotteryInitPrefix())
             }
+            if (rewardedVideos == "inspect-lottery") {
+                for ((type, pins) in nativeBridgePins72701) {
+                    val pool = DexPool(Opcodes.forDexVersion(39)); pool.internClass(classDefBy(type))
+                    val store = MemoryDataStore(); pool.writeTo(store)
+                    require(sha256(store.data) in pins) { "Unsupported or modified native preload transport: $type" }
+                }
+                installNativePreloadCapture(mutableClassDefBy(NATIVE_BRIDGE).methods.single { it.name == "callApp" && it.signature() == "(Ljava/lang/String;)V" })
+            }
             val control = mutableClassDefBy(WATCH_CONTROL)
             val sites = RewardSkipSite.entries.map { site ->
                 val method = control.methods.single { it.name == site.methodName }

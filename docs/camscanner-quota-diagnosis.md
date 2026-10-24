@@ -310,3 +310,24 @@ forwarders and unsupported host descriptors remain possible).
 Phone test is still enter/wait for FINAL/screenshot only; no draw/get-reward.
 The temporary report font is compacted so the additional fields remain readable.
 This is not a reward repair, pending-prize recovery or attempt refund.
+
+## V25: original native preload entry diagnostics
+
+V24 could not confirm installing a JavaScript replacement of Android's `callApp`.
+That is an unsupported observer, not evidence that the native body was never called.
+V25 instruments only the pinned original Java entry for existing
+`watchad_lottery` requests with `data.prestrain=1`. The original body, arguments,
+return and caught Throwable identity are preserved. Diagnostic parser, metadata and
+UI-post failures cannot replace the original outcome. Normal skip/block are unchanged.
+
+The existing pinned UI-post/base64 transport carries fixed, id-less diagnostic
+objects only, with no business callback, status, token or reward code. The receiver
+wraps the exact reviewed plain-JavaScript `callWeb`, not native `callApp`. All
+ordinary SDK callback traffic is forwarded unchanged. Error and first-frame class
+names are reduced to finite categories; no raw message, stack, method or account
+identifier is displayed. Receiver absence or a missed packet is not proof that
+native code did not execute. Reflection resolution is not ART or reward acceptance.
+
+Phone acceptance remains enter-only: wait for the final observation, screenshot
+`NATIVE_LISTENER`, `NATIVE_ENTRY`, `NATIVE_THROW`, `NATIVE_SITE` and initialization
+status. Do not draw or claim a reward. A daily reset is not a patch repair or refund.

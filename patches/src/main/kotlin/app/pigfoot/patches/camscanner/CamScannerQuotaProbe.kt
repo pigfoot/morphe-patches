@@ -19,9 +19,9 @@ internal fun quotaProbePrefix(): String {
     return """
         if-eqz p1, :quota_probe_original
         const/4 v3, 0x0
-        const-string v1, "CS-Q24:HOOK NO_PAGE_URL"
+        const-string v1, "CS-Q25:HOOK NO_PAGE_URL"
         if-eqz p2, :quota_probe_toast
-        const-string v1, "CS-Q24:HOOK HOST_OUT_OF_SCOPE"
+        const-string v1, "CS-Q25:HOOK HOST_OUT_OF_SCOPE"
         const-string v0, "https://mo.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
@@ -32,7 +32,7 @@ internal fun quotaProbePrefix(): String {
         if-eqz v0, :quota_probe_toast
         :quota_probe_host
         const/4 v3, 0x1
-        const-string v1, "CS-Q24:HOOK SCOPED"
+        const-string v1, "CS-Q25:HOOK SCOPED"
         :quota_probe_toast
         invoke-virtual {p1}, Landroid/view/View;->getContext()Landroid/content/Context;
         move-result-object v0
@@ -56,10 +56,10 @@ internal fun quotaProbePrefix(): String {
 internal val quotaBootstrapScript = """
 (function() {
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (!document.documentElement || document.getElementById("cs-quota-probe-v24")) return;
-  var box = document.createElement("pre"); box.id = "cs-quota-probe-v24";
+  if (!document.documentElement || document.getElementById("cs-quota-probe-v25")) return;
+  var box = document.createElement("pre"); box.id = "cs-quota-probe-v25";
   box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:12px/1.35 monospace;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;border:2px solid #39c7b3";
-  box.textContent = "CS-QUOTA-V24\nSTAGE=JS_BOOTSTRAP";
+  box.textContent = "CS-QUOTA-V25\nSTAGE=JS_BOOTSTRAP";
   document.documentElement.appendChild(box);
 })();
 """.trimIndent()
@@ -69,12 +69,12 @@ internal val quotaProbeScript = """
 (function(importer) {
   "use strict";
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (window.__csQuotaProbeV24) return;
-  window.__csQuotaProbeV24 = true;
+  if (window.__csQuotaProbeV25) return;
+  window.__csQuotaProbeV25 = true;
   var done = false, started = false, observer, watchTimer, timer, uiQuery, observing = false, uiWatchStarted = false, uiWatchActive = false, uiTickTimer, uiDeadline, uiSamples = 0, restore = function() {};
   var nativeCheck = window.__csRewardClassCheck;
   if (typeof nativeCheck !== "string" || !/^(BOTH_RESOLVED|(CONTROL|CALLBACK)_(VERIFY_ERROR|CLASS_MISSING|LINKAGE_ERROR|SECURITY_ERROR|OTHER_ERROR))$/.test(nativeCheck)) nativeCheck = "UNKNOWN";
-  var report = {NATIVE_CLASS_CHECK:nativeCheck, CALLAPP_OBSERVER:"WAITING_INIT_GUARD", CALLAPP_BOUNDARY:"NOT_OBSERVED", CALLAPP_PRELOAD_CALLS:0, CALLAPP_CLEANUP:"NOT_ARMED", INIT_PRELOAD:"NOT_SEEN", STAGE:"MAIN_ENTERED", ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
+  var report = {NATIVE_CLASS_CHECK:nativeCheck, NATIVE_LISTENER:"WAITING_CONFIG", NATIVE_ENTRY:"NOT_OBSERVED", NATIVE_ENTRIES:0, NATIVE_THROW:"NOT_OBSERVED", NATIVE_SITE:"NOT_OBSERVED", NATIVE_CLEANUP:"NOT_ARMED", INIT_PRELOAD:"NOT_SEEN", STAGE:"MAIN_ENTERED", ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
   $quotaBridgeObserverFunctions
   function code(v) {
     if (typeof v !== "number" && typeof v !== "string") return "UNKNOWN";
@@ -90,12 +90,16 @@ internal val quotaProbeScript = """
   }
   // Passive Vue inspection: no methods, setters, credentials or objects are output.
   async function installInitGuard() {
-    await ($lotteryInitGuardFactory)(importer, report, qualifiedGuardRender, function() {
+    await ($lotteryInitGuardFactory)(async function(url) {
+      var mod = await importer(url);
+      if (url === "https://static-cdn.camscanner.com/camscanner-mo/static/config-DAocHWAW.js") armNativeReceiver(mod);
+      return mod;
+    }, report, qualifiedGuardRender, function() {
       Promise.resolve().then(function() { if (!uiWatchStarted) captureUi("UI_AFTER"); render(); });
       startUiWatch();
     });
     qualifiedGuardRender();
-    if (!callObserverAttempted) report.CALLAPP_OBSERVER = "NO_QUALIFIED_WINDOW_NO_CHANGE";
+    if (!nativeListenerAttempted) report.NATIVE_LISTENER = "NO_QUALIFIED_WINDOW_NO_CHANGE";
   }
   function uiSnapshot(q) {
     try {
@@ -175,13 +179,13 @@ internal val quotaProbeScript = """
   }
   function render() {
     try {
-      var box = document.getElementById("cs-quota-probe-v24");
+      var box = document.getElementById("cs-quota-probe-v25");
       if (!box) {
-        box = document.createElement("pre"); box.id = "cs-quota-probe-v24";
+        box = document.createElement("pre"); box.id = "cs-quota-probe-v25";
         box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:12px/1.35 monospace;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;border:2px solid #39c7b3";
         document.documentElement.appendChild(box);
       }
-      box.textContent = "CS-QUOTA-V24 (no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
+      box.textContent = "CS-QUOTA-V25 (no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
     } catch (_) {}
   }
   function finish(state) {
