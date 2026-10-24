@@ -241,3 +241,32 @@ passive diagnostics using the same shared mitigation core.
 
 A clean-mode phone test must separately verify one genuine draw and the awarded
 reward/history. Build/APK checks and original readiness do not establish receipt.
+
+## V23 native resolution check without a draw
+
+The V22 device test reached a reported 50MB result and prize modal, but pressing
+get-reward produced no reported response or awarded reward. The exact failure is
+not localized: tracking, native dispatch, callback and original type2 claim are
+separate boundaries. No consumed-attempt refund or prize recovery is promised.
+
+Explicit `inspect-lottery` now adds a bounded native reflection check before its
+JS diagnosis. It resolves only the pinned WatchAdControl and original callback
+with the app context class loader and `Class.forName(initialize=false)`, then
+requests declared method metadata. It never constructs either class, invokes
+reward methods, starts an ad, tracks an event, queries task codes, draws or claims.
+The added Throwable handler covers only this self-check, not the original method
+or JS evaluations. Original page-finished method state and handlers remain.
+
+`NATIVE_CLASS_CHECK` reports BOTH_RESOLVED or CONTROL/CALLBACK with a fixed
+VERIFY_ERROR, CLASS_MISSING, LINKAGE_ERROR, SECURITY_ERROR or OTHER_ERROR suffix.
+No exception message/stack, arbitrary class name or credentials are output.
+BOTH_RESOLVED means only that these reflection operations completed; it is not a
+full ART verification, proof of invocation success, callback delivery or reward.
+Unknown/untrusted JS values become UNKNOWN. Current-profile diagnosis still adds
+zero quota requests; original page initialization and natural reads may occur.
+Normal skip and block remain unchanged. Diagnostic labels are CS-QUOTA-V23.
+
+Phone instruction: only enter the wheel and wait for FINAL, then capture the
+report. Do not draw or press get-reward. This narrows a possible native-resolution
+failure using the existing natural preload evidence; it does not reproduce or
+repair every possible post-get-reward failure and cannot recover an old event.

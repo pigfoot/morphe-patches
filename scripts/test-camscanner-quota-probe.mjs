@@ -75,7 +75,7 @@ function fixture(options = {}) {
     fetch:async (url,config) => { publicFetches++; assert.equal(url,loaded); assert.equal(config.credentials,'omit'); return {ok:options.fetchOk!==false,arrayBuffer:async()=>new Uint8Array([1,2,3]).buffer}; },
     __importer:async url => { if(options.initGuard && url===initFunctions.config_url)return initModule; imports++; assert.equal(url,loaded); if(options.importError) throw Error(canary); return options.functionMissing ? {} : modern ? {I:quota,c:{macro:{token:options.noToken?'':canary}}} : options.phone ? {i:quota} : {queryLottery:quota}; },
   };
-  context.window={addEventListener(name,fn){events.set(name,fn);},removeEventListener(name,fn){if(events.get(name)===fn)events.delete(name);},jsapi_ready:!!options.initGuard,crypto:{subtle:{async digest(algorithm,bytes) {
+  context.window={__csRewardClassCheck:options.nativeCheck,addEventListener(name,fn){events.set(name,fn);},removeEventListener(name,fn){if(events.get(name)===fn)events.delete(name);},jsapi_ready:!!options.initGuard,crypto:{subtle:{async digest(algorithm,bytes) {
     assert.equal(algorithm,'SHA-256'); assert.deepEqual([...new Uint8Array(bytes)],[1,2,3]);
     // Model the browser's digest boundary; the real public-source hashes were independently measured.
     return Uint8Array.from(Buffer.from(options.hashMismatch ? '00'.repeat(32) : modern ? modernHash : options.phone ? phoneHash : legacyHash,'hex')).buffer;
@@ -89,7 +89,7 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v21')?.textContent || ''; }
+  function report() { return nodes.get('cs-quota-probe-v23')?.textContent || ''; }
   return {context,flush,report,
     uiTick(){const entry=[...timers].find(([,t])=>t.delay===1000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
     finishUi(){const entry=[...timers].find(([,t])=>t.delay===35000);if(entry){timers.delete(entry[0]);entry[1].fn();}},
@@ -252,4 +252,13 @@ test('silent scope guards preserve callbacks other routes changed functions and 
   assert.throws(()=>f.initModule.C.watchad_lottery({data:{prestrain:0},close_web:0}),e=>e===f.initError);
   assert.throws(()=>f.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0},()=>{}),e=>e===f.initError);
   f.expireInit();assert.equal(f.initModule.C.watchad_lottery,f.originalPreload);assert.equal(f.queryCalls,0);assert.equal(f.report(),'');
+});
+
+
+test('native class diagnosis prints fixed classifications only and never treats resolution as a grant',async()=>{
+  for(const nativeCheck of ['BOTH_RESOLVED','CONTROL_VERIFY_ERROR','CALLBACK_CLASS_MISSING','CONTROL_LINKAGE_ERROR','CALLBACK_SECURITY_ERROR','CONTROL_OTHER_ERROR',canary,'CONTROL_VERIFY_ERROR\n'+canary,{},null]) {
+    const f=fixture({silent:false,phone:true,nativeCheck});await f.flush();
+    const allowed=typeof nativeCheck==='string'&&/^(BOTH_RESOLVED|(CONTROL|CALLBACK)_(VERIFY_ERROR|CLASS_MISSING|LINKAGE_ERROR|SECURITY_ERROR|OTHER_ERROR))$/.test(nativeCheck);
+    assert.match(f.report(),new RegExp('NATIVE_CLASS_CHECK='+(allowed?nativeCheck:'UNKNOWN')+'\\n'));assert.equal(f.queryCalls,0);assert.equal(f.imports,0);f.assertPrivate();f.finishUi();
+  }
 });

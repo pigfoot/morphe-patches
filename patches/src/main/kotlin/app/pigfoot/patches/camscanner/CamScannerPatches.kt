@@ -255,7 +255,8 @@ val camscannerAdsPatch = bytecodePatch(
                     it.name == "onPageFinished" && it.signature() == "(Landroid/webkit/WebView;Ljava/lang/String;)V"
                 }
                 requireQuotaProbeMethod(pageFinished)
-                pageFinished.addInstructions(0, if (rewardedVideos == "inspect-lottery") quotaProbePrefix() else lotteryInitPrefix())
+                if (rewardedVideos == "inspect-lottery") installQuotaProbe(pageFinished)
+                else pageFinished.addInstructions(0, lotteryInitPrefix())
             }
             val control = mutableClassDefBy(WATCH_CONTROL)
             val sites = RewardSkipSite.entries.map { site ->
