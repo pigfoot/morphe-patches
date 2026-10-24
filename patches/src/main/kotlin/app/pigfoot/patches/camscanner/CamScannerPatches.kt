@@ -269,9 +269,10 @@ val camscannerAdsPatch = bytecodePatch(
             val control = mutableClassDefBy(WATCH_CONTROL)
             val sites = RewardSkipSite.entries.map { site ->
                 val method = control.methods.single { it.name == site.methodName }
-                Triple(method, rewardSkipIndex(method, site), rewardSkipPrefix(site))
+                rewardSkipIndex(method, site) // Qualify both original shapes before mutating either method.
+                method to site
             }
-            for ((method, index, prefix) in sites) method.addInstructions(index, prefix)
+            for ((method, site) in sites) installRewardSkip(method, site)
         }
         for (t in adTargets) {
             val ret = t.descriptor.substringAfter(')')

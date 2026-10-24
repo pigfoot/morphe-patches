@@ -98,7 +98,7 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v25')?.textContent || ''; }
+  function report() { return nodes.get('cs-quota-probe-v26')?.textContent || ''; }
   return {context,flush,report,
     uiTick(){const entry=[...timers].find(([,t])=>t.delay===1000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
     finishUi(){const entry=[...timers].find(([,t])=>t.delay===35000);if(entry){timers.delete(entry[0]);entry[1].fn();}},

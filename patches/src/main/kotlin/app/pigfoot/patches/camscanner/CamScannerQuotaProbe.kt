@@ -19,9 +19,9 @@ internal fun quotaProbePrefix(): String {
     return """
         if-eqz p1, :quota_probe_original
         const/4 v3, 0x0
-        const-string v1, "CS-Q25:HOOK NO_PAGE_URL"
+        const-string v1, "CS-Q26:HOOK NO_PAGE_URL"
         if-eqz p2, :quota_probe_toast
-        const-string v1, "CS-Q25:HOOK HOST_OUT_OF_SCOPE"
+        const-string v1, "CS-Q26:HOOK HOST_OUT_OF_SCOPE"
         const-string v0, "https://mo.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
@@ -32,7 +32,7 @@ internal fun quotaProbePrefix(): String {
         if-eqz v0, :quota_probe_toast
         :quota_probe_host
         const/4 v3, 0x1
-        const-string v1, "CS-Q25:HOOK SCOPED"
+        const-string v1, "CS-Q26:HOOK SCOPED"
         :quota_probe_toast
         invoke-virtual {p1}, Landroid/view/View;->getContext()Landroid/content/Context;
         move-result-object v0
@@ -56,10 +56,10 @@ internal fun quotaProbePrefix(): String {
 internal val quotaBootstrapScript = """
 (function() {
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (!document.documentElement || document.getElementById("cs-quota-probe-v25")) return;
-  var box = document.createElement("pre"); box.id = "cs-quota-probe-v25";
+  if (!document.documentElement || document.getElementById("cs-quota-probe-v26")) return;
+  var box = document.createElement("pre"); box.id = "cs-quota-probe-v26";
   box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:12px/1.35 monospace;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;border:2px solid #39c7b3";
-  box.textContent = "CS-QUOTA-V25\nSTAGE=JS_BOOTSTRAP";
+  box.textContent = "CS-QUOTA-V26\nSTAGE=JS_BOOTSTRAP";
   document.documentElement.appendChild(box);
 })();
 """.trimIndent()
@@ -69,8 +69,8 @@ internal val quotaProbeScript = """
 (function(importer) {
   "use strict";
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (window.__csQuotaProbeV25) return;
-  window.__csQuotaProbeV25 = true;
+  if (window.__csQuotaProbeV26) return;
+  window.__csQuotaProbeV26 = true;
   var done = false, started = false, observer, watchTimer, timer, uiQuery, observing = false, uiWatchStarted = false, uiWatchActive = false, uiTickTimer, uiDeadline, uiSamples = 0, restore = function() {};
   var nativeCheck = window.__csRewardClassCheck;
   if (typeof nativeCheck !== "string" || !/^(BOTH_RESOLVED|(CONTROL|CALLBACK)_(VERIFY_ERROR|CLASS_MISSING|LINKAGE_ERROR|SECURITY_ERROR|OTHER_ERROR))$/.test(nativeCheck)) nativeCheck = "UNKNOWN";
@@ -179,13 +179,13 @@ internal val quotaProbeScript = """
   }
   function render() {
     try {
-      var box = document.getElementById("cs-quota-probe-v25");
+      var box = document.getElementById("cs-quota-probe-v26");
       if (!box) {
-        box = document.createElement("pre"); box.id = "cs-quota-probe-v25";
+        box = document.createElement("pre"); box.id = "cs-quota-probe-v26";
         box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:12px/1.35 monospace;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;border:2px solid #39c7b3";
         document.documentElement.appendChild(box);
       }
-      box.textContent = "CS-QUOTA-V25 (no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
+      box.textContent = "CS-QUOTA-V26 (no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
     } catch (_) {}
   }
   function finish(state) {

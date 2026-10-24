@@ -41,7 +41,8 @@ class CamScannerRewardSkipTest {
         init {
             val test = CamScannerRewardSkipTest(); m = test.method(site)
             m.addInstructions(0, "invoke-static {}, Ltest/Marker;->original()V")
-            m.addInstructions(0, rewardSkipPrefix(site))
+            if (site == RewardSkipSite.MAIN) m.addInstructions(0, List(37) { "nop" }.joinToString("\n") + "\nmove-object v3, p0")
+            installRewardSkip(m, site)
             val control = Any()
             expected = listOf(control, life, manager, fragment, request)
             val args = if (site == RewardSkipSite.MAIN) listOf(control, life, fragment, manager, request)
@@ -55,7 +56,7 @@ class CamScannerRewardSkipTest {
             var at = 0; var index = 0; var result: Any? = null; var steps = 0
             fun truth(v: Any?) = v != null && v != 0 && v != false
             while (index < code.size) {
-                check(++steps < 100)
+                check(++steps < 150)
                 val i = code[index]; var next = index + 1
                 val one = (i as? OneRegisterInstruction)?.registerA
                 val two = i as? TwoRegisterInstruction

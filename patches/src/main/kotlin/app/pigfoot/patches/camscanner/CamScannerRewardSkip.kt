@@ -1,5 +1,7 @@
 package app.pigfoot.patches.camscanner
 
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
+import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
@@ -115,4 +117,9 @@ internal fun rewardSkipPrefix(site: RewardSkipSite): String {
         :reward_skip_original
         nop
     """.trimIndent()
+}
+
+/** Install using the qualified real dispatch site, including its nonzero MAIN offset. */
+internal fun installRewardSkip(method: MutableMethod, site: RewardSkipSite) {
+    method.addInstructionsWithLabels(rewardSkipIndex(method, site), rewardSkipPrefix(site))
 }

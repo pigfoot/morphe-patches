@@ -331,3 +331,34 @@ native code did not execute. Reflection resolution is not ART or reward acceptan
 Phone acceptance remains enter-only: wait for the final observation, screenshot
 `NATIVE_LISTENER`, `NATIVE_ENTRY`, `NATIVE_THROW`, `NATIVE_SITE` and initialization
 status. Do not draw or claim a reward. A daily reset is not a patch repair or refund.
+
+## V26: relocate dispatch-prefix branches at the real insertion offset
+
+V25 device evidence captured an original native `VerifyError` at the app-dispatch
+call site, despite the earlier reflection metadata check succeeding. Pristine
+method replay identifies a concrete defect in the shared lottery dispatch patch:
+MAIN inserts at instruction 21 / code-unit offset 38, but `addInstructions` leaves
+its local branch destinations zero-based. Cancellation targets code unit 81,
+which is a `move-result`, and fallback targets 82 in the middle of the prefix.
+Branching into `move-result` violates the DEX control-flow contract. POSTED inserts
+at zero and is unaffected by that relocation defect.
+
+V26 uses the official `addInstructionsWithLabels` through a shared installer.
+At the qualified MAIN site the same unchanged prefix now branches only to its
+own cancellation return (119) or original-fallback NOP (120). The parser, request
+binding, lifecycle guards, callback/code path and original body remain unchanged.
+The correction applies to both explicit skip modes; block remains unchanged.
+The native diagnostic protocol and accepted initialization mitigation are retained.
+
+Regression coverage now installs both paths at their real code-unit offsets,
+including the existing semantic VM cases. A separate counterexample must detect
+the old nonzero insertion and illegal branch into `move-result`. Actual-output
+qualification must verify every injected conditional target, not merely preserve
+original instructions or check `MethodAnalyzer.analysisException`: that analyzer
+also returned no exception for the defective branch graph.
+
+This fixes a reproduced bytecode defect consistent with the captured native
+verification failure. It is not proof that Android accepts every relevant method
+or that a server awarded a prize. The first phone check remains enter/wait/final
+screenshot only, with no draw or claim. No synthetic response, extra business
+request, reward replay or counter rewrite is introduced.

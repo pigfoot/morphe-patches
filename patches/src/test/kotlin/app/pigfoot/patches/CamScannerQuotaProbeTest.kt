@@ -112,9 +112,9 @@ class CamScannerQuotaProbeTest {
             }
             assertEquals(if (silent && expected == 3) 1 else expected, evaluated)
             assertEquals(if (silent || !hasView) emptyList<String>() else listOf(when {
-                url == null -> "CS-Q25:HOOK NO_PAGE_URL"
-                expected == 3 -> "CS-Q25:HOOK SCOPED"
-                else -> "CS-Q25:HOOK HOST_OUT_OF_SCOPE"
+                url == null -> "CS-Q26:HOOK NO_PAGE_URL"
+                expected == 3 -> "CS-Q26:HOOK SCOPED"
+                else -> "CS-Q26:HOOK HOST_OUT_OF_SCOPE"
             }), messages)
             assertTrue(messages.none { "secret" in it || "https://" in it })
             assertSame(control, registers[8]); assertSame(view, registers[9]); assertEquals(url, registers[10])
