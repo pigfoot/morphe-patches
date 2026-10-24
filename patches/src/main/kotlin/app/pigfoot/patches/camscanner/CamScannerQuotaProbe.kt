@@ -19,9 +19,9 @@ internal fun quotaProbePrefix(): String {
     return """
         if-eqz p1, :quota_probe_original
         const/4 v3, 0x0
-        const-string v1, "CS-Q20:HOOK NO_PAGE_URL"
+        const-string v1, "CS-Q21:HOOK NO_PAGE_URL"
         if-eqz p2, :quota_probe_toast
-        const-string v1, "CS-Q20:HOOK HOST_OUT_OF_SCOPE"
+        const-string v1, "CS-Q21:HOOK HOST_OUT_OF_SCOPE"
         const-string v0, "https://mo.camscanner.com/"
         invoke-virtual {p2, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
         move-result v0
@@ -32,7 +32,7 @@ internal fun quotaProbePrefix(): String {
         if-eqz v0, :quota_probe_toast
         :quota_probe_host
         const/4 v3, 0x1
-        const-string v1, "CS-Q20:HOOK SCOPED"
+        const-string v1, "CS-Q21:HOOK SCOPED"
         :quota_probe_toast
         invoke-virtual {p1}, Landroid/view/View;->getContext()Landroid/content/Context;
         move-result-object v0
@@ -55,10 +55,10 @@ internal fun quotaProbePrefix(): String {
 internal val quotaBootstrapScript = """
 (function() {
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (!document.documentElement || document.getElementById("cs-quota-probe-v20")) return;
-  var box = document.createElement("pre"); box.id = "cs-quota-probe-v20";
+  if (!document.documentElement || document.getElementById("cs-quota-probe-v21")) return;
+  var box = document.createElement("pre"); box.id = "cs-quota-probe-v21";
   box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;border:2px solid #39c7b3";
-  box.textContent = "CS-QUOTA-V20\nSTAGE=JS_BOOTSTRAP";
+  box.textContent = "CS-QUOTA-V21\nSTAGE=JS_BOOTSTRAP";
   document.documentElement.appendChild(box);
 })();
 """.trimIndent()
@@ -68,9 +68,9 @@ internal val quotaProbeScript = """
 (function(importer) {
   "use strict";
   if (location.hostname !== "mo.camscanner.com" && location.hostname !== "www.camscanner.com") return;
-  if (window.__csQuotaProbeV20) return;
-  window.__csQuotaProbeV20 = true;
-  var done = false, started = false, observer, watchTimer, timer, uiQuery, restore = function() {};
+  if (window.__csQuotaProbeV21) return;
+  window.__csQuotaProbeV21 = true;
+  var done = false, started = false, observer, watchTimer, timer, uiQuery, observing = false, uiWatchStarted = false, uiWatchActive = false, uiTickTimer, uiDeadline, uiSamples = 0, restore = function() {};
   var report = {STAGE:"MAIN_ENTERED", ROUTE:"PENDING", QUERY:"NOT_RUN", HTTP_OBS:"NO_CAPTURE", RET_OBS:"UNKNOWN", XERR_OBS:"UNKNOWN", RAW_OBS:"UNKNOWN", OBSERVED_READS:0, QUOTA_READS:0};
   function code(v) {
     if (typeof v !== "number" && typeof v !== "string") return "UNKNOWN";
@@ -124,8 +124,8 @@ internal val quotaProbeScript = """
         var preloadRestored = restoreOwned(bridge,"watchad_lottery",preloadCall,preload.value);
         report.INIT_GUARD = (expired ? "DEADLINE_" : "OBSERVED_") +
           (pageRestored && preloadRestored ? "RESTORED" : "RELEASED_NOT_RESTORED");
-        Promise.resolve().then(function() { captureUi("UI_AFTER"); render(); });
-        setTimeout(function() { captureUi("UI_AFTER"); render(); },500);
+        Promise.resolve().then(function() { if (!uiWatchStarted) captureUi("UI_AFTER"); render(); });
+        startUiWatch();
       }
       function pageCall() {
         if (!active || !inRoute() || arguments[0] !== "CSPlaytable") return Reflect.apply(page.value,this,arguments);
@@ -198,22 +198,52 @@ internal val quotaProbeScript = """
       report.UI_KEY_MATCH = ui.keyMatch; report.UI_UID_MATCH = ui.uidMatch;
     }
   }
+  function releaseObservation() {
+    observing = false;
+    try { restore(); } catch (_) {}
+  }
+  function stopUiWatch(reason) {
+    if (!uiWatchActive) return;
+    if (reason === "FINAL" && location.pathname !== "/lottery/relottery") reason = "ROUTE_CHANGED";
+    if (reason === "FINAL") sampleUi();
+    uiWatchActive = false; clearTimeout(uiTickTimer); clearTimeout(uiDeadline);
+    if (typeof window.removeEventListener === "function") window.removeEventListener("pagehide",hideUiWatch);
+    releaseObservation(); report.UI_OBSERVATION = reason; render();
+  }
+  function hideUiWatch() { stopUiWatch("PAGE_HIDDEN"); }
+  function sampleUi() {
+    captureUi("UI_AFTER"); report.UI_SAMPLES = ++uiSamples;
+  }
+  function startUiWatch() {
+    if (uiWatchStarted || !uiQuery || report.ROUTE !== "LEGACY_WATCHAD_VIP") return;
+    uiWatchStarted = true; uiWatchActive = true;
+    report.UI_OBSERVATION = "LIVE"; report.UI_WINDOW_SECONDS = 35;
+    function tick() {
+      if (!uiWatchActive) return;
+      if (location.pathname !== "/lottery/relottery") return stopUiWatch("ROUTE_CHANGED");
+      sampleUi(); render(); uiTickTimer = setTimeout(tick,1000);
+    }
+    if (typeof window.addEventListener === "function") window.addEventListener("pagehide",hideUiWatch,{once:true});
+    uiDeadline = setTimeout(function() { stopUiWatch("FINAL"); },35000); tick();
+  }
   function render() {
     try {
-      var box = document.getElementById("cs-quota-probe-v20");
+      var box = document.getElementById("cs-quota-probe-v21");
       if (!box) {
-        box = document.createElement("pre"); box.id = "cs-quota-probe-v20";
+        box = document.createElement("pre"); box.id = "cs-quota-probe-v21";
         box.style.cssText = "position:fixed;top:52px;left:8px;right:8px;z-index:2147483647;background:#102b32;color:#fff;padding:12px;font:13px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;border:2px solid #39c7b3";
         document.documentElement.appendChild(box);
       }
-      box.textContent = "CS-QUOTA-V20 (one read; no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
+      box.textContent = "CS-QUOTA-V21 (no draw)\n" + Object.keys(report).map(function(k) { return k + "=" + report[k]; }).join("\n");
     } catch (_) {}
   }
   function finish(state) {
     if (done) return;
     if (state) report.QUERY = state;
     done = true; clearTimeout(timer); clearTimeout(watchTimer);
-    if (observer) observer.disconnect(); restore(); captureUi("UI_AFTER"); render();
+    if (observer) observer.disconnect();
+    if (!uiWatchActive) releaseObservation();
+    if (!uiWatchStarted) captureUi("UI_AFTER"); render();
   }
   function scope(url, method, legacy) {
     try {
@@ -224,12 +254,15 @@ internal val quotaProbeScript = """
     } catch (_) { return false; }
   }
   function observe(legacy) {
-    if (typeof XMLHttpRequest === "undefined") return;
-    var original = XMLHttpRequest.prototype.open;
+    if (typeof XMLHttpRequest === "undefined" || observing) return;
+    if (legacy && uiWatchStarted && !uiWatchActive) return;
+    var descriptor = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype,"open");
+    if (!descriptor || !descriptor.writable || typeof descriptor.value !== "function") return;
+    var original = descriptor.value; observing = true;
     function open(method, url) {
-      if (!done && scope(url, method, legacy)) {
+      if (observing && (!legacy || location.pathname === "/lottery/relottery") && scope(url, method, legacy)) {
         this.addEventListener("loadend", function() {
-          if (done) return;
+          if (!observing) return;
           report.OBSERVED_READS++; report.HTTP_OBS = code(this.status);
           try { report.XERR_OBS = code(this.getResponseHeader("X-IS-Error-Code")); } catch (_) {}
           try {
@@ -245,13 +278,16 @@ internal val quotaProbeScript = """
       return Reflect.apply(original, this, arguments);
     }
     XMLHttpRequest.prototype.open = open;
-    restore = function() { if (XMLHttpRequest.prototype.open === open) XMLHttpRequest.prototype.open = original; };
+    restore = function() {
+      var current = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype,"open");
+      if (current && current.value === open && current.writable) XMLHttpRequest.prototype.open = original;
+    };
   }
   async function run(legacy) {
     report.ROUTE = legacy ? "LEGACY_WATCHAD_VIP" : "MODERN_DAY_COUNT";
     var q = new URLSearchParams(location.search); uiQuery = q;
     captureUi("UI_BEFORE");
-    if (legacy) await installInitGuard();
+    if (legacy) { startUiWatch(); observe(true); await installInitGuard(); }
     report.KEY_PARAMS = Math.min(q.getAll("intsig_key").length,9);
     report.UID_PARAMS = Math.min(q.getAll("encrypt_uid").length,9);
     report.BRIDGE_READY = window.jsapi_ready === true ? "YES" : window.jsapi_ready === false ? "NO" : "UNKNOWN";
@@ -299,6 +335,10 @@ internal val quotaProbeScript = """
       if (!loaded) return finish("MODULE_NOT_LOADED");
       var url = profile.url;
       report.MODULE_TAG = url.slice(url.lastIndexOf("/") + 1);
+      if (legacy && profile.entry === "i") {
+        report.MODULE_CHECK = "PASSIVE_NO_FUNCTION_IMPORT";
+        return finish("PASSIVE_ORIGINAL_READS_ONLY");
+      }
       if (!window.crypto || !window.crypto.subtle) return finish("NO_HASH_API");
       var response = await fetch(url, {credentials:"omit"});
       if (done) return;
