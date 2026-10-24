@@ -83,3 +83,36 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 ## License
 
 [GNU General Public License v3.0](LICENSE). Build/release scaffolding and patch-list generation derive from the [Morphe template](https://github.com/MorpheApp/morphe-patches-template).
+
+## CamScanner experimental source
+
+New target candidate: see [version-porting workflow](docs/camscanner-version-porting.md).
+Build/actual-APK qualification and phone acceptance are separate checkpoints.
+
+Clean **7.26.5.2609160000 (72651)** and **7.27.0.2609220000 (72701) APKM**, preserving original modules/OCR assets.
+The reorganized candidate has five named patches:
+
+| Patch | Recommendation |
+| --- | --- |
+| CamScanner restore trust on re-signed builds | Required for standard/Shizuku; mount unavailable. |
+| CamScanner local premium features | Recommended; local status only, no server subscription/credit guarantee. Folder limit stays original by default. |
+| CamScanner reduce telemetry and app logging | Recommended; fixed qualified Firebase/app/local logging suppression, not a zero-telemetry guarantee. |
+| CamScanner disable ads | Optional, not recommended by default. Blocks rewarded videos by default; optional online 7.27.0-only lottery skip experiment, no guaranteed server grant. |
+| CamScanner offline mode | Optional, not recommended by default. Includes ads/core and removes all app INTERNET declarations. |
+
+No debugging entries or overlays are included, in normal or Advanced selections.
+Trust retains the narrow native request-sign computation fix and exact API Center
+cache policy; it does not globally spoof certificates or alter authentication results.
+
+For an online ad-support composition, use the recommendation set and leave
+ads/offline unselected. Local premium/privacy can be deselected independently.
+The ads cleanup bool and low-level privacy options are removed. Do not reuse old
+selection profiles; reselect on pristine APKM and update with the same signing key,
+without uninstalling or clearing user data.
+
+See [organization, option migration and qualification](docs/camscanner-patch-organization.md)
+and [implementation history](docs/camscanner-implementation.md). No cloud Word,
+server quota, repeat-reward, all-device crop or zero-telemetry claim.
+
+The optional [lottery video experiment](docs/camscanner-reward-video-experiment.md)
+is separate from ordinary ad blocking and does not promise server rewards.
