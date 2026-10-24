@@ -67,7 +67,7 @@ internal fun installQuotaProbe(method: MutableMethod) {
     val impl = requireNotNull(method.implementation)
     val code = impl.instructions.toList()
     fun literal(index: Int) = ((code[index] as? ReferenceInstruction)?.reference as? StringReference)?.string
-    val start = code.indices.single { literal(it) == "window.__csRewardClassCheck='CONTROL_" }
+    val start = code.indices.single { literal(it) == "window.__csRewardClassCheck='CONTROL_" } + 1
     val end = code.indices.single { literal(it) == "window.__csRewardClassCheck='BOTH_RESOLVED';" }
     val handler = (end + 1 until code.size).first { code[it].opcode == Opcode.MOVE_EXCEPTION }
     impl.addCatch("Ljava/lang/Throwable;", impl.newLabelForIndex(start), impl.newLabelForIndex(end), impl.newLabelForIndex(handler))

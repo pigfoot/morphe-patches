@@ -4,6 +4,7 @@ import app.pigfoot.patches.camscanner.*
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.*
+import com.android.tools.smali.dexlib2.analysis.*
 import com.android.tools.smali.dexlib2.iface.instruction.*
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
 import com.android.tools.smali.dexlib2.immutable.*
@@ -118,6 +119,23 @@ class CamScannerQuotaProbeTest {
             assertTrue(messages.none { "secret" in it || "https://" in it })
             assertSame(control, registers[8]); assertSame(view, registers[9]); assertEquals(url, registers[10])
         }
+    }
+    @Test fun nativeExceptionHandlerReadsOnlyDefinitelyInitializedStage() {
+        val m = method(); installQuotaProbe(m)
+        // Framework hierarchy stubs model dataflow only, not Android execution/ART verification.
+        val path = ClassPath(ClassProvider { type ->
+            if (type == QUOTA_CLIENT || type.startsWith("Landroid/")) ImmutableClassDef(type,
+                AccessFlags.PUBLIC.value, "Ljava/lang/Object;", emptyList(), null, emptySet(),
+                emptyList(), if (type == QUOTA_CLIENT) listOf(m) else emptyList()) else null
+        })
+        val analyzer = MethodAnalyzer(path, m, null, false)
+        assertNull(analyzer.analysisException)
+        val concat = analyzer.analyzedInstructions.single {
+            (it.instruction as? ReferenceInstruction)?.reference.toString() == "Ljava/lang/String;->concat(Ljava/lang/String;)Ljava/lang/String;"
+        }
+        val stage = concat.getPreInstructionRegisterType(5)
+        assertEquals(RegisterType.REFERENCE, stage.category)
+        assertEquals("Ljava/lang/String;", stage.type.type)
     }
     @Test fun methodShapeAndUnqualifiedWriterDigestsFailClosed() {
         assertThrows(IllegalArgumentException::class.java) { requireQuotaProbeMethod(method(10)) }
