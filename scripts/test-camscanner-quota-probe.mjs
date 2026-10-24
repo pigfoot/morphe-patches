@@ -8,6 +8,7 @@ const raw = source.split('internal val quotaProbeScript = """')[1].split('""".tr
 const bootstrap = source.split('internal val quotaBootstrapScript = """')[1].split('""".trimIndent()')[0];
 const script = raw.replace('function(url) { return import(url); }', '__importer');
 assert.notEqual(raw, script);
+const initFunctions = JSON.parse(fs.readFileSync(new URL('./fixtures/camscanner-init-functions.json',import.meta.url),'utf8'));
 const canary = 'PRIVATE_ACCOUNT_TOKEN_NOT_FOR_DISPLAY';
 const legacyUrl = 'https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-BrpmLW-U.js';
 const phoneUrl = 'https://static-cdn.camscanner.com/camscanner-mo/static/pc-api-DWt5-aHp.js';
@@ -29,6 +30,14 @@ function fixture(options = {}) {
     finish() { for (const fn of this.listeners) fn.call(this); }
   }
   const originalOpen = Xhr.prototype.open;
+  let originalPage,originalPreload,initModule,pageCalls=0,preloadCalls=0;
+  const initError=Object.assign(new Error(canary),{name:options.initErrorName || 'TypeError'});
+  if(options.initGuard) {
+    const scope={localStorage:{getItem:()=>null},N:'',Nt:'/',he:'',Xe:'',de:true,y:{event_tracking(){pageCalls++;if(options.pageFail)throw initError;return 41;}},Se:()=>{},Ct:()=>1,ge:{},i:'watchad_lottery',se:()=>{},U:()=>{},r(){preloadCalls++;if(options.preloadFail)throw initError;return 42;}};
+    vm.createContext(scope);vm.runInContext('page=('+initFunctions.page_source+');preload=('+initFunctions.preload_source+');',scope);
+    originalPage=scope.page;originalPreload=scope.preload;
+    initModule={L:{page:options.changedInitFunction ? function unknown(){} : originalPage},C:{watchad_lottery:originalPreload}};
+  }
   const uiData = options.uiData;
   if (uiData) {
     function vnode(data) { return {component:{data,type:{methods:{queryLotteryTime(){throw Error("UI method forbidden");},startlottery(){throw Error("Draw forbidden");},banLottery(){throw Error("UI write forbidden");}}},subTree:null}}; }
@@ -54,15 +63,15 @@ function fixture(options = {}) {
   const context = {
     location, URL, URLSearchParams, Uint8Array, Reflect, Date, Number, Object, String,
     XMLHttpRequest:Xhr,
-    performance:{getEntriesByType(type) { assert.equal(type,'resource'); return options.moduleAbsent ? [] : options.ambiguous ? [{name:legacyUrl},{name:phoneUrl}] : [{name:options.moduleUnknown ? loaded.replace(modern ? 'Dyz9RPJ4' : options.phone ? 'DWt5-aHp' : 'BrpmLW-U','ABCDEFGH') : loaded}]; }},
+    performance:{getEntriesByType(type) { assert.equal(type,'resource'); if(options.initGuard)return [{name:loaded},{name:initFunctions.config_url}]; return options.moduleAbsent ? [] : options.ambiguous ? [{name:legacyUrl},{name:phoneUrl}] : [{name:options.moduleUnknown ? loaded.replace(modern ? 'Dyz9RPJ4' : options.phone ? 'DWt5-aHp' : 'BrpmLW-U','ABCDEFGH') : loaded}]; }},
     setTimeout(fn,delay) { const id = ++timerId; timers.set(id,{fn,delay}); return id; },
     clearTimeout(id) { timers.delete(id); },
     MutationObserver:class { constructor(fn) { mutation=fn; } observe() {} disconnect() {} },
     document:{documentElement:{appendChild(node) { nodes.set(node.id,node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {style:{}}; }, querySelector() { return options.wheel ? {} : null; }},
     fetch:async (url,config) => { publicFetches++; assert.equal(url,loaded); assert.equal(config.credentials,'omit'); return {ok:options.fetchOk!==false,arrayBuffer:async()=>new Uint8Array([1,2,3]).buffer}; },
-    __importer:async url => { imports++; assert.equal(url,loaded); if(options.importError) throw Error(canary); return options.functionMissing ? {} : modern ? {I:quota,c:{macro:{token:options.noToken?'':canary}}} : options.phone ? {i:quota} : {queryLottery:quota}; },
+    __importer:async url => { if(options.initGuard && url===initFunctions.config_url)return initModule; imports++; assert.equal(url,loaded); if(options.importError) throw Error(canary); return options.functionMissing ? {} : modern ? {I:quota,c:{macro:{token:options.noToken?'':canary}}} : options.phone ? {i:quota} : {queryLottery:quota}; },
   };
-  context.window={crypto:{subtle:{async digest(algorithm,bytes) {
+  context.window={jsapi_ready:!!options.initGuard,crypto:{subtle:{async digest(algorithm,bytes) {
     assert.equal(algorithm,'SHA-256'); assert.deepEqual([...new Uint8Array(bytes)],[1,2,3]);
     // Model the browser's digest boundary; the real public-source hashes were independently measured.
     return Uint8Array.from(Buffer.from(options.hashMismatch ? '00'.repeat(32) : modern ? modernHash : options.phone ? phoneHash : legacyHash,'hex')).buffer;
@@ -76,8 +85,9 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v19')?.textContent || ''; }
-  return {context,flush,report,get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
+  function report() { return nodes.get('cs-quota-probe-v20')?.textContent || ''; }
+  return {context,flush,report,initError,initModule,originalPage,originalPreload,get pageCalls(){return pageCalls;},get preloadCalls(){return preloadCalls;},
+    expireInit(){const entry=[...timers].find(([,t])=>t.delay===30000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
     repeat(){vm.runInContext(script,context);mutation?.();},
     bootstrap(){vm.runInContext(bootstrap,context);},
     routeTimeout(){const entry=[...timers].find(([,t])=>t.delay===30000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
@@ -168,4 +178,34 @@ test('missing ambiguous and oversized Vue trees do not expose arbitrary componen
 });
 test('cyclic Vue trees are bounded and repeated finish cannot invoke component methods or read twice',async()=>{
   const data=Object.freeze({lotteryChance:3,canReady:true,showChance:false,timezone:'8',intsig_key:canary,encrypt_uid:canary});const f=fixture({uiData:data,uiCycle:true});await f.flush();f.repeat();await f.flush();assert.match(f.report(),/UI_AFTER=COUNT_3/);assert.equal(f.queryCalls,1);f.assertPrivate();
+});
+
+
+test('exact scoped analytics and callback-free preload errors are isolated without forging a callback',async()=>{
+  for(const opts of [{pageFail:true},{preloadFail:true},{pageFail:true,preloadFail:true}]) {
+    const f=fixture({phone:true,initGuard:true,...opts});await f.flush();const page=f.initModule.L.page,preload=f.initModule.C.watchad_lottery;
+    assert.doesNotThrow(()=>page('CSPlaytable',{}));assert.doesNotThrow(()=>preload({data:{prestrain:1},close_web:0}));await f.flush();
+    assert.equal(f.pageCalls,1);assert.equal(f.preloadCalls,1);assert.equal(f.initModule.L.page,f.originalPage);assert.equal(f.initModule.C.watchad_lottery,f.originalPreload);assert.equal(f.queryCalls,1);assert.match(f.report(),/INIT_GUARD=OBSERVED_RESTORED/);assert.match(f.report(),/ISOLATED_TypeError/);f.assertPrivate();
+  }
+});
+test('unrelated pages, real draw and preload-with-callback preserve the original exception identity',async()=>{
+  const f=fixture({initGuard:true,pageFail:true,preloadFail:true});await f.flush();
+  assert.throws(()=>f.initModule.L.page('OtherPage',{}),e=>e===f.initError);
+  assert.throws(()=>f.initModule.C.watchad_lottery({data:{prestrain:0},close_web:0}),e=>e===f.initError);
+  assert.throws(()=>f.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0},()=>{}),e=>e===f.initError);
+  assert.equal(f.pageCalls,1);assert.equal(f.preloadCalls,2);f.expireInit();await f.flush();assert.equal(f.initModule.L.page,f.originalPage);f.assertPrivate();
+});
+test('unknown init function is not wrapped and no diagnostic reads are added',async()=>{
+  const f=fixture({initGuard:true,changedInitFunction:true});const before=f.initModule.L.page;await f.flush();assert.equal(f.initModule.L.page,before);assert.equal(f.initModule.C.watchad_lottery,f.originalPreload);assert.match(f.report(),/INIT_GUARD=UNQUALIFIED_NO_CHANGE/);assert.equal(f.queryCalls,1);f.assertPrivate();
+});
+test('guard deadline preserves a later SDK wrapper and retained old wrappers stop isolating',async()=>{
+  const f=fixture({initGuard:true,pageFail:true});await f.flush();const owned=f.initModule.L.page;function sdk(){return Reflect.apply(owned,this,arguments);}f.initModule.L.page=sdk;f.expireInit();await f.flush();assert.equal(f.initModule.L.page,sdk);assert.throws(()=>sdk('CSPlaytable',{}),e=>e===f.initError);f.assertPrivate();
+});
+
+
+test('callback getter arguments are read only by the original function and frozen ownership cannot throw during cleanup',async()=>{
+  const f=fixture({initGuard:true,preloadFail:true,pageFail:true});await f.flush();let reads=0;
+  const options={get data(){reads++;return{prestrain:1};},close_web:0};
+  assert.throws(()=>f.initModule.C.watchad_lottery(options,()=>{}),e=>e===f.initError);assert.equal(reads,1);
+  const owned=f.initModule.L.page;Object.defineProperty(f.initModule.L,'page',{writable:false});assert.doesNotThrow(()=>f.expireInit());await f.flush();assert.equal(f.initModule.L.page,owned);assert.throws(()=>owned('CSPlaytable',{}),e=>e===f.initError);assert.match(f.report(),/INIT_GUARD=DEADLINE_RELEASED_NOT_RESTORED/);f.assertPrivate();
 });

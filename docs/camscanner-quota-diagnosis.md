@@ -1,5 +1,46 @@
 # Temporary lottery quota diagnosis
 
+## V20 scoped initialization isolation candidate
+
+V19 device output returns three but the original component remains zero,
+`READY_YES/TZ_EMPTY`, with single string credentials matching the URL and a ready
+bridge. The current official view assigns credentials, then invokes page tracking
+and a callback-free `prestrain=1` preload, before timezone and quota initialization.
+The snapshot supports an interruption in this pre-query boundary; the exact
+phone operation/exception is not yet confirmed.
+
+**V20 is no longer only a read-only diagnosis.** Explicit temporary inspect mode
+also isolates synchronous exceptions from those two nonessential initialization
+calls so that the unchanged original mounted function can continue. It never
+writes UI count/readiness/timezone, normalizes credentials, refreshes a component,
+fabricates callbacks or overrides original quota/auth/claim/draw results.
+
+Qualification requires the already-loaded exact config module URL and exact
+reviewed `L.page` / generated `C.watchad_lottery` function source, with writable
+own value properties and a ready bridge. The config source is independently
+measured; function-source equality avoids a new public-source network wait before
+installing the guard. Existing quota-module SHA256 checks remain unchanged.
+
+Only `L.page("CSPlaytable", ...)` and a one-argument preload with own plain
+`data.prestrain=1` / `close_web=0` values are isolated on the exact legacy route.
+All nonmatching pages, real `prestrain=0` draw/claim flows, callback-bearing calls,
+accessor-bearing inputs and unknown functions retain original args/this/results/
+exceptions. The original function is invoked once, not retried. No callback is
+manufactured. Only operation and allowlisted exception-name class are reported,
+never messages, stack traces, credentials or arbitrary exception objects.
+
+Wrappers release after the observed preload or a 30-second deadline. Restore only
+owned writable properties, preserve later SDK owners, and deactivate even if a
+later owner freezes a property. Missing/unknown functions or late/no observed
+initialization are reported, not claimed as a repair. A bounded later passive UI
+snapshot observes normal completion; no extra API read is added.
+
+Seven actual-view offline cases reproduce the unguarded stopping state and show
+that isolation lets the original quota result three become UI three, while a real
+zero or query failure remains unavailable. Native/API errors are synthetic
+boundaries; actual phone repair still needs acceptance. Current markers are
+`CS-Q20:HOOK` / `CS-QUOTA-V20`, plus `INIT_GUARD/INIT_PAGE/INIT_PRELOAD`.
+
 ## V19 passive page-state comparison
 
 V18 live output returned three in a successful separate query while the wheel
@@ -112,7 +153,7 @@ modules/route/hash fail without a read. Do not press draw during this diagnosis.
 
 ## Output and limits
 
-The temporary `CS-QUOTA-V19` box reports route class, genuine count versus
+The temporary `CS-QUOTA-V20` box reports route class, genuine count versus
 null/missing/false/error, a bounded request count and credential-presence booleans.
 It may report a strictly bounded public module build tag if a different version is loaded.
 It never prints credentials, account/device identifiers, names, full URLs, response bodies or
