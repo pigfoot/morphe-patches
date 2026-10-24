@@ -8,7 +8,9 @@ const guardSource = fs.readFileSync(new URL('../patches/src/main/kotlin/app/pigf
 const guard = guardSource.split('internal val lotteryInitGuardFactory = """')[1].split('""".trimIndent()')[0].trim();
 const silentRaw = guardSource.split('internal val lotteryInitOnlyScript = """')[1].split('""".trimIndent()')[0].replace('$lotteryInitGuardFactory',guard);
 const silentScript = silentRaw.replace('function(url) { return import(url); }','__importer');
-const raw = source.split('internal val quotaProbeScript = """')[1].split('""".trimIndent()')[0].replace('$lotteryInitGuardFactory',guard);
+const observerSource = fs.readFileSync(new URL('../patches/src/main/kotlin/app/pigfoot/patches/camscanner/CamScannerBridgeObserver.kt',import.meta.url),'utf8');
+const observer = observerSource.split('internal val quotaBridgeObserverFunctions = """')[1].split('""".trimIndent()')[0].trim();
+const raw = source.split('internal val quotaProbeScript = """')[1].split('""".trimIndent()')[0].replace('$lotteryInitGuardFactory',guard).replace('$quotaBridgeObserverFunctions',observer);
 const bootstrap = source.split('internal val quotaBootstrapScript = """')[1].split('""".trimIndent()')[0];
 const script = raw.replace('function(url) { return import(url); }', '__importer');
 assert.notEqual(raw, script);
@@ -34,10 +36,15 @@ function fixture(options = {}) {
     finish() { for (const fn of this.listeners) fn.call(this); }
   }
   const originalOpen = Xhr.prototype.open;
-  let originalPage,originalPreload,initModule,pageCalls=0,preloadCalls=0;
+  let originalPage,originalPreload,initModule,pageCalls=0,preloadCalls=0,nativeCalls=0,nativeReceiver,nativeArgs;
+  const nativeError=Object.assign(new Error(canary),{name:'Error'});
+  const native = {callApp(...args){nativeCalls++;nativeReceiver=this;nativeArgs=args;if(options.nativeFail)throw nativeError;return 91;}};
+  const originalNative=native.callApp;
+  if(options.nativeLocked)Object.defineProperty(native,'callApp',{writable:false});
+  if(options.nativeGetter)Object.defineProperty(native,'callApp',{get(){throw Error('Getter must not be called');}});
   const initError=Object.assign(new Error(canary),{name:options.initErrorName || 'TypeError'});
   if(options.initGuard) {
-    const scope={localStorage:{getItem:()=>null},N:'',Nt:'/',he:'',Xe:'',de:true,y:{event_tracking(){pageCalls++;if(options.pageFail)throw initError;return 41;}},Se:()=>{},Ct:()=>1,ge:{},i:'watchad_lottery',se:()=>{},U:()=>{},r(){preloadCalls++;if(options.preloadFail)throw initError;return 42;}};
+    const scope={localStorage:{getItem:()=>null},N:'',Nt:'/',he:'',Xe:'',de:true,y:{event_tracking(){pageCalls++;if(options.pageFail)throw initError;return 41;}},Se:()=>{},Ct:()=>1,ge:{},i:'watchad_lottery',se:()=>{},U:()=>{},r(payload){preloadCalls++;if(options.preloadFail)throw initError;if(options.observeNative)return native.callApp(JSON.stringify(payload));return 42;}};
     vm.createContext(scope);vm.runInContext('page=('+initFunctions.page_source+');preload=('+initFunctions.preload_source+');',scope);
     originalPage=scope.page;originalPreload=scope.preload;
     initModule={L:{page:options.changedInitFunction ? function unknown(){} : originalPage},C:{watchad_lottery:originalPreload}};
@@ -80,6 +87,7 @@ function fixture(options = {}) {
     // Model the browser's digest boundary; the real public-source hashes were independently measured.
     return Uint8Array.from(Buffer.from(options.hashMismatch ? '00'.repeat(32) : modern ? modernHash : options.phone ? phoneHash : legacyHash,'hex')).buffer;
   }}}};
+  if(options.observeNative)context.window.JSMethods=native;
   context.crypto=context.window.crypto;
   vm.createContext(context); vm.runInContext(options.silent ? silentScript : script,context);
   async function flush() {
@@ -89,11 +97,12 @@ function fixture(options = {}) {
       if(entry) { timers.delete(entry[0]); entry[1].fn(); }
     }
   }
-  function report() { return nodes.get('cs-quota-probe-v23')?.textContent || ''; }
+  function report() { return nodes.get('cs-quota-probe-v24')?.textContent || ''; }
   return {context,flush,report,
     uiTick(){const entry=[...timers].find(([,t])=>t.delay===1000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
     finishUi(){const entry=[...timers].find(([,t])=>t.delay===35000);if(entry){timers.delete(entry[0]);entry[1].fn();}},
     hidePage(){events.get('pagehide')?.();},
+    native,originalNative,nativeError,get nativeCalls(){return nativeCalls;},get nativeReceiver(){return nativeReceiver;},get nativeArgs(){return nativeArgs;},
     lateRead(body={ret:'0',data:{watchad_vip_chance:3}}){const x=new Xhr();x.responseText=JSON.stringify(body);x.open('GET','https://api-cs.intsig.net/query_property?property_id=watchad_vip');x.finish();return x;},initError,initModule,originalPage,originalPreload,get pageCalls(){return pageCalls;},get preloadCalls(){return preloadCalls;},
     expireInit(){const entry=[...timers].find(([,t])=>t.delay===30000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
     repeat(){vm.runInContext(options.silent ? silentScript : script,context);mutation?.();},
@@ -261,4 +270,32 @@ test('native class diagnosis prints fixed classifications only and never treats 
     const allowed=typeof nativeCheck==='string'&&/^(BOTH_RESOLVED|(CONTROL|CALLBACK)_(VERIFY_ERROR|CLASS_MISSING|LINKAGE_ERROR|SECURITY_ERROR|OTHER_ERROR))$/.test(nativeCheck);
     assert.match(f.report(),new RegExp('NATIVE_CLASS_CHECK='+(allowed?nativeCheck:'UNKNOWN')+'\\n'));assert.equal(f.queryCalls,0);assert.equal(f.imports,0);f.assertPrivate();f.finishUi();
   }
+});
+
+
+test('qualified natural preload observes original native entry once, preserves receiver arguments return and error',async()=>{
+  for(const nativeFail of [false,true]) {const f=fixture({phone:true,initGuard:true,observeNative:true,nativeFail});await f.flush();assert.equal(f.nativeCalls,0,'observer never invokes native by itself');assert.match(f.report(),/CALLAPP_OBSERVER=INSTALLED_OWN_WRITABLE/);
+    f.initModule.L.page('CSPlaytable',{});assert.doesNotThrow(()=>f.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0}));await f.flush();
+    assert.equal(f.nativeCalls,1);assert.equal(f.nativeReceiver,f.native);assert.equal(JSON.parse(f.nativeArgs[0]).action,'watchad_lottery');assert.match(f.report(),new RegExp('CALLAPP_BOUNDARY='+(nativeFail?'THREW_Error':'RETURNED_ORIGINAL')));assert.match(f.report(),/CALLAPP_PRELOAD_CALLS=1/);assert.match(f.report(),/CALLAPP_CLEANUP=OBSERVED_RESTORED/);assert.equal(f.native.callApp,f.originalNative);assert.equal(f.queryCalls,0);f.assertPrivate();
+  }
+});
+test('native observer passes through unrelated actions and genuine draw arguments with identical results and errors',async()=>{
+  for(const nativeFail of [false,true]) {const f=fixture({phone:true,initGuard:true,observeNative:true,nativeFail});await f.flush();const wrapped=f.native.callApp;
+    for(const raw of ['invalid',JSON.stringify({action:'event_tracking',data:{token:canary}}),JSON.stringify({action:'watchad_lottery',data:{prestrain:0},close_web:'0'})]) {
+      if(nativeFail)assert.throws(()=>wrapped.call(f.native,raw),e=>e===f.nativeError);else assert.equal(wrapped.call(f.native,raw),91);
+      assert.equal(f.nativeArgs[0],raw);
+    }
+    assert.match(f.report(),/CALLAPP_PRELOAD_CALLS=0/);f.expireInit();f.expireInit();assert.equal(f.native.callApp,f.originalNative);f.assertPrivate();
+  }
+});
+test('unsafe native descriptors and unqualified init profiles are unchanged without calling getters or native methods',async()=>{
+  for(const extra of [{nativeLocked:true},{nativeGetter:true},{changedInitFunction:true}]){const f=fixture({phone:true,initGuard:true,observeNative:true,...extra});const before=Object.getOwnPropertyDescriptor(f.native,'callApp');await f.flush();assert.deepEqual(Object.getOwnPropertyDescriptor(f.native,'callApp'),before);assert.equal(f.nativeCalls,0);assert.match(f.report(),/CALLAPP_OBSERVER=(UNSAFE_METHOD_NO_CHANGE|NO_QUALIFIED_WINDOW_NO_CHANGE)/);f.assertPrivate();}
+});
+test('native observer deadline preserves later owners and frozen retained wrappers deactivate without altering original behavior',async()=>{
+  for(const frozen of [false,true]){const f=fixture({phone:true,initGuard:true,observeNative:true});await f.flush();const wrapped=f.native.callApp;const sdk=function(...a){return Reflect.apply(wrapped,this,a);};if(frozen)Object.defineProperty(f.native,'callApp',{writable:false});else f.native.callApp=sdk;
+    f.expireInit();assert.doesNotThrow(()=>f.expireInit());assert.equal(f.native.callApp,frozen?wrapped:sdk);const payload=JSON.stringify({action:'watchad_lottery',data:{prestrain:1},close_web:'0'});assert.equal(f.native.callApp(payload),91);assert.match(f.report(),/CALLAPP_PRELOAD_CALLS=0/);assert.match(f.report(),new RegExp('CALLAPP_CLEANUP=DEADLINE_'+(frozen?'RELEASED_NOT_RESTORED':'OWNER_CHANGED')));f.assertPrivate();}
+});
+test('before-boundary preload error remains distinct and no observer error replaces an original native exception',async()=>{
+  const before=fixture({phone:true,initGuard:true,observeNative:true,preloadFail:true});await before.flush();before.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0});await before.flush();assert.match(before.report(),/INIT_PRELOAD=ISOLATED_TypeError/);assert.match(before.report(),/CALLAPP_BOUNDARY=NOT_OBSERVED/);assert.equal(before.nativeCalls,0);before.assertPrivate();
+  const f=fixture({phone:true,initGuard:true,observeNative:true,nativeFail:true});await f.flush();const payload=JSON.stringify({action:'watchad_lottery',data:{prestrain:1},close_web:'0'});Object.defineProperty(f.native,'callApp',{writable:false});assert.throws(()=>f.native.callApp(payload),e=>e===f.nativeError);assert.match(f.report(),/CALLAPP_CLEANUP=OBSERVED_RELEASED_NOT_RESTORED/);assert.equal(f.nativeCalls,1);f.assertPrivate();
 });

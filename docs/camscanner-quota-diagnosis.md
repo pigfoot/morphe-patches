@@ -270,3 +270,43 @@ Phone instruction: only enter the wheel and wait for FINAL, then capture the
 report. Do not draw or press get-reward. This narrows a possible native-resolution
 failure using the existing natural preload evidence; it does not reproduce or
 repair every possible post-get-reward failure and cannot recover an old event.
+
+## V24 passive callApp boundary observer
+
+The V23 device report shows BOTH_RESOLVED, original count two/ready true, two
+natural reads and zero extra quota reads, while the original callback-free
+preload still throws generic Error. This accepts reflection metadata resolution
+only. It neither establishes which operation consumed an attempt nor proves a
+native invocation, callback, type2 claim or awarded reward.
+
+Explicit inspect now attempts a passive observer after the existing exact init
+qualification. It wraps only an own writable value-function JSMethods.callApp;
+accessors, read-only/missing/unknown descriptors are not overwritten. If a host
+cannot confirm installation it reports that limitation, never calls a native
+method to test it. Arm on the qualified tracking-finally boundary or immediately
+after guard installation; report a missed/unqualified window rather than force
+preload or retry initialization. The accepted shared init factory, native
+reflection self-check and normal skip/block behavior remain unchanged.
+
+Only the naturally forwarded legacy watchad_lottery/prestrain1/close_web0 JSON
+call is classified. Forward the original receiver, arguments, return and same
+exception exactly once, without editing a payload or synthesizing a callback.
+Other actions, real prestrain0/draw/claim/callback traffic pass through. Reporting
+and cleanup failures cannot replace an original result/error. Restore only owned
+wrappers after the first observed preload or 30 seconds; preserve later owners
+and deactivate retained wrappers if restoration becomes impossible. No new native
+call, tracking event, source fetch, quota query, task-code request, draw or claim
+is initiated by this observer. Payloads, tokens, callback ids, error messages and
+stacks are never displayed.
+
+CALLAPP_OBSERVER reports installation/unsupported/missed state;
+CALLAPP_BOUNDARY reports NOT_OBSERVED, ENTERED_ORIGINAL, RETURNED_ORIGINAL or an
+allowlisted THREW_name; CALLAPP_PRELOAD_CALLS and CALLAPP_CLEANUP show actual
+observation count and ownership cleanup. These are JS method-boundary observations,
+not proof that Java finished or that an asynchronous callback/reward succeeded.
+Zero observations alone do not prove native code was never called (timing, cached
+forwarders and unsupported host descriptors remain possible).
+
+Phone test is still enter/wait for FINAL/screenshot only; no draw/get-reward.
+The temporary report font is compacted so the additional fields remain readable.
+This is not a reward repair, pending-prize recovery or attempt refund.
