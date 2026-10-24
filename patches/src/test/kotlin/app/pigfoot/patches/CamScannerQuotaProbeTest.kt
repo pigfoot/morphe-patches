@@ -19,13 +19,13 @@ class CamScannerQuotaProbeTest {
             listOf(ImmutableInstruction10x(Opcode.RETURN_VOID)), emptyList(), emptyList())))
 
     @Test fun assembledPrefixPreservesArgumentsAndEvaluatesExactScriptOnlyOnScopedHosts() {
-        for ((url, hasView, expected) in listOf(
+        for (silent in listOf(false, true)) for ((url, hasView, expected) in listOf(
             Triple("https://mo.camscanner.com/lottery/relottery?intsig_key=secret", true, 2),
             Triple("https://www.camscanner.com/lottery/relottery", true, 2),
             Triple("https://mo.camscanner.com.evil.invalid/lottery/relottery", true, 0),
             Triple("http://mo.camscanner.com/lottery/relottery", true, 0),
             Triple(null, true, 0), Triple("https://mo.camscanner.com/lottery/relottery", false, 0))) {
-            val m = method(); requireQuotaProbeMethod(m); m.addInstructions(0, quotaProbePrefix())
+            val m = method(); requireQuotaProbeMethod(m); m.addInstructions(0, if (silent) lotteryInitPrefix() else quotaProbePrefix())
             val code = m.implementation!!.instructions.toList()
             val addresses = mutableMapOf<Int, Int>(); var size = 0
             code.forEachIndexed { index, i -> addresses[size] = index; size += i.codeUnits }
@@ -61,7 +61,7 @@ class CamScannerQuotaProbeTest {
                             "Landroid/widget/Toast;->show()V" -> assertSame(toast, registers[call.registerC])
                             "Landroid/webkit/WebView;->evaluateJavascript(Ljava/lang/String;Landroid/webkit/ValueCallback;)V" -> {
                                 assertSame(view, registers[call.registerC])
-                                assertEquals(if (evaluated == 0) quotaBootstrapScript else quotaProbeScript, registers[call.registerD])
+                                assertEquals(if (silent) lotteryInitOnlyScript else if (evaluated == 0) quotaBootstrapScript else quotaProbeScript, registers[call.registerD])
                                 assertEquals(0, registers[call.registerE]); evaluated++
                             }
                             else -> error("Unexpected native probe call $ref")
@@ -72,8 +72,8 @@ class CamScannerQuotaProbeTest {
                 }
                 index = next; pc = addresses.entries.single { it.value == index }.key
             }
-            assertEquals(expected, evaluated)
-            assertEquals(if (!hasView) emptyList<String>() else listOf(when {
+            assertEquals(if (silent && expected == 2) 1 else expected, evaluated)
+            assertEquals(if (silent || !hasView) emptyList<String>() else listOf(when {
                 url == null -> "CS-Q21:HOOK NO_PAGE_URL"
                 expected == 2 -> "CS-Q21:HOOK SCOPED"
                 else -> "CS-Q21:HOOK HOST_OUT_OF_SCOPE"

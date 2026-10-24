@@ -4,7 +4,11 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../patches/src/main/kotlin/app/pigfoot/patches/camscanner/CamScannerQuotaProbe.kt', import.meta.url), 'utf8');
-const raw = source.split('internal val quotaProbeScript = """')[1].split('""".trimIndent()')[0];
+const guardSource = fs.readFileSync(new URL('../patches/src/main/kotlin/app/pigfoot/patches/camscanner/CamScannerLotteryInitGuard.kt', import.meta.url), 'utf8');
+const guard = guardSource.split('internal val lotteryInitGuardFactory = """')[1].split('""".trimIndent()')[0].trim();
+const silentRaw = guardSource.split('internal val lotteryInitOnlyScript = """')[1].split('""".trimIndent()')[0].replace('$lotteryInitGuardFactory',guard);
+const silentScript = silentRaw.replace('function(url) { return import(url); }','__importer');
+const raw = source.split('internal val quotaProbeScript = """')[1].split('""".trimIndent()')[0].replace('$lotteryInitGuardFactory',guard);
 const bootstrap = source.split('internal val quotaBootstrapScript = """')[1].split('""".trimIndent()')[0];
 const script = raw.replace('function(url) { return import(url); }', '__importer');
 assert.notEqual(raw, script);
@@ -77,7 +81,7 @@ function fixture(options = {}) {
     return Uint8Array.from(Buffer.from(options.hashMismatch ? '00'.repeat(32) : modern ? modernHash : options.phone ? phoneHash : legacyHash,'hex')).buffer;
   }}}};
   context.crypto=context.window.crypto;
-  vm.createContext(context); vm.runInContext(script,context);
+  vm.createContext(context); vm.runInContext(options.silent ? silentScript : script,context);
   async function flush() {
     for(let i=0;i<80;i++) {
       await Promise.resolve();
@@ -92,7 +96,7 @@ function fixture(options = {}) {
     hidePage(){events.get('pagehide')?.();},
     lateRead(body={ret:'0',data:{watchad_vip_chance:3}}){const x=new Xhr();x.responseText=JSON.stringify(body);x.open('GET','https://api-cs.intsig.net/query_property?property_id=watchad_vip');x.finish();return x;},initError,initModule,originalPage,originalPreload,get pageCalls(){return pageCalls;},get preloadCalls(){return preloadCalls;},
     expireInit(){const entry=[...timers].find(([,t])=>t.delay===30000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},get queryCalls(){return queryCalls;},get imports(){return imports;},get publicFetches(){return publicFetches;},originalOpen,
-    repeat(){vm.runInContext(script,context);mutation?.();},
+    repeat(){vm.runInContext(options.silent ? silentScript : script,context);mutation?.();},
     bootstrap(){vm.runInContext(bootstrap,context);},
     routeTimeout(){const entry=[...timers].find(([,t])=>t.delay===30000);assert.ok(entry);timers.delete(entry[0]);entry[1].fn();},
     navigate(url){context.location=new URL(url); mutation?.();},
@@ -225,4 +229,27 @@ test('page hide and route change close passive observation and later SDK ownersh
 test('deadline notices a route change without another tick and locked XHR ownership deactivates safely',async()=>{
   const a=fixture();await a.flush();a.navigate('https://mo.camscanner.com/task/index');a.finishUi();assert.match(a.report(),/UI_OBSERVATION=ROUTE_CHANGED/);assert.equal(a.lateRead().listeners.length,0);
   const b=fixture();await b.flush();const owned=b.context.XMLHttpRequest.prototype.open;Object.defineProperty(b.context.XMLHttpRequest.prototype,'open',{writable:false});assert.doesNotThrow(()=>b.finishUi());assert.equal(b.context.XMLHttpRequest.prototype.open,owned);assert.equal(b.lateRead().listeners.length,0);assert.equal(b.queryCalls,1);b.assertPrivate();
+});
+
+test('silent normal skip shares qualified guard with no overlay observer fetch or quota call',async()=>{
+  const f=fixture({silent:true,phone:true,initGuard:true,pageFail:true,preloadFail:true});await f.flush();
+  assert.notEqual(f.initModule.L.page,f.originalPage);assert.notEqual(f.initModule.C.watchad_lottery,f.originalPreload);
+  assert.doesNotThrow(()=>f.initModule.L.page('CSPlaytable',{}));
+  assert.doesNotThrow(()=>f.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0}));
+  assert.equal(f.pageCalls,1);assert.equal(f.preloadCalls,1);
+  assert.equal(f.initModule.L.page,f.originalPage);assert.equal(f.initModule.C.watchad_lottery,f.originalPreload);
+  assert.equal(f.queryCalls,0);assert.equal(f.publicFetches,0);assert.equal(f.imports,0);assert.equal(f.report(),'');assert.equal(f.context.XMLHttpRequest.prototype.open,f.originalOpen);
+  f.repeat();await f.flush();assert.equal(f.initModule.C.watchad_lottery,f.originalPreload,'document entry is idempotent');
+  assert.ok(!silentRaw.includes('CS-QUOTA'));assert.ok(!silentRaw.includes('createElement'));assert.ok(!silentRaw.includes('XMLHttpRequest'));
+});
+test('silent scope guards preserve callbacks other routes changed functions and original exceptions',async()=>{
+  for(const location of ['https://evil.invalid/lottery/relottery','https://mo.camscanner.com/task/index']) {
+    const f=fixture({silent:true,initGuard:true,location});await f.flush();assert.equal(f.initModule.L.page,f.originalPage);assert.equal(f.initModule.C.watchad_lottery,f.originalPreload);assert.equal(f.queryCalls,0);
+  }
+  const bad=fixture({silent:true,initGuard:true,changedInitFunction:true});await bad.flush();assert.equal(bad.initModule.C.watchad_lottery,bad.originalPreload);
+  const f=fixture({silent:true,initGuard:true,pageFail:true,preloadFail:true});await f.flush();
+  assert.throws(()=>f.initModule.L.page('OtherPage',{}),e=>e===f.initError);
+  assert.throws(()=>f.initModule.C.watchad_lottery({data:{prestrain:0},close_web:0}),e=>e===f.initError);
+  assert.throws(()=>f.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0},()=>{}),e=>e===f.initError);
+  f.expireInit();assert.equal(f.initModule.C.watchad_lottery,f.originalPreload);assert.equal(f.queryCalls,0);assert.equal(f.report(),'');
 });

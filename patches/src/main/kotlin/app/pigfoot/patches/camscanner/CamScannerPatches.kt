@@ -232,7 +232,7 @@ val camscannerAdsPatch = bytecodePatch(
     availability { installer, _ -> noNetwork(installer) }
     dependsOn(camscannerInputPatch, camscannerSigningPatch, adsManifestPatch)
     val rewardedVideos by stringOption(key = "rewardedVideos", default = "block", title = "Rewarded videos",
-        description = "Block by default. The lottery-only skip experiment requires online 7.27.0; it preserves actual server results, not guaranteed rewards. Temporary quota diagnosis adds one read-only query.",
+        description = "Block by default. The lottery-only skip experiment requires online 7.27.0; it preserves actual server results, not guaranteed rewards. Normal skip includes scoped initialization recovery; temporary diagnosis observes current original reads (older profiles may add one read-only query).",
         values = mapOf("Block videos (no reward flow)" to "block",
             "Skip lottery video (experimental, 7.27.0 only)" to "skip-lottery",
             "Skip lottery video + quota diagnosis (temporary)" to "inspect-lottery"), required = true,
@@ -245,7 +245,7 @@ val camscannerAdsPatch = bytecodePatch(
                 val store = MemoryDataStore(); pool.writeTo(store)
                 require(matchesCamScannerClassPin(pin, sha256(store.data))) { "Unsupported or modified lottery callback path: $type" }
             }
-            if (rewardedVideos == "inspect-lottery") {
+            run {
                 val pool = DexPool(Opcodes.forDexVersion(39)); pool.internClass(classDefBy(QUOTA_CLIENT))
                 val store = MemoryDataStore(); pool.writeTo(store)
                 require(matchesCamScannerClassPin(QUOTA_CLIENT_PIN, sha256(store.data))) {
@@ -255,7 +255,7 @@ val camscannerAdsPatch = bytecodePatch(
                     it.name == "onPageFinished" && it.signature() == "(Landroid/webkit/WebView;Ljava/lang/String;)V"
                 }
                 requireQuotaProbeMethod(pageFinished)
-                pageFinished.addInstructions(0, quotaProbePrefix())
+                pageFinished.addInstructions(0, if (rewardedVideos == "inspect-lottery") quotaProbePrefix() else lotteryInitPrefix())
             }
             val control = mutableClassDefBy(WATCH_CONTROL)
             val sites = RewardSkipSite.entries.map { site ->

@@ -221,3 +221,23 @@ APKM/combined and legacy cases, preserve all original method bodies outside the
 three scoped prefixes, and reject a modified probe-client class. The diagnostic
 must be removed or deselected after RCA. Neither CI nor a locally displayed count
 proves the backend granted a reward or repaired phone behavior.
+
+## Clean normal-skip initialization recovery
+
+The settled V21 device observation accepted original count three and ready true,
+with zero extra diagnostic reads. This accepts initialization recovery only, not
+an actual draw, video-skip completion, claim or reward receipt. The exact native
+preload exception detail remains unknown.
+
+Normal `skip-lottery` now uses the same shared, exact-function-qualified init
+mitigation without the diagnostic overlay. Its official-host page-finished prefix
+runs one init-only script: no Toast, DOM observer/mutation, quota query, HTTP
+observer, function-source fetch, UI-state write or fabricated callback. Only the
+already-loaded qualified config module is imported. Exact legacy route, tracking
+page and callback-free preload argument guards, original this/arguments/results,
+owned restoration and the 30-second deadline are retained. Unqualified profiles
+are unchanged. `block` remains unchanged; `inspect-lottery` retains explicit V21
+passive diagnostics using the same shared mitigation core.
+
+A clean-mode phone test must separately verify one genuine draw and the awarded
+reward/history. Build/APK checks and original readiness do not establish receipt.
