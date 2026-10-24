@@ -1,5 +1,41 @@
 # Temporary lottery quota diagnosis
 
+## V21 settled passive observation
+
+V20 phone output confirms `INIT_PAGE=RETURNED` and
+`INIT_PRELOAD=ISOLATED_Error`: the preload call threw synchronously, the guard
+isolated it, and the original component progressed to count three and a set
+timezone. `READY_NO` in that screenshot is not proof of settled readiness.
+V20 snapshots only run around diagnosis/guard completion and500ms later. The
+actual view's username callback starts a second quota query; a controlled replay
+shows its later success sets readiness true while V20 retains the earlier false
+snapshot. The underlying native exception detail remains unknown.
+
+V21 retains the same init guard and adds a bounded35second passive window with
+`UI_OBSERVATION=LIVE/FINAL`, configured window and actual sample count. UI state
+is sampled every second and at the final deadline. Target quota XHR observations
+remain active for this window after diagnostic completion, so a late original
+response/business error can be classified. Page hide/route change stops it;
+cleanup preserves later SDK owners, and locked ownership becomes inactive
+pass-through without modifying the original request/result. No request is
+aborted or retried. Final is a point-in-time observation, not a permanent promise.
+
+For the exact recorded `pc-api-DWt5-aHp.js` current phone profile, V21 performs
+**zero extra quota reads, quota-function imports or quota-source fetches**:
+`QUERY=PASSIVE_ORIGINAL_READS_ONLY`, `QUOTA_READS=0`. It observes the page's own
+requests and UI. This minimizes measurement perturbation; it does not establish
+that the earlier extra read caused a failure. Old legacy/modern active-diagnosis
+compatibility retains its prior one-read/digest guards. Passive monitoring does
+not invoke an unqualified function; init changes still require their separate
+exact config/function qualification.
+
+Keep the page in the foreground and capture only after `UI_OBSERVATION=FINAL`
+(about35seconds, allow40seconds). `PAGE_HIDDEN/ROUTE_CHANGED` is not a final
+same-page observation. `_OBS` values remain passive/latest, not guaranteed
+request-correlated. Genuine zero/error/persistent-not-ready are never forced
+ready. No component refresh, draw/claim call or count/readiness write is added.
+Current markers: `CS-Q21:HOOK` / `CS-QUOTA-V21`.
+
 ## V20 scoped initialization isolation candidate
 
 V19 device output returns three but the original component remains zero,
@@ -153,7 +189,7 @@ modules/route/hash fail without a read. Do not press draw during this diagnosis.
 
 ## Output and limits
 
-The temporary `CS-QUOTA-V20` box reports route class, genuine count versus
+The temporary `CS-QUOTA-V21` box reports route class, genuine count versus
 null/missing/false/error, a bounded request count and credential-presence booleans.
 It may report a strictly bounded public module build tag if a different version is loaded.
 It never prints credentials, account/device identifiers, names, full URLs, response bodies or
