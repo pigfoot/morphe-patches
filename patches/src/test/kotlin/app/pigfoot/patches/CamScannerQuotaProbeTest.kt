@@ -135,7 +135,7 @@ class CamScannerQuotaProbeTest {
         }
         val stage = concat.getPreInstructionRegisterType(5)
         assertEquals(RegisterType.REFERENCE, stage.category)
-        assertEquals("Ljava/lang/String;", stage.type.type)
+        assertEquals("Ljava/lang/String;", stage.type?.type)
     }
     @Test fun methodShapeAndUnqualifiedWriterDigestsFailClosed() {
         assertThrows(IllegalArgumentException::class.java) { requireQuotaProbeMethod(method(10)) }
