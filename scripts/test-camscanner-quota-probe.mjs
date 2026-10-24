@@ -299,3 +299,10 @@ test('before-boundary preload error remains distinct and no observer error repla
   const before=fixture({phone:true,initGuard:true,observeNative:true,preloadFail:true});await before.flush();before.initModule.C.watchad_lottery({data:{prestrain:1},close_web:0});await before.flush();assert.match(before.report(),/INIT_PRELOAD=ISOLATED_TypeError/);assert.match(before.report(),/CALLAPP_BOUNDARY=NOT_OBSERVED/);assert.equal(before.nativeCalls,0);before.assertPrivate();
   const f=fixture({phone:true,initGuard:true,observeNative:true,nativeFail:true});await f.flush();const payload=JSON.stringify({action:'watchad_lottery',data:{prestrain:1},close_web:'0'});Object.defineProperty(f.native,'callApp',{writable:false});assert.throws(()=>f.native.callApp(payload),e=>e===f.nativeError);assert.match(f.report(),/CALLAPP_CLEANUP=OBSERVED_RELEASED_NOT_RESTORED/);assert.equal(f.nativeCalls,1);f.assertPrivate();
 });
+
+test('diagnostic DOM reporting failures cannot replace an original native return or exception',async()=>{
+  for(const nativeFail of [false,true]){const f=fixture({phone:true,initGuard:true,observeNative:true,nativeFail});await f.flush();const old=f.context.document.getElementById;f.context.document.getElementById=()=>{throw Error('synthetic DOM unavailable');};const raw=JSON.stringify({action:'watchad_lottery',data:{prestrain:1},close_web:'0'});
+    try {if(nativeFail)assert.throws(()=>f.native.callApp(raw),e=>e===f.nativeError);else assert.equal(f.native.callApp(raw),91);}finally{f.context.document.getElementById=old;}
+    assert.equal(f.nativeCalls,1);assert.equal(f.native.callApp,f.originalNative);f.assertPrivate();
+  }
+});
