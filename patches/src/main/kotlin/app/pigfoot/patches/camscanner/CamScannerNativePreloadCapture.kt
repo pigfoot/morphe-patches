@@ -1,6 +1,7 @@
 package app.pigfoot.patches.camscanner
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -253,7 +254,8 @@ internal fun installNativePreloadCapture(method: MutableMethod) {
     method.addInstructions(0, nativePreloadEntry())
     val originalStart = original.instructions.size - originalCount
     val originalEnd = original.instructions.size
-    method.addInstructions(originalEnd, nativePreloadError())
+    // Appended local branches must be relocated to their actual method offset.
+    method.addInstructionsWithLabels(originalEnd, nativePreloadError())
     val code = original.instructions.toList()
     for (stage in listOf("ENTRY", "ERROR")) {
         val start = code.indices.single {
