@@ -22,7 +22,7 @@ private const val CRASH = "Lcom/google/firebase/crashlytics/FirebaseCrashlytics;
 private const val LOG = "Lcom/intsig/logagent/LogAgent;"
 private val target = Compatibility(packageName = CAM_PACKAGE, name = "CamScanner", apkFileType = ApkFileType.APKM,
     targets = camScannerVersions.map { AppTarget(it.name, versionCodes = mapOf(
-        SupportedAbi.ARM64_V8A to it.code.toInt(), SupportedAbi.ARMEABI_V7A to it.code.toInt()), isExperimental = true) })
+        SupportedAbi.ARM64_V8A to it.code.toInt(), SupportedAbi.ARMEABI_V7A to it.code.toInt()), isExperimental = false) })
 
 internal fun Method.signature() = "(" + parameterTypes.joinToString("") + ")" + returnType
 internal fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
