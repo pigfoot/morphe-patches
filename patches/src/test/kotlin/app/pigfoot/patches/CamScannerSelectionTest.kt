@@ -22,6 +22,23 @@ class CamScannerSelectionTest {
         assertNotNull(camscannerAdsPatch.options["rewardedVideos"])
     }
 
+    @Test fun qualifiedVersionsAreNonExperimentalWithoutWideningCompatibility() {
+        val expected = mapOf("7.26.5.2609160000" to 72651, "7.27.0.2609220000" to 72701)
+        for (patch in publicPatches) {
+            val compatibility = patch.compatibility!!.single()
+            assertEquals(CAM_PACKAGE, compatibility.packageName)
+            assertEquals(app.morphe.patcher.patch.ApkFileType.APKM, compatibility.apkFileType)
+            assertEquals(expected.keys, compatibility.targets.map { it.version }.toSet())
+            for (target in compatibility.targets) {
+                assertFalse(target.isExperimental)
+                assertEquals(mapOf(
+                    app.morphe.patcher.patch.SupportedAbi.ARM64_V8A to expected.getValue(target.version!!),
+                    app.morphe.patcher.patch.SupportedAbi.ARMEABI_V7A to expected.getValue(target.version!!)
+                ), target.versionCodes)
+            }
+        }
+    }
+
     @Test fun recommendedProfilePreservesAdsAndInternetWithoutForcedScannerEdits() {
         for (patch in listOf(camscannerSigningPatch, camscannerLocalFeaturesPatch, camscannerPrivacyPatch)) assertTrue(patch.default)
         for (patch in listOf(camscannerAdsPatch, camscannerOfflinePatch)) assertFalse(patch.default)

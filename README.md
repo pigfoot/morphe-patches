@@ -103,11 +103,14 @@ Do not manually edit generated metadata or rewrite release tags. The initial v0.
 
 [GNU General Public License v3.0](LICENSE). Build/release scaffolding and patch-list generation derive from the [Morphe template](https://github.com/MorpheApp/morphe-patches-template).
 
-## CamScanner experimental source
+## CamScanner support
 
 Supports pristine full APKM **7.26.5.2609160000 (72651)** and
 **7.27.0.2609220000 (72701)**. Preserve original modules, OCR assets and identity;
 update with the same local signing key without clearing data.
+The two qualified app targets are non-experimental in Manager and do not require
+source experimental-version mode. This does not broaden supported versions; the
+optional lottery skip experiment remains independently restricted to online 72701.
 
 | Patch | Default / scope |
 | --- | --- |
