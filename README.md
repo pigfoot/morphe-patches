@@ -27,7 +27,26 @@ The original app display name is preserved. Phone startup and live bus updates s
 ## Patches
 
 <!-- PATCHES_START -->
-> **[v0.1.0](https://github.com/pigfoot/morphe-patches/releases/tag/v0.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+> **[v0.2.0](https://github.com/pigfoot/morphe-patches/releases/tag/v0.2.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
+<details open>
+<summary>📦 CamScanner&nbsp;&nbsp;•&nbsp;&nbsp;5 patches</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 🧪&nbsp;7.26.5.2609160000 | 🧪&nbsp;7.27.0.2609220000 |
+| :---: | :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [CamScanner disable ads](#camscanner-disable-ads) | Suppress qualified ad entry points with reviewed manifest cleanup. Rewarded videos are blocked by default; an explicit 7.27.0-only lottery skip experiment can forward the original task/code flow without video. Server grants are not guaranteed or overridden. | • Rewarded videos |
+| [CamScanner local premium features](#camscanner-local-premium-features) | Experimental local account-status features. Does not unlock server credits or cloud quotas. | • Folder limit |
+| [CamScanner offline mode](#camscanner-offline-mode) | Revoke all app INTERNET declarations. Includes ad suppression; preserves real platform connectivity. External apps/services and offline error flows require device testing. |  |
+| [CamScanner reduce telemetry and app logging](#camscanner-reduce-telemetry-and-app-logging) | Suppress qualified Firebase Analytics/Crashlytics/Performance/Sessions and app network/cache/local logging. Preserve unrelated Firebase services. Not a guarantee of zero telemetry. |  |
+| [CamScanner restore trust on re-signed builds](#camscanner-restore-trust-on-re-signed-builds) | Required compatibility for supported re-signed standard/Shizuku installs: preserve original request signing and recover exact obsolete/error-only API Center caches. No diagnostic overlays. No forced host, global signature spoofing, authentication-result changes or INTERNET grant. Root mount is not qualified. |  |
+
+</details>
+
 <details open>
 <summary>📦 台灣鐵道通&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
 <br>
