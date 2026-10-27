@@ -133,3 +133,18 @@ promise that every account/request will receive a server grant.
 See the [implementation contract](docs/camscanner-implementation.md),
 [lottery skip contract and regression](docs/camscanner-reward-video-experiment.md),
 and [independent version-porting workflow](docs/camscanner-version-porting.md).
+
+## Fing candidate
+
+Original full APKM **12.13.5 / 121305003**, Android SDK 28+, original ARM64 and ARMv7 ABIs.
+Two independently selectable recommended patches are provided:
+
+- **Fing local premium features**: local tier, feature-entry and purchase-status gates;
+  no fabricated account, purchase, cloud entitlement or server grant.
+- **Fing reduce telemetry**: qualified Analytics/automatic Crashlytics suppression,
+  scoped metadata opt-outs and reviewed analytics/ad-ID manifest cleanup.
+
+Keep the original identity, minimum SDK, Maps key, assets/native libraries,
+Billing, push and network discovery. No donor helper, offline mode, global Play
+services bypass or resource reoptimization is included. Device functionality is
+not inferred from static qualification. See the [Fing contract](docs/fing-implementation.md).
