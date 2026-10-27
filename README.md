@@ -53,6 +53,22 @@ To update an existing `.morphe` or custom-package installation, explicitly selec
 This opt-in default differs from the initial v0.0.1 behavior. Phone startup and
 live bus-refresh behavior require device validation.
 
+### RailsGo patch options
+
+Startup compatibility is required and bus update is enabled by default for
+standard/Shizuku installs. Neither has user-configurable parameters.
+Only **Change package name** exposes an option:
+
+| Parameter (Manager label) | Default | Accepted values and effect |
+| --- | --- | --- |
+| `packageName` (Package name) | `com.waccliu.taiwanrail.morphe` | Used only when the rename patch is selected. A required package string of at most 200 characters, with at least two dot-separated segments. Each segment starts with an ASCII letter and continues with ASCII letters, digits or `_`. The original `com.waccliu.taiwanrail` and reserved `com.waccliu.taiwanrail.diagnostic` are rejected. |
+
+Changing this value changes the installed app identity, not just its label.
+For example, `com.example.taiwanrail` installs separately; it cannot update an
+existing `.morphe` install. Renaming also isolates provider authorities, app-owned
+permissions and the deep-link scheme. The default scheme is `taiwanrail-morphe`;
+custom names receive a deterministic isolated scheme.
+
 ## CamScanner
 
 Use pristine full APKM **7.26.5.2609160000 (72651)** or
@@ -76,6 +92,21 @@ The retired `inspect-lottery` option is not supported; use `block` or
 The skip profile includes the phone-accepted dispatch-label correction and silent,
 scoped initialization protection; a reward receipt does not guarantee server grants.
 
+### CamScanner patch options
+
+Patch selection and its parameter values are separate choices: an option takes
+effect only when its owning patch is selected (directly or as a dependency).
+
+| Patch / parameter (Manager label) | Default | Accepted values and effect |
+| --- | --- | --- |
+| Local premium / `folderLimit` (Folder limit) | `0` — Keep original limit | `0` leaves the original folder limit untouched; `5000` changes the qualified local folder-cap predicate to 5,000. Other values are rejected. This does not change cloud storage, credits or server quotas. |
+| Disable ads / `rewardedVideos` (Rewarded videos) | `block` | `block` suppresses videos without entering the reward flow. `skip-lottery` forwards the original lottery task/code callback without playing the video; requires online **7.27.0.2609220000 (72701)** and preserves actual server responses. Other values are rejected. |
+
+**Restore trust**, **reduce telemetry and app logging**, and **offline mode** have
+no user-configurable parameters. Every optional CamScanner policy depends on the
+required trust compatibility patch; offline also selects disable ads and requires
+`rewardedVideos=block`. Offline does not automatically select premium or privacy.
+
 Details: [implementation contract](docs/camscanner-implementation.md),
 [lottery contract](docs/camscanner-reward-video-experiment.md),
 [version-porting workflow](docs/camscanner-version-porting.md).
@@ -95,6 +126,14 @@ Maps configuration, assets/native libraries, Billing, push and network discovery
 No donor helper, offline mode, global Google Play services bypass or resource
 reoptimization is included. Static qualification does not establish device or
 certificate-restricted service behavior. See the [Fing contract](docs/fing-implementation.md).
+
+### Fing patch options
+
+Neither Fing patch has user-configurable parameters: each is a selected/unselected
+policy. Both default to selected, neither selects the other, and their only shared
+dependency is the hidden clean-input guard. The Crash reporting switch being off
+is an effect of **Fing reduce telemetry**, not a separate Manager option. This
+policy preserves the stored app preference rather than erasing it.
 
 ## Patch catalog
 
