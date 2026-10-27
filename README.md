@@ -27,7 +27,7 @@ The original app display name is preserved. Phone startup and live bus updates s
 ## Patches
 
 <!-- PATCHES_START -->
-> **[v0.2.1](https://github.com/pigfoot/morphe-patches/releases/tag/v0.2.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
+> **[v0.3.0](https://github.com/pigfoot/morphe-patches/releases/tag/v0.3.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;10 patches total
 <details open>
 <summary>📦 CamScanner&nbsp;&nbsp;•&nbsp;&nbsp;5 patches</summary>
 <br>
@@ -61,6 +61,22 @@ The original app display name is preserved. Phone startup and live bus updates s
 | [Change package name](#change-package-name) | Optional parallel installation with a default or custom package name. Without this patch the original package is retained. The app name is unchanged; providers, permissions and links are isolated when selected. | • Package name |
 | [RailsGo bus update without video](#railsgo-bus-update-without-video) | Complete the observed bus-update rewarded unit using its loaded reward metadata; retain the original fallback. Requires sideload startup compatibility, not package renaming. |  |
 | [RailsGo sideload startup compatibility](#railsgo-sideload-startup-compatibility) | Required for supported re-signed standard or Shizuku installs, with or without package renaming. Bypasses the Java Play-license startup entry. Root mount is not qualified. |  |
+
+</details>
+
+<details open>
+<summary>📦 Fing&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 12.13.5 |
+| :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Fing local premium features](#fing-local-premium-features) | Change qualified local tier, feature-entry and purchase-status gates while preserving service readiness. Does not create purchases, account entitlements, cloud grants or server authorization. Device functionality still requires verification. |  |
+| [Fing reduce telemetry](#fing-reduce-telemetry) | Disable qualified Google Analytics and automatic Crashlytics collection, opt out of ad identifiers/app-event collection and remove reviewed analytics components. Preserve push, login, Billing and network discovery. Show Crash reporting off and disable its switch while selected. Not a zero-telemetry guarantee. |  |
 
 </details>
 
