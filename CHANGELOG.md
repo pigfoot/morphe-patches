@@ -1,3 +1,9 @@
+## [0.4.0](https://github.com/pigfoot/morphe-patches/compare/v0.3.0...v0.4.0) (2026-10-29)
+
+### ✨ New Features
+
+* **pitt:** add local sponsored features and GmsCore sign-in ([#6](https://github.com/pigfoot/morphe-patches/issues/6)) ([ab02ec1](https://github.com/pigfoot/morphe-patches/commit/ab02ec1adbf33bb06edf7c583da1c4696f388342))
+
 ## [0.3.0](https://github.com/pigfoot/morphe-patches/compare/v0.2.1...v0.3.0) (2026-10-27)
 
 ### ✨ New Features
