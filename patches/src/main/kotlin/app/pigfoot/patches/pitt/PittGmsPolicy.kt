@@ -35,7 +35,8 @@ internal val pittGmsClassPins = mapOf(
     "Lcom/google/android/gms/auth/api/signin/internal/SignInHubActivity;" to "76b5300093f4fa5d83785738c4a43c74e858c998bbbce851b6dd8a1c7fdf5ea4",
     PITT_GMS_BASE to "a675b53eb795860190f6f07e37287735b3963fe360fcf8455fa3d7fd00727054",
     PITT_FIREBASE_HEADERS.substringBefore("->") to "72f7376ff426f415efc4996fe14a82a196cda06669564207f22bf1a247f4fec5",
-    PITT_FIREBASE_IDENTITY to "10d6a9015342d56fb22102f68f1d711b5897b13c27d14eff6612af27a4f425a5"
+    PITT_FIREBASE_IDENTITY to "10d6a9015342d56fb22102f68f1d711b5897b13c27d14eff6612af27a4f425a5",
+    PITT_GOOGLE_CLICK to "e6d0de5b0fe513a1988ecabf6525b16a779eb108f2b494c081f9860cf71da3fc"
 )
 
 internal val pittGmsStrings = mapOf(

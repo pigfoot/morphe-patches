@@ -25,12 +25,13 @@ class PittGmsPolicyTest {
     private fun hubMethod(values: List<String>) = method(hub, "onCreate", "V", values.map { string(it) } +
         ImmutableInstruction10x(Opcode.RETURN_VOID), listOf("Landroid/os/Bundle;"))
 
-    @Test fun independentOptInPatchKeepsOtherPoliciesOptional() {
-        assertFalse(pittGmsCorePatch.default)
+    @Test fun defaultSelectedPatchKeepsOtherPoliciesOptional() {
+        assertTrue(pittGmsCorePatch.default)
+        assertEquals("PiTT Google account sign-in", pittGmsCorePatch.name)
         assertFalse(pittGmsCorePatch.dependencies.contains(pittLocalSponsoredPatch))
         assertEquals(setOf(pittInputPatch), pittGmsInputPatch.dependencies)
         assertEquals(pittLocalSponsoredPatch.compatibility, pittGmsCorePatch.compatibility)
-        assertEquals(7, pittGmsClassPins.size)
+        assertEquals(8, pittGmsClassPins.size)
     }
 
     @Test fun onlyDeclaredAuthStringsChangeAndRegistersStayPut() {

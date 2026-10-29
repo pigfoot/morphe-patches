@@ -65,6 +65,7 @@ internal val pittGmsInputPatch = bytecodePatch {
     execute {
         for ((type, expected) in pittGmsClassPins) {
             val definition = requireNotNull(classDefByOrNull(type)) { "Missing qualified PiTT auth class: $type" }
+            require(definition.methods.none { it.name == PITT_GOOGLE_PREPARE }) { "Existing PiTT Google login helper" }
             require(pittClassHash(definition) == expected) { "Unsupported or already modified PiTT auth class: $type" }
         }
         requirePittGmsBaseContract(classDefBy(PITT_GMS_BASE).methods)
@@ -78,12 +79,12 @@ private val pittGmsResources = resourcePatch {
 }
 
 val pittGmsCorePatch = bytecodePatch(
-    name = "PiTT GmsCore Google sign-in",
-    description = "Route only qualified legacy Google sign-in to app.revanced.android.gms (MicroG-RE 7.2.2 reference). Requires MicroG-RE installed separately. Keeps PiTT package and original Google client; restores the original certificate metadata only in the qualified Firebase Auth HTTP header, preserving real Firebase verification; does not fabricate tokens, accounts or purchases.",
-    default = false
+    name = "PiTT Google account sign-in",
+    description = "Enable Google-account sign-in to PiTT, not PTT BBS login. Reuse compatible app.revanced.android.gms (MicroG-RE 7.2.2 reference); guide missing/disabled MicroG only when starting Google login. No automatic sign-in or installation. Keeps PiTT package and original Google client; restores the original certificate metadata only in the qualified Firebase Auth HTTP header, preserving real Firebase verification; does not fabricate tokens, accounts or purchases.",
+    default = true
 ) {
     compatibleWith(pittTarget)
-    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.DISABLED }
+    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED }
     dependsOn(pittGmsInputPatch, pittGmsResources)
     execute {
         val replacements = (pittGmsStrings.keys + PITT_GMS_MODE + PITT_FIREBASE_HEADERS).map { id ->
@@ -97,6 +98,12 @@ val pittGmsCorePatch = bytecodePatch(
             }
             Triple(owner, original, replacement)
         }
+        val click = mutableClassDefBy(PITT_GOOGLE_CLICK)
+        val originalClick = click.methods.single { it.pittId() == "$PITT_GOOGLE_CLICK->onClick(Landroid/view/View;)V" }
+        val replacementClick = MutableMethod(originalClick)
+        guardPittGoogleEntry(replacementClick)
+        require(click.methods.none { it.name == PITT_GOOGLE_PREPARE }) { "Existing PiTT Google login helper" }
+        val prepare = MutableMethod(pittGooglePrepareMethod())
         val client = mutableClassDefBy(PITT_GMS_CLIENT)
         require(client.methods.none { it.name in pittGmsOverrideNames }) { "Existing PiTT auth override" }
         val overrides = pittGmsClientOverrides().map(::MutableMethod)
@@ -104,6 +111,9 @@ val pittGmsCorePatch = bytecodePatch(
             require(owner.methods.remove(original))
             require(owner.methods.add(replacement))
         }
+        require(click.methods.remove(originalClick))
+        require(click.methods.add(replacementClick))
+        require(click.methods.add(prepare))
         overrides.forEach { require(client.methods.add(it)) }
     }
 }

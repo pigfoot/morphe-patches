@@ -1,4 +1,4 @@
-# Pigfoot Patches
+# pigfoot Patches
 
 App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing and PiTT**, built
 with the official Morphe Gradle template. Each app has independent patch policies
@@ -11,7 +11,7 @@ and strict clean-input compatibility guards.
 | [RailsGo / 台灣鐵道通](#railsgo--台灣鐵道通) | **1.25.2 (156)**, arm64-v8a APKS | Sideload startup compatibility, bus refresh without video, optional package rename |
 | [CamScanner](#camscanner) | **7.26.5.2609160000 (72651)** or **7.27.0.2609220000 (72701)**, full APKM | Re-signing compatibility, local premium, privacy; optional ads/offline policies |
 | [Fing](#fing) | **12.13.5 (121305003)**, full APKM, ARM64/ARMv7, Android 9+ | Local premium features and reduced telemetry, independently selectable |
-| [PiTT](#pitt) | **12.0.0 (40892)**, ARM64 APKS, Android 8+ | Local sponsored features; optional GmsCore Google sign-in with scoped Firebase Auth compatibility |
+| [PiTT](#pitt) | **12.0.0 (40892)**, ARM64 APKS, Android 8+ | Local sponsored features; default-selected, optional Google-account sign-in with on-demand MicroG setup guidance |
 
 Only these qualified versions/builds are supported. Use pristine originals, not
 previously patched APKs or third-party mods. Standard and Shizuku installation
@@ -145,12 +145,12 @@ original display name. Version 11 and previously patched inputs are unsupported.
 | Patch | Default and scope |
 | --- | --- |
 | PiTT local sponsored features | Selected; keeps the local sponsored state enabled across all six qualified writes for the app's original ad suppression and IP-detail quota gates. Mutes only the misleading no-purchased-subscription expiry notice; other warnings, receipt verification and reset callbacks remain. |
-| PiTT GmsCore Google sign-in | Unselected; redirects only the qualified legacy Google sign-in client to `app.revanced.android.gms` and restores original certificate metadata in the separate Firebase Auth HTTP header. Requires MicroG-RE installed separately; real token and backend validation remain. |
+| PiTT Google account sign-in | Selected; redirects only the qualified legacy Google sign-in client to `app.revanced.android.gms` and restores original certificate metadata in the separate Firebase Auth HTTP header. Requires MicroG-RE installed separately; real token and backend validation remain. |
 
 ### PiTT installation and options
 
 - Both patches are independent and have **no additional parameters**. For Google
-  login, explicitly select **PiTT GmsCore Google sign-in**. Select local sponsored
+  login, keep **PiTT Google account sign-in** selected. Select local sponsored
   features separately; it is not a prerequisite for login. Deselecting both leaves
   PiTT unchanged.
 - Install [MicroG-RE 7.2.2](https://github.com/MorpheApp/MicroG-RE/releases/tag/7.2.2)
@@ -164,8 +164,23 @@ original display name. Version 11 and previously patched inputs are unsupported.
   cache cleanup continue. IP-detail server limits are not overridden, and SDK
   initialization/telemetry is not disabled by this policy.
 
-The qualified v12 Google-login flow has been user-tested; this is not a guarantee
-for every device/account or backend feature. Temporary Google/Firebase diagnostic
+The Google-account policy signs in to a **PiTT account**, not a PTT BBS account.
+It defaults to selected, not required: opting out does not select or disable local
+sponsored features. It never automatically signs in or picks a Google account.
+A compatible MicroG-RE installation already used by YouTube can be shared in the
+same Android profile; PiTT still requests its own Google authorization. No second
+MicroG APK is bundled or silently installed.
+
+Only when the signed-out user presses **Sign in to PiTT**, check the provider:
+if missing, show a short notice and open the official MicroG-RE release page; if
+disabled, show a notice and open that package's app settings. Missing handlers or
+package-check failures leave PiTT running without starting Google login. No prompt
+runs on startup, ordinary navigation or the existing sign-out branch.
+
+The qualified v12 Google-login flow has been user-tested, and the current
+Google-account sign-in/default/guidance candidate has been accepted for closeout.
+This does not establish every device/account, cancellation, expired-token or
+missing/disabled-provider scenario on a phone. Temporary Google/Firebase diagnostic
 patches and their extra failure messages are **not shipped**. See the
 [implementation contract](docs/pitt-implementation.md),
 [GmsCore adapter](docs/pitt-gmscore-study.md),
@@ -286,6 +301,13 @@ After the initial v0.0.1 bootstrap, semantic-release owns versions:
 - `chore:` / `docs:` alone does not publish a release.
 - `main` publishes stable releases; `dev` publishes prereleases.
 - Automation updates version properties, changelog, Manager metadata and catalog together.
+
+The PiTT Google-account sign-in follow-up is a compatibility/usability correction
+to the existing v0.4.0 adapter, not a new app policy or breaking change. It uses a
+`fix(pitt):` landing commit and is intended as **v0.4.1** when released from v0.4.0.
+The generated catalog above continues to describe the published stable bundle
+until release automation updates it; the manual PiTT section describes this
+follow-up. A candidate MPP or PR update alone does not publish a stable version.
 
 Do not manually bump generated metadata, edit the catalog above or rewrite release tags.
 
