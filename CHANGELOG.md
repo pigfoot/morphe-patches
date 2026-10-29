@@ -1,3 +1,9 @@
+## [0.4.1](https://github.com/pigfoot/morphe-patches/compare/v0.4.0...v0.4.1) (2026-10-29)
+
+### 🐛 Bug Fixes
+
+* **pitt:** improve Google account sign-in defaults and MicroG guidance ([#7](https://github.com/pigfoot/morphe-patches/issues/7)) ([5a1c210](https://github.com/pigfoot/morphe-patches/commit/5a1c210570f5a8fd7fb3d5d49ccf0cc5ce964a1d))
+
 ## [0.4.0](https://github.com/pigfoot/morphe-patches/compare/v0.3.0...v0.4.0) (2026-10-29)
 
 ### ✨ New Features
