@@ -1,6 +1,6 @@
 # pigfoot Patches
 
-App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing and PiTT**, built
+App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT and Windy**, built
 with the official Morphe Gradle template. Each app has independent patch policies
 and strict clean-input compatibility guards.
 
@@ -12,6 +12,7 @@ and strict clean-input compatibility guards.
 | [CamScanner](#camscanner) | **7.26.5.2609160000 (72651)** or **7.27.0.2609220000 (72701)**, full APKM | Re-signing compatibility, local premium, privacy; optional ads/offline policies |
 | [Fing](#fing) | **12.13.5 (121305003)**, full APKM, ARM64/ARMv7, Android 9+ | Local premium features and reduced telemetry, independently selectable |
 | [PiTT](#pitt) | **12.0.0 (40892)**, ARM64 APKS, Android 8+ | Local sponsored features; default-selected, optional Google-account sign-in with on-demand MicroG setup guidance |
+| [Windy](#windy) | **51.3.2 (5103023)**, full APKM, Android 12L+ | Premium features and home-screen widgets |
 
 Only these qualified versions/builds are supported. Use pristine originals, not
 previously patched APKs or third-party mods. Standard and Shizuku installation
@@ -28,7 +29,21 @@ are supported as described below; **root mount is not qualified for any of these
 An ordinary re-signed build cannot update a differently signed Play installation
 under the same package name. Uninstalling that app removes its local data.
 Only RailsGo offers optional package renaming for parallel installation; CamScanner,
-Fing and PiTT preserve their original package and display identity.
+Fing, PiTT and Windy preserve their original package and display identity.
+
+## Windy
+
+Use clean **Windy.com 51.3.2 (5103023)** (`com.windyty.android`), full APKM,
+Android 12L or newer. This is not the unrelated Windy.app.
+
+**Windy local premium features** enables Premium features and home-screen
+widgets. It is selected by default; no additional patches or settings are needed.
+
+This does not add a paid subscription to your Windy account. Some weather data
+may still require one, even if the app lets you select the feature. You can keep
+using your existing account, and the app keeps its original name.
+
+For build details and test coverage, see [implementation and validation](docs/windy-implementation.md).
 
 Local premium policies do not create a purchase, subscription, server entitlement,
 cloud quota or credit grant. Reduced telemetry is scoped suppression, not a
