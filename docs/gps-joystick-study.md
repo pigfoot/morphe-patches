@@ -107,8 +107,8 @@ the original key and is not claimed repaired by this candidate.
 ## Map configuration and native follow-up
 
 The candidate now exposes an optional `mapsApiKey` setting on the same Premium
-patch. A shared value-only DOM helper checks the unique original Maps metadata
-and app-owned value hash before replacement. Public source/defaults/artifacts
+patch. A shared raw payload helper checks the complete original manifest and Maps value
+hashes before an equal-length replacement, preserving all other bytes. Public source/defaults/artifacts
 contain no reference key. Private local validation uses the value supplied within
 the reference APK; device test settings are delivered separately. This provides
 a falsifiable key-only map test, not a claimed completed Maps backend repair.
@@ -130,3 +130,14 @@ three original native payloads, which match the reference byte-for-byte.
 | Removed force update | No clearly named app-owned force-update/min-version gate found in current bounded scan. Do not disable all update APIs on this claim alone. |
 | ARMv7 + ARM64 | Current clean input and metadata qualified for ARM64 only. ARMv7 needs its own original-input qualification, not transplanted donor payloads. |
 | Languages | Original resources retained; no language stripping. Individual language UI tests are not claimed. |
+
+
+### Resource-mode correction
+
+The first full-resource implementation passed unit tests but real APK comparison
+showed unnecessary manifest/resource-table rebuilding even with a blank option.
+It was rejected. The revised raw-resource dependency leaves blank input untouched
+and permits only a39-character key payload replacement in the pinned binary
+manifest. Both source and pristine no-policy manifest hashes are identical for
+this input. Unit tests cover UTF8/UTF16LE, byte inverse, missing/duplicate literal,
+modified manifest/value pin and malformed key; actual AXML is qualified too.

@@ -188,8 +188,11 @@ permission/setup and native payloads remain original. See
 
 ## Implemented: qualified Google Maps metadata replacement
 
-`shared/maps/MapsApiKey.kt` is a value-only DOM helper with unique application
-metadata, expected original-value SHA256 and key-format guards. The app adapter
+`shared/maps/MapsApiKey.kt` is an equal-length raw AXML payload helper with
+app-owned complete-manifest and original-value SHA256 pins, one supported key
+occurrence and fixed-format guards. Manifest pins qualify the original metadata
+structure; UTF8/UTF16LE edits preserve all string-pool lengths/offsets and every
+other byte. The app adapter
 owns the hash and option. Empty input is a no-op. It does not ship a key, change
 signer identity, grant Google Cloud access, or add a native loader. GPS JoyStick
 is the first consumer; other apps still need independent qualification.

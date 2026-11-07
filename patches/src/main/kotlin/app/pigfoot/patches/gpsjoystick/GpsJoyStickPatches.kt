@@ -7,7 +7,7 @@ import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.pigfoot.patches.shared.certificate.requireOriginalCertificate
 import app.pigfoot.patches.shared.maps.isMapsKey
-import app.pigfoot.patches.shared.maps.replaceMapsApiKey
+import app.pigfoot.patches.shared.maps.replaceMapsKeyBytes
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.writer.io.MemoryDataStore
@@ -86,11 +86,15 @@ val gpsJoyStickPremiumPatch = bytecodePatch(
         description="Optional key for map access. Leave blank to keep the app's original key.",
         required=false, validator={value -> isMapsKey(value)}
     )
-    dependsOn(resourcePatch {
+    dependsOn(rawResourcePatch {
         dependsOn(gpsInputPatch)
         execute {
-            if(!mapsKey.isNullOrBlank()) document("AndroidManifest.xml").use { document ->
-                replaceMapsApiKey(document,"18e4effd43e80b25d94c45bd641313d180d826d876656f1a93383c9ffc9f8628",mapsKey)
+            if(!mapsKey.isNullOrBlank()) {
+                val manifest=get("AndroidManifest.xml")
+                val replacement=replaceMapsKeyBytes(manifest.readBytes(),
+                    setOf("c56fe8dba41296189e9839849a6db786a3e1403a850c25fccc6d116eb52803c7"),
+                    "18e4effd43e80b25d94c45bd641313d180d826d876656f1a93383c9ffc9f8628",mapsKey)
+                manifest.writeBytes(replacement)
             }
         }
     })
