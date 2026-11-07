@@ -16,8 +16,9 @@ class GpsJoyStickPolicyTest {
         ImmutableMethodImplementation(registers,listOf(ImmutableInstruction11n(Opcode.CONST_4,0,0),if(returns=="V") ImmutableInstruction10x(Opcode.RETURN_VOID) else ImmutableInstruction11x(Opcode.RETURN_OBJECT,registers-1)),emptyList(),emptyList())))
 
     @Test fun emittedPreferenceBranchesRestrictOverrideToTwoExactEnumKeys() {
-        val m=method(GPS_PREFS,"b",listOf(GPS_KEYS,"Ljava/lang/Object;"),"Ljava/lang/Object;",6)
-        enableGpsLocalEntitlements(m)
+        for(policy in listOf(gps533,gps534)) {
+        val m=method(policy.prefs,policy.preferenceMethod,listOf(policy.keys,"Ljava/lang/Object;"),"Ljava/lang/Object;",6)
+        enableGpsLocalEntitlements(m,policy)
         val code=m.implementation!!.instructions.toList();val at=mutableMapOf<Int,Int>();var address=0
         for((i,x) in code.withIndex()){at[address]=i;address+=x.codeUnits}
         fun run(key: String?): String {
@@ -28,7 +29,7 @@ class GpsJoyStickPolicyTest {
                 val x=code[pc];val here=code.take(pc).sumOf { it.codeUnits }
                 when(x.opcode){
                     Opcode.SGET_OBJECT -> { val f=(x as ReferenceInstruction).reference as FieldReference
-                        assertTrue(f.definingClass==GPS_KEYS || (f.definingClass=="Ljava/lang/Boolean;" && f.name=="TRUE"))
+                        assertTrue(f.definingClass==policy.keys || (f.definingClass=="Ljava/lang/Boolean;" && f.name=="TRUE"))
                         regs[(x as OneRegisterInstruction).registerA]=f.name;pc++ }
                     Opcode.IF_EQ,Opcode.IF_NE -> { val v=x as TwoRegisterInstruction
                         val equal=regs[v.registerA]==regs[v.registerB]
@@ -38,9 +39,10 @@ class GpsJoyStickPolicyTest {
                 }
             };error("loop")
         }
-        assertEquals("TRUE",run("P0"));assertEquals("TRUE",run("E0"))
-        for(key in listOf(null,"unrelated","map_key","overlay_permission"))assertEquals("original",run(key))
+        assertEquals("TRUE",run(policy.proField));assertEquals("TRUE",run(policy.adFreeField))
+        for(key in listOf(null,"unrelated","map_key","overlay_permission")+listOf("P0","E0","O0","D0").filter { it!=policy.proField && it!=policy.adFreeField })assertEquals("original",run(key))
         assertEquals(8,code.size)
+        }
     }
 
     @Test fun localRestoreNormalizesOnlyStatusParameterAndRetainsOriginalBody() {
@@ -55,6 +57,10 @@ class GpsJoyStickPolicyTest {
 
     @Test fun unsupportedTargetOrRegisterShapeFailsWithoutMutation() {
         requireGpsTarget(GPS_PACKAGE,"5.3.3","3030")
+        requireGpsTarget(GPS_PACKAGE,"5.3.4","3031")
+        assertSame(gps533,gpsPolicyFor(GPS_PACKAGE,"5.3.3","3030"))
+        assertSame(gps534,gpsPolicyFor(GPS_PACKAGE,"5.3.4","3031"))
+        assertThrows(IllegalArgumentException::class.java){requireGpsTarget(GPS_PACKAGE,"5.3.4","3030")}
         for((p,v,c) in listOf(Triple("other","5.3.3","3030"),Triple(GPS_PACKAGE,"5.3.2","3030"),Triple(GPS_PACKAGE,"5.3.3","3031")))
             assertThrows(IllegalArgumentException::class.java){requireGpsTarget(p,v,c)}
         val m=method(GPS_PREFS,"b",listOf(GPS_KEYS,"Ljava/lang/Object;"),"Ljava/lang/Object;",5)
