@@ -152,3 +152,22 @@ the benefit/requiredness sentence; detailed mechanism explanations belong in
 developer references. RailsGo previously called this `RailsGo sideload startup compatibility`;
 the variable/dependency object stays the same, but users may need to select the
 newly named entry if a manager saved selection names from an older bundle.
+
+## Feature-comparison identity map
+
+Consult this map when comparing repositories/features; installer labels alone are
+not technical capability identifiers. Keep UI wording understandable while
+retaining the canonical technical name in the description and this record.
+
+| Canonical capability | Public label / technical reference | Repo implementation and consumers | Comparison boundary |
+| --- | --- | --- | --- |
+| Pairip Java client-side license startup check | `<App>: Skip Google Play install check`; `Technical reference: Pairip client-side license check.` | `shared/pairip/PairipLicense.kt`; visible REQUIRED RailsGo/PikieWalker adapters, explicit feature dependencies, app-owned pins | This repo skips its qualified `checkLicense(Context)` entry. Do not count it as native Pairip VM support or server Play Integrity attestation. |
+| Install-source spoofing | Other repos call it `Spoof install source` | **Not implemented by the Pairip helper.** A separate adapter and qualification would be needed. | Installer getter/Binder spoofing is not the same as Java license-entry compatibility. Do not mark either feature as covering the other. |
+
+Verified comparison references:
+- [Hoo-dles: Disable Pairip license check](https://github.com/hoo-dles/morphe-patches/blob/e9c942640130c809fcb908332bf7dc56d59cf86f/patches/src/main/kotlin/hoodles/morphe/patches/all/pairip/license/DisableLicenseCheckPatch.kt): processes/validates license responses; its implementation differs from this repo's pinned entry skip. Both are client-side licensing mechanisms, not proof of VM/attestation coverage.
+- [Doom: Spoof install source](https://github.com/rushiranpise/morphe-patches/blob/92c0fca0ae103a419c7fc61f9c5b8b38b7d6b82a/patches/src/main/kotlin/app/template/patches/shared/installer/SpoofInstallSourcePatch.kt): installer getters plus an optional Binder proxy; a distinct capability.
+
+On future additions/renames, update this mapping with the canonical mechanism,
+user-facing label, implemented vs planned status, consumers, pinned references,
+and explicit non-coverage. Never infer feature equivalence from similar names.

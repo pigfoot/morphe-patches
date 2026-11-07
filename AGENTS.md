@@ -152,3 +152,12 @@ implementation explanations in developer docs.
 Use consistent wording for the same capability across apps. Explicitly document
 renames and update selection tests/references; never leave stale dependency names.
 Pointer: [required compatibility presentation](docs/shared-components.md#required-compatibility-patch-presentation).
+
+### Feature comparison and technical identity
+Trigger: comparing this repo with another patch repo, renaming patches, or claiming feature coverage.
+Guard: read/update the canonical capability mapping; preserve a short technical
+reference after user-facing descriptions and record implemented vs planned status,
+consumers, pinned upstream references and non-coverage. Similar UI labels do not
+prove equivalent mechanisms. Pairip licensing is not installer spoofing, native
+VM support or server attestation.
+Pointer: [feature-comparison identity map](docs/shared-components.md#feature-comparison-identity-map).
