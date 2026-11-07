@@ -34,7 +34,7 @@ Fing, PiTT, Windy and PikieWalker preserve their original package and display id
 
 ## GPS JoyStick
 
-Use original **GPS JoyStick 5.3.3 (3030)**, ARM64 APK, Android 6.0 or newer.
+Use original **GPS JoyStick 5.3.3 (3030)** or **5.3.4 (3031)**, ARM64 APK, Android 6.0 or newer.
 **GPS JoyStick Premium** enables local Premium features including ad-free use.
 There is no separate ad-removal option. It does not purchase a subscription. The optional **Google Maps API key** setting
 can be used for map access; leaving it blank preserves the original key. Map service access and Android mock-location/overlay
