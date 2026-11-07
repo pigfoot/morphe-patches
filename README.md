@@ -35,6 +35,10 @@ Fing, PiTT, Windy and PikieWalker preserve their original package and display id
 ## PikieWalker
 
 Use the original **PikieWalker 2.0.4 (42)**, arm64-v8a APKS, Android 12L or newer.
+**PikieWalker: Skip Google Play install check** is visible and required when
+installing the patched app outside Google Play. The reward patch automatically
+includes it; no separate setup is needed.
+
 **PikieWalker rewards without video ads** lets you receive the normal in-app
 reward without playing the video. It is selected by default. Reward amounts,
 daily limits, walking and Health Connect behavior are unchanged. Reward
@@ -64,7 +68,7 @@ zero-traffic guarantee. Build/static checks do not replace device validation.
 
 Use clean **1.25.2 (156), arm64-v8a APKS**.
 
-- **RailsGo sideload startup compatibility** is required for standard/Shizuku
+- **RailsGo: Skip Google Play install check** is required for standard/Shizuku
   installs, whether or not the package is renamed.
 - **RailsGo bus update without video** includes startup compatibility automatically,
   but **does not select package renaming**. It uses the observed rewarded unit's

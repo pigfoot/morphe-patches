@@ -4,6 +4,8 @@ import app.morphe.patcher.patch.*
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.pigfoot.patches.shared.certificate.requireOriginalCertificate
+import app.pigfoot.patches.shared.pairip.PAIRIP_LICENSE_OWNER
+import app.pigfoot.patches.shared.pairip.preparePairipLicenseSkip
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.writer.io.MemoryDataStore
@@ -13,6 +15,7 @@ import java.security.MessageDigest
 internal const val PIKIE_PACKAGE = "com.kairosvector.pikiewalker"
 internal const val PIKIE_OWNER = "Lcom/example/pikiewalker/data/AdManager;"
 internal const val PIKIE_RESULT = "Lcom/example/pikiewalker/data/AdResult;"
+internal const val PIKIE_LICENSE_PIN = "f08d2d194009abacb04324c4f8bdf00a9198048b9d7fd3a20866cbd8fc210c66"
 internal const val PIKIE_SIGNER = "5f3dd3b2f97653a84e65f7b8fe58052944aabe4c"
 internal val pikieClassPins = mapOf(
     PIKIE_OWNER to "aa77cf260c3813bf8f812c379d4158886db3b835ad2eee741adefb0e22ad5ee4",
@@ -49,14 +52,10 @@ internal fun skipPikieRewardPlayback(method: MutableMethod) {
     """.trimIndent())
 }
 
-val pikieWalkerRewardPatch = bytecodePatch(
-    name = "PikieWalker rewards without video ads",
-    description = "Skip reward videos and receive the normal in-app reward. Existing reward amounts and daily limits stay unchanged.",
-    default = true
-) {
-    compatibleWith(Compatibility(packageName = PIKIE_PACKAGE, name = "PikieWalker", apkFileType = ApkFileType.APKS,
-        targets = listOf(AppTarget("2.0.4", versionCodes = mapOf(SupportedAbi.ARM64_V8A to 42), minSdk = 32))))
-    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED }
+private val target = Compatibility(packageName = PIKIE_PACKAGE, name = "PikieWalker", apkFileType = ApkFileType.APKS,
+    targets = listOf(AppTarget("2.0.4", versionCodes = mapOf(SupportedAbi.ARM64_V8A to 42), minSdk = 32)))
+
+internal val pikieInputPatch = bytecodePatch {
     execute {
         requirePikieTarget(packageMetadata.packageName, packageMetadata.versionName, packageMetadata.versionCode)
         requireOriginalCertificate(packageMetadata.signingCertificates.values.flatten(), PIKIE_SIGNER)
@@ -64,6 +63,37 @@ val pikieWalkerRewardPatch = bytecodePatch(
             val definition = requireNotNull(classDefByOrNull(type)) { "Missing PikieWalker class: $type" }
             require(pikieClassHash(definition) == pin) { "Unsupported or already modified PikieWalker class: $type" }
         }
+    }
+}
+
+val pikieWalkerStartupPatch = bytecodePatch(
+    name = "PikieWalker: Skip Google Play install check",
+    description = "Let the patched app open without asking you to install it from Google Play. This patch is required and included automatically. Technical reference: Pairip client-side license check.",
+    default = true
+) {
+    compatibleWith(target)
+    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.REQUIRED }
+    dependsOn(pikieInputPatch)
+    execute {
+        val definition = requireNotNull(classDefByOrNull(PAIRIP_LICENSE_OWNER)) { "Missing PikieWalker Pairip license class" }
+        val replacement = preparePairipLicenseSkip(definition, PIKIE_LICENSE_PIN, 39)
+        val owner = mutableClassDefBy(PAIRIP_LICENSE_OWNER)
+        val original = owner.methods.single { it.name == replacement.name &&
+            it.parameterTypes == replacement.parameterTypes && it.returnType == replacement.returnType }
+        require(owner.methods.remove(original))
+        require(owner.methods.add(replacement))
+    }
+}
+
+val pikieWalkerRewardPatch = bytecodePatch(
+    name = "PikieWalker rewards without video ads",
+    description = "Skip reward videos and receive the normal in-app reward. Existing reward amounts and daily limits stay unchanged.",
+    default = true
+) {
+    compatibleWith(target)
+    availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED }
+    dependsOn(pikieWalkerStartupPatch)
+    execute {
         val owner = mutableClassDefBy(PIKIE_OWNER)
         val original = owner.methods.single { it.name == "showAd" &&
             it.parameterTypes == listOf("Landroid/app/Activity;", "Lkotlin/jvm/functions/Function1;") && it.returnType == "V" }

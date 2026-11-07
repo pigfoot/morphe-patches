@@ -130,3 +130,25 @@ APKs or APKS, private device logs, local workspace paths or personal context.
 Publish only intended project artifacts through the existing release workflow.
 Pointer: [build instructions](README.md#build), [.gitignore](.gitignore),
 [release workflow](.github/workflows/release.yml).
+
+### Visible required compatibility patches
+Trigger: adding or reusing a required startup/install compatibility capability.
+Guard: expose the app-scoped compatibility patch in the installer list with
+`REQUIRED` availability for qualified installers, and add explicit `dependsOn`
+from feature patches that require it. Keep only the implementation internal in
+shared/common; app adapters retain package/version/signer/content qualification.
+Do not silently bury a required compatibility edit in a feature patch, replace
+requiredness with default selection alone, or add a duplicate universal toggle.
+Pointer: [shared component practice](docs/shared-components.md#required-compatibility-patch-presentation),
+[RailsGo selection tests](patches/src/test/kotlin/app/pigfoot/patches/RailsGoSelectionTest.kt),
+[PikieWalker dependency tests](patches/src/test/kotlin/app/pigfoot/patches/PairipLicenseTest.kt).
+
+### User-facing patch names and descriptions
+Trigger: adding or editing installer-visible patch names, descriptions or options.
+Guard: name the user-visible purpose in plain language; descriptions explain the
+benefit, necessary limits and whether the patch is required. A short technical reference (for example, Pairip) may follow the plain-language
+benefit, but must not replace it or dominate the name/description. Keep detailed
+implementation explanations in developer docs.
+Use consistent wording for the same capability across apps. Explicitly document
+renames and update selection tests/references; never leave stale dependency names.
+Pointer: [required compatibility presentation](docs/shared-components.md#required-compatibility-patch-presentation).

@@ -36,3 +36,19 @@ persistence, plus ordinary walking/Health Connect behavior.
   are distinct gates. Pending results must not be reported as passed.
 
 Status: implementation candidate, not yet qualified or delivered for installation.
+
+## Required startup compatibility
+
+The first reward-only candidate did not suppress Pairip's independent Play-license
+startup gate. The original Application.attachBaseContext and LicenseContentProvider
+both call LicenseClient.checkLicense(Context). The revised patch uses the shared
+Pairip Java-entry helper through visible **PikieWalker: Skip Google Play install check**, REQUIRED for standard/Shizuku installs and an explicit dependency
+of the reward patch. Combined output now intentionally changes **two** original
+methods: LicenseClient.checkLicense and AdManager.showAd. Startup-only changes
+only checkLicense. Keep all other preservation and negative-input gates.
+
+References inspected: Hoo-dles `Disable Pairip license check` at
+`e9c942640130c809fcb908332bf7dc56d59cf86f` and Doom `Spoof install source` at
+`92c0fca0ae103a419c7fc61f9c5b8b38b7d6b82a`. These are different mechanisms;
+installer-name spoofing alone does not prove license-startup compatibility.
+The shared helper preserves RailsGo's existing qualified early-return behavior.

@@ -90,8 +90,8 @@ globally for matching header strings or remove guards to force a match.
   native request-signing edits/cache policy and telemetry suppression are not the
   Firebase Auth certificate-header fix. Preserve their separate guards.
 - [RailsGo sideload policy](../patches/src/main/kotlin/app/pigfoot/patches/railsgo/RailsGoPatches.kt):
-  exact Java license-entry compatibility, not a generic PairIP VM/global signature
-  hook. Do not widen it while reusing certificate utilities.
+  app adapter for the shared, pinned Java license-entry helper below, not a generic
+  PairIP VM/global signature hook. App-specific qualification remains required.
 
 Deferred: independent library distribution, generalized GmsCore, generic Firebase
 product adapters, and public common-patch options. Add only after concrete consumers
@@ -115,3 +115,40 @@ consume SDK reward metadata. Its app-scoped entry transformation therefore does
 not reuse the RailsGo loaded-reward helper or introduce a shared extension.
 Package/build/signer/class pins and eligibility remain app-owned. See
 [PikieWalker evidence and validation](pikiewalker-implementation.md).
+
+## Required compatibility patch presentation
+
+Repository practice: a required app compatibility policy is **visible** as an
+app-scoped patch in Morphe, with `REQUIRED` availability for qualified installers.
+Each feature needing it also declares `dependsOn`. Default selection alone is
+not requiredness, and a hidden inline edit is not a substitute for this UI.
+The implementation can remain an internal helper/dependency in shared/common;
+do not expose a second universal toggle simply to share code. App-owned
+package/version/signer/class pins are not moved into global mutable state.
+
+## Implemented: Pairip Java license startup entry
+
+- Source: [PairipLicense.kt](../patches/src/main/kotlin/app/pigfoot/patches/shared/pairip/PairipLicense.kt).
+- Consumers: RailsGo startup compatibility and PikieWalker startup compatibility.
+- Tests: [PairipLicenseTest.kt](../patches/src/test/kotlin/app/pigfoot/patches/PairipLicenseTest.kt).
+
+`preparePairipLicenseSkip(originalClass, appPin, dexWriterVersion)` validates the
+exact original class and static `checkLicense(Context): void` shape, then returns
+a copy with an early return. It does not mutate the supplied class on success or
+failure. Each adapter owns its content pin and writer version; RailsGo retains
+its existing DEX37 pin and PikieWalker qualifies its own DEX39 original.
+
+This addresses the traced Java entry called by the application's startup/provider.
+It is not installer-name spoofing, a purchase grant, Play Integrity server
+attestation bypass, or Pairip native virtualization support. Other Pairip versions
+need independent qualification; broad string scanning is not an adapter.
+
+### Plain-language labels
+
+For this capability use `<App>: Skip Google Play install check`. Explain that it
+lets the patched app open without requiring installation from Google Play and is
+required/included automatically. A brief `Technical reference: Pairip client-side license check.` may follow
+the benefit/requiredness sentence; detailed mechanism explanations belong in
+developer references. RailsGo previously called this `RailsGo sideload startup compatibility`;
+the variable/dependency object stays the same, but users may need to select the
+newly named entry if a manager saved selection names from an older bundle.
