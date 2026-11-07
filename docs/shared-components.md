@@ -178,10 +178,8 @@ and explicit non-coverage. Never infer feature equivalence from similar names.
 
 ## GPS JoyStick local Premium adapter
 
-GPS JoyStick reuses original-input certificate identity pinning. Its enum-key
-preference reader and local billing-restore consumer are qualified app-owned
-policies, not generic Billing hooks or Pairip/installer spoofing. One public
-adapter selects separate class/field/manifest pins for 5.3.3/3030 and 5.3.4/3031.
+GPS JoyStick reuses original-input certificate identity pinning. Its local cached-tier resolver and separate Splash ad-free
+preference reader are qualified app-owned policies, not generic Billing hooks or Pairip/installer spoofing. The adapter selects separate class/field/manifest pins for 5.3.3/3030 and 5.3.4/3031.
 One public
 Premium policy includes ad-free; no injected extension is needed. Maps key stays original unless the user provides the optional map setting;
 permission/setup and native payloads remain original. See

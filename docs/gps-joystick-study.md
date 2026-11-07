@@ -1,4 +1,13 @@
-# GPS JoyStick 5.3.3 — static feasibility study
+# GPS JoyStick — qualification and device-failure investigation
+
+## Current device status and correction
+The `cd93de6` candidate **failed device acceptance on both versions**: Pro features did not work, advertisements remained visible, and Maps stayed black with or without the reference key. Offline APK-delta checks did not establish feature behavior. Do not merge/release or describe that candidate as working.
+
+Root cause found for local entitlements: UI feature gates read a cached tier string and cache age through `Lji/b;->z()I` (5.3.3) / `Lii/b;->u()I` (5.3.4), not the two stored subscription Boolean flags. Both return FREE=1, AD_FREE=2, PRO=3. The previous restore callback change also missed this read path.
+
+The correction changes this app-owned local tier read to PRO and overrides only the separate ad-free preference used by Splash, preserving unrelated keys/defaults. It removes the previous restore-callback mutation. Version-owned pins cover tier, preference owner and enum. Actual original DEX tests reproduce free/ad-free/Pro/expired/future/unknown-cache cases and check real UI feature/ad-entry references. Main initialization's Pro branch bypasses ad loaders; Splash has its own ad-free read. This remains a candidate until phone acceptance.
+
+Maps is **not fixed** by this entitlement correction. The optional setting is only a value override, not proof of Google Cloud authorization, signer compatibility or tile rendering. The supplied screenshot shows a black basemap with marker/controls and an advertisement. Need built-APK/log evidence to distinguish identity/authorization, layer and load failures; do not guess or transplant protected native code.
 
 ## Scope and provenance
 
@@ -84,7 +93,7 @@ Independent implementation should start from the readable candidate source.
 Next implementation should be scoped from these findings. No implementation,
 push, merge or release follows merely from this analysis document.
 
-## Candidate implementation and validation plan
+## Initial rejected candidate implementation (historical)
 
 One public **GPS JoyStick Premium** patch. Reuse shared original-input certificate
 identity pinning; no Pairip dependency and no injected extension. App-owned pins
@@ -123,7 +132,7 @@ three original native payloads, which match the reference byte-for-byte.
 
 | Reference claim | Candidate status / evidence |
 | --- | --- |
-| Pro unlocked / no ads | One local Premium policy covers both original entitlement flags and restore callback. Device acceptance pending. |
+| Pro unlocked / no ads | Initial Boolean/restore candidate failed device acceptance; current correction targets actual cached-tier UI gates plus Splash ad-free read. Phone recheck required. |
 | Fix map | Optional key configuration plus original-hash guard; actual service/rendering acceptance pending. No donor native loader copied. |
 | Faster opening animation | Not claimed. A five-second splash fallback is visible, but it is not automatically an animation or safe to remove without tracing/measurement. |
 | Clean ads/debug code / useless layouts/dialogs / optimized | Not claimed wholesale. Paid gates should disappear through Premium; necessary setup/error dialogs and resources are preserved. |
@@ -151,4 +160,7 @@ New user-supplied original APK SHA256: `2a884eff1e6c644fb286b9a0c5d673bd1e7e4dc9
 
 The upgrade re-obfuscates preference access: `Ln6/k;->m(Lpd/f0;Ljava/lang/Object;)Ljava/lang/Object;` replaces the 5.3.3 getter. The enum keys are now `O0=pro_subscription_active` and `D0=remove_ads_subscription_active`; reusing the old `P0/E0` field names would affect unrelated settings. The original getter still has six registers, reads SharedPreferences and retains the same fallback/NumberFormatException semantics. `Lg3/e;->e(I)V` still has eight registers, sets ad-free for status 2/3 and Premium for status 3 via `Lf2/l1;->b(I)Z`, and preserves callbacks.
 
-A version-owned adapter binds exact version/build pairs to their own getter/enum names, three complete class hashes and manifest hash. Both 5.3.3/3030 and 5.3.4/3031 remain separately qualified; crossed version/build pairs are rejected. Tests exercise emitted control flow for both sets, explicitly treating the other version's field names as unrelated. Phone acceptance remains pending.
+A version-owned adapter binds exact version/build pairs to their own getter/enum names, three complete class hashes and manifest hash. Both 5.3.3/3030 and 5.3.4/3031 remain separately qualified; crossed version/build pairs are rejected. Tests exercise emitted control flow for both sets, explicitly treating the other version's field names as unrelated. This initial adapter failed phone acceptance; see current status above.
+
+### Corrected local-tier validation
+Actual original DEX interpretation now reproduces ten cache scenarios per version: missing/free/ad-free/Pro tiers, normal/stale/grace-boundary/expired/future timestamps and unknown values. The corrected app-owned tier read returns 3 before any cache access. Main Activity's initialization is traced through the original Pro classifier to the ad-loader skip branch; GPX import/export are confirmed callers. Splash's separate ad-free preference is overridden narrowly; unrelated keys retain the original method/body/default. The receipt/cache write and restore callbacks are no longer mutated. These tests still do not replace phone acceptance or solve Maps.
