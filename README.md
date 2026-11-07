@@ -1,6 +1,6 @@
 # pigfoot Patches
 
-App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT and Windy**, built
+App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT, Windy and PikieWalker**, built
 with the official Morphe Gradle template. Each app has independent patch policies
 and strict clean-input compatibility guards.
 
@@ -12,6 +12,7 @@ and strict clean-input compatibility guards.
 | [CamScanner](#camscanner) | **7.26.5.2609160000 (72651)** or **7.27.0.2609220000 (72701)**, full APKM | Re-signing compatibility, local premium, privacy; optional ads/offline policies |
 | [Fing](#fing) | **12.13.5 (121305003)**, full APKM, ARM64/ARMv7, Android 9+ | Local premium features and reduced telemetry, independently selectable |
 | [PiTT](#pitt) | **12.0.0 (40892)**, ARM64 APKS, Android 8+ | Local sponsored features; default-selected, optional Google-account sign-in with on-demand MicroG setup guidance |
+| [PikieWalker](#pikiewalker) | **2.0.4 (42)**, arm64-v8a APKS, Android 12L+ | Normal rewards without video playback |
 | [Windy](#windy) | **51.3.2 (5103023)**, full APKM, Android 12L+ | Premium features and home-screen widgets |
 
 Only these qualified versions/builds are supported. Use pristine originals, not
@@ -29,7 +30,17 @@ are supported as described below; **root mount is not qualified for any of these
 An ordinary re-signed build cannot update a differently signed Play installation
 under the same package name. Uninstalling that app removes its local data.
 Only RailsGo offers optional package renaming for parallel installation; CamScanner,
-Fing, PiTT and Windy preserve their original package and display identity.
+Fing, PiTT, Windy and PikieWalker preserve their original package and display identity.
+
+## PikieWalker
+
+Use the original **PikieWalker 2.0.4 (42)**, arm64-v8a APKS, Android 12L or newer.
+**PikieWalker rewards without video ads** lets you receive the normal in-app
+reward without playing the video. It is selected by default. Reward amounts,
+daily limits, walking and Health Connect behavior are unchanged. Reward
+confirmation prompts may still appear. This does not block every background ad
+request. Keep your existing app data; do not uninstall just to test an update.
+
 
 ## Windy
 

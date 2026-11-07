@@ -107,3 +107,11 @@ fresh clean-input selected/default/split outputs with both the original and the
 previously qualified result. Document any newly rejected input separately. Static
 equivalence is not a new phone/login test. Commit only public synthetic test
 certificates, never private keys, app APKs or private device evidence.
+
+## App-owned enum reward callbacks (PikieWalker)
+
+PikieWalker 2.0.4 passes an `AdResult` enum to its existing callback; it does not
+consume SDK reward metadata. Its app-scoped entry transformation therefore does
+not reuse the RailsGo loaded-reward helper or introduce a shared extension.
+Package/build/signer/class pins and eligibility remain app-owned. See
+[PikieWalker evidence and validation](pikiewalker-implementation.md).
