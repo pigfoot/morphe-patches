@@ -175,3 +175,21 @@ Verified comparison references:
 On future additions/renames, update this mapping with the canonical mechanism,
 user-facing label, implemented vs planned status, consumers, pinned references,
 and explicit non-coverage. Never infer feature equivalence from similar names.
+
+## GPS JoyStick local Premium adapter
+
+GPS JoyStick reuses original-input certificate identity pinning. Its enum-key
+preference reader and local billing-restore consumer are qualified app-owned
+policies, not generic Billing hooks or Pairip/installer spoofing. One public
+Premium policy includes ad-free; no injected extension is needed. Maps key stays original unless the user provides the optional map setting;
+permission/setup and native payloads remain original. See
+[GPS study and candidate contract](gps-joystick-study.md).
+
+
+## Implemented: qualified Google Maps metadata replacement
+
+`shared/maps/MapsApiKey.kt` is a value-only DOM helper with unique application
+metadata, expected original-value SHA256 and key-format guards. The app adapter
+owns the hash and option. Empty input is a no-op. It does not ship a key, change
+signer identity, grant Google Cloud access, or add a native loader. GPS JoyStick
+is the first consumer; other apps still need independent qualification.

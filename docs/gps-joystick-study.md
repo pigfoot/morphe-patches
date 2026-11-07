@@ -2,11 +2,11 @@
 
 ## Scope and provenance
 
-Analysis only; no GPS patch or device/runtime acceptance is claimed. Candidate
+Static study followed by a candidate implementation; device/runtime acceptance is not claimed. Candidate
 source: `com.theappninjas.fakegpsjoystick`, version **5.3.3 (3030)**, minSdk23,
 targetSdk36, ARM64 APK. The supplied third-party ANiK555 reference has the same
 package/version/build but a different signing certificate. It is not a clean
-baseline, this repository's output, or a source of credentials/native libraries.
+baseline, this repository's output, or a source of native implementation to transplant. A reference key can be supplied as a private local test setting, never a public default.
 Public indexed APKMirror metadata corroborates the source identity, but the
 landing page is challenged; direct page/provenance verification remains partial.
 
@@ -34,7 +34,7 @@ local behavior must not be presented as a real server subscription.
 ## Maps is a separate capability
 
 The reference changes the literal Google Maps API key, not merely a resource ID.
-Only value hashes were compared; key values are not recorded here or adopted.
+Only value hashes were compared; key values are not recorded here or hardcoded in the repository.
 This is a verified map-related difference, **not proof that the key change alone
 fixes maps**. Re-signing, key restrictions and any extra reference hooks require
 independent qualification. Do not embed the reference author's key. A supported
@@ -77,9 +77,56 @@ Independent implementation should start from the readable candidate source.
   readers; design cold-start, restore/reset, offline and normal-usage tests plus
   unsupported/modified/reapplication guards. Premium must imply ad-free without
   forging purchases. Map loading/search/routing and signature/key restrictions
-  have a separate success criterion; no key/hook transplantation.
+  have a separate success criterion; no native-hook transplantation or public key default.
 - Preserve actual APK package identity, label, signing/update continuity and
   unrelated resources/native payloads. UI title wording is not package renaming.
 
 Next implementation should be scoped from these findings. No implementation,
 push, merge or release follows merely from this analysis document.
+
+## Candidate implementation and validation plan
+
+One public **GPS JoyStick Premium** patch. Reuse shared original-input certificate
+identity pinning; no Pairip dependency and no injected extension. App-owned pins
+qualify package/build/signer, preference reader, local restore consumer and enum
+key definitions. The reader returns true only for Pro/ad-free keys and otherwise
+branches to the untouched original body. The local restore consumer normalizes
+the client status to Pro before its original preference writes/callback. No
+Billing SDK, receipt request, token, purchase object, map key, native library,
+permission or manifest edit is included.
+
+Validate actual input transformation/DEX roundtrip/inverse and unrelated-pref
+fall-through; cold-start/restore consistency; selected/default/no-op applications;
+modified/unsupported/wrong-signer/reapplication rejection with no output. Compare
+all class/method graphs and non-DEX payloads against a pristine no-policy build.
+Phone acceptance must include local features/no ads, restart, map rendering/search,
+normal setup/overlay permission flow and ordinary joystick operation. Maps keeps
+the original key and is not claimed repaired by this candidate.
+
+
+## Map configuration and native follow-up
+
+The candidate now exposes an optional `mapsApiKey` setting on the same Premium
+patch. A shared value-only DOM helper checks the unique original Maps metadata
+and app-owned value hash before replacement. Public source/defaults/artifacts
+contain no reference key. Private local validation uses the value supplied within
+the reference APK; device test settings are delivered separately. This provides
+a falsifiable key-only map test, not a claimed completed Maps backend repair.
+
+ELF inspection confirms `libpixel` exports generated native_jvm MainActivity
+implementations, while `libdexprotector` depends on `libANiK555` and that library
+exports a JNI wrapper. This establishes Java-to-native/protection roles but is
+not a full reconstruction of every extra behavior. The candidate retains the
+three original native payloads, which match the reference byte-for-byte.
+
+## Reference feature audit
+
+| Reference claim | Candidate status / evidence |
+| --- | --- |
+| Pro unlocked / no ads | One local Premium policy covers both original entitlement flags and restore callback. Device acceptance pending. |
+| Fix map | Optional key configuration plus original-hash guard; actual service/rendering acceptance pending. No donor native loader copied. |
+| Faster opening animation | Not claimed. A five-second splash fallback is visible, but it is not automatically an animation or safe to remove without tracing/measurement. |
+| Clean ads/debug code / useless layouts/dialogs / optimized | Not claimed wholesale. Paid gates should disappear through Premium; necessary setup/error dialogs and resources are preserved. |
+| Removed force update | No clearly named app-owned force-update/min-version gate found in current bounded scan. Do not disable all update APIs on this claim alone. |
+| ARMv7 + ARM64 | Current clean input and metadata qualified for ARM64 only. ARMv7 needs its own original-input qualification, not transplanted donor payloads. |
+| Languages | Original resources retained; no language stripping. Individual language UI tests are not claimed. |

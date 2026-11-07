@@ -32,6 +32,16 @@ under the same package name. Uninstalling that app removes its local data.
 Only RailsGo offers optional package renaming for parallel installation; CamScanner,
 Fing, PiTT, Windy and PikieWalker preserve their original package and display identity.
 
+## GPS JoyStick
+
+Use original **GPS JoyStick 5.3.3 (3030)**, ARM64 APK, Android 6.0 or newer.
+**GPS JoyStick Premium** enables local Premium features including ad-free use.
+There is no separate ad-removal option. It does not purchase a subscription. The optional **Google Maps API key** setting
+can be used for map access; leaving it blank preserves the original key. Map service access and Android mock-location/overlay
+permissions still need to work on your device. Keep the original app package and
+existing local signing key when updating.
+
+
 ## PikieWalker
 
 Use the original **PikieWalker 2.0.4 (42)**, arm64-v8a APKS, Android 12L or newer.
