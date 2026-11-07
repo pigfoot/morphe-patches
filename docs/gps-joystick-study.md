@@ -141,3 +141,6 @@ and permits only a39-character key payload replacement in the pinned binary
 manifest. Both source and pristine no-policy manifest hashes are identical for
 this input. Unit tests cover UTF8/UTF16LE, byte inverse, missing/duplicate literal,
 modified manifest/value pin and malformed key; actual AXML is qualified too.
+
+### Raw manifest staging integration
+The configured-key APK test caught a second integration defect: raw resource mode stages binary AXML as `AndroidManifest.xml.bin`, while the canonical `get("AndroidManifest.xml")` points at decoded XML, which does not exist in raw mode. Resolve its binary sibling, require it to exist, and retain raw export (the coder maps `.bin` back to the original APK entry). Do not enable full resource decoding as a fallback. Byte-helper unit tests alone do not cover resource-context staging; configured-key APK qualification is mandatory.

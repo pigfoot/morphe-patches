@@ -90,7 +90,10 @@ val gpsJoyStickPremiumPatch = bytecodePatch(
         dependsOn(gpsInputPatch)
         execute {
             if(!mapsKey.isNullOrBlank()) {
-                val manifest=get("AndroidManifest.xml")
+                // Raw mode stages binary AXML beside (not at) the decoded XML path.
+                // Arsclib maps this .bin file back to AndroidManifest.xml on export.
+                val manifest=get("AndroidManifest.xml").resolveSibling("AndroidManifest.xml.bin")
+                require(manifest.isFile) { "Missing raw GPS JoyStick manifest" }
                 val replacement=replaceMapsKeyBytes(manifest.readBytes(),
                     setOf("c56fe8dba41296189e9839849a6db786a3e1403a850c25fccc6d116eb52803c7"),
                     "18e4effd43e80b25d94c45bd641313d180d826d876656f1a93383c9ffc9f8628",mapsKey)
