@@ -149,6 +149,10 @@ Guard: name the user-visible purpose in plain language; descriptions explain the
 benefit, necessary limits and whether the patch is required. A short technical reference (for example, Pairip) may follow the plain-language
 benefit, but must not replace it or dominate the name/description. Keep detailed
 implementation explanations in developer docs.
+Do not include raw Android package IDs (for example, com.vendor.app) in
+installer-visible titles. Keep package IDs in compatibility metadata. App display
+names are not package IDs and may remain as readable context; do not remove them
+or change actual APK package identity based on this wording rule.
 Use consistent wording for the same capability across apps. Explicitly document
 renames and update selection tests/references; never leave stale dependency names.
 Pointer: [required compatibility presentation](docs/shared-components.md#required-compatibility-patch-presentation).

@@ -145,7 +145,11 @@ need independent qualification; broad string scanning is not an adapter.
 
 ### Plain-language labels
 
-For this capability use `<App>: Skip Google Play install check`. Explain that it
+Use `<App>: Skip Google Play install check` when the app display name is useful.
+Do not put raw Android package IDs (such as `com.vendor.app`) in the title;
+package identity belongs to compatibility metadata. This UI-copy rule does not
+rename the actual APK package and does not require removing readable app names.
+The delivered 1bfbaf5 labels already follow this distinction. Explain that it
 lets the patched app open without requiring installation from Google Play and is
 required/included automatically. A brief `Technical reference: Pairip client-side license check.` may follow
 the benefit/requiredness sentence; detailed mechanism explanations belong in
