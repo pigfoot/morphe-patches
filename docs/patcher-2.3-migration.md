@@ -49,6 +49,6 @@ No ABI support expansion is part of this change.
   resulting DEX and native entries match the previous qualified test output.
   Old bundle alone retains old behavior; the supplied Manager screenshot is the
   mixed-bundle warning reproduction.
-- Formal Gradle build is blocked locally by GitHub Maven registry authentication
-  (HTTP401). A CI validation route must be agreed before pushing this branch.
-  No candidate MPP, completed APK regression, PR, merge or release is claimed yet.
+- Formal Gradle, extension and bundle validation will use the repository GitHub
+  Actions workflow, followed by qualification of its exact-head MPP artifact.
+  No candidate MPP or completed APK regression is claimed before those checks.
