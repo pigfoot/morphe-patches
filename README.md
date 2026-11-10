@@ -373,6 +373,9 @@ and `gpr.key` in **user-level** Gradle properties. Never commit credentials.
 ```sh
 npm ci --include=dev
 npm test
+node scripts/resolve-morphe-toolchain.mjs
+export MORPHE_PATCHER_VERSION=$(node -p "require('./morphe-toolchain.json').patcher.version")
+export MORPHE_PLUGIN_VERSION=$(node -p "require('./morphe-toolchain.json').plugin.version")
 ./gradlew :patches:test :patches:buildAndroid :patches:generatePatchesList --no-daemon
 ```
 

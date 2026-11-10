@@ -38,6 +38,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --include=dev && npm test
 
+      - name: Resolve latest stable Morphe toolchain
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/resolve-morphe-toolchain.mjs
+
       - name: Verify patches
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,4 +86,5 @@ jobs:
           path: |
             patches/build/libs/patches-*.mpp
             patches-list.json
+            morphe-toolchain.json
             patches/build/test-results/test/*.xml

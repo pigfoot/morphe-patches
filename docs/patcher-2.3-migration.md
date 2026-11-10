@@ -14,7 +14,8 @@ Do not suppress the warning or edit the MPP manifest to claim an untested versio
 
 ## Planned change
 
-Build against actual Patcher 2.3.0 and the compatible official settings plugin.
+Build against the latest stable Patcher and compatible official settings plugin
+selected afresh by CI (currently Patcher 2.3.0 and plugin 2.1.0).
 Audit selective resource decoding and exact-string matching; retain all app pins,
 public patch selection/defaults, original input identity and native libraries.
 Use deprecated context APIs where still supported instead of unrelated API rewrites.
@@ -35,8 +36,8 @@ No ABI support expansion is part of this change.
 
 ## Results
 
-- Updated the Patcher pin from 1.15.1 to 2.3.0 and official settings plugin
-  from 1.3.4 to 2.1.0. Migrated the catalog generator from `Patch<*>` to the
+- Removed fixed Patcher/plugin versions. CI discovers current stable versions
+  and supplies the resolved pair to Gradle for that job. Migrated the catalog generator from `Patch<*>` to the
   non-generic `Patch` API. Public app patches/defaults are unchanged.
 - Audited resource access: decoded-resource patches request individual XML files;
   the only directory listing is Windy raw assets, not a decoded `res/` tree.
@@ -52,3 +53,14 @@ No ABI support expansion is part of this change.
 - Formal Gradle, extension and bundle validation will use the repository GitHub
   Actions workflow, followed by qualification of its exact-head MPP artifact.
   No candidate MPP or completed APK regression is claimed before those checks.
+
+## Latest-stable selection policy
+
+Each CI build/release must discover the latest stable Patcher and settings plugin
+from upstream GitHub metadata, not keep repository version pins. Resolve once per
+job so verification and release steps use the same pair. Record the selected
+versions and upstream references in the artifact; a later run discovers again.
+API errors, malformed versions and prerelease-only results must stop the build,
+not silently fall back to an older version. The actual MPP Patcher-Version must
+match the selected Patcher. Validation covers unordered tags, prerelease guards,
+API failures and normal resolution before any publishing changes.
