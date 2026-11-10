@@ -31,3 +31,6 @@ jobs:
       - run: ./gradlew :patches:test :patches:buildAndroid :patches:generatePatchesList --no-daemon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify selected toolchain in bundle
+        run: python3 scripts/verify-morphe-toolchain.py
