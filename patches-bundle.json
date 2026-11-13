@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-13T00:03:41",
-  "description": "## [0.6.2](https://github.com/pigfoot/morphe-patches/compare/v0.6.1...v0.6.2) (2026-11-13)\n\n### 🐛 Bug Fixes\n\n* **gps:** force Splash ad-free callback so Premium stops App-Open ads ([#13](https://github.com/pigfoot/morphe-patches/issues/13)) ([c47172e](https://github.com/pigfoot/morphe-patches/commit/c47172e9438a2121883987c84e5779bec429093c))",
-  "download_url": "https://github.com/pigfoot/morphe-patches/releases/download/v0.6.2/patches-0.6.2.mpp",
+  "created_at": "2026-11-13T10:34:10",
+  "description": "## [0.6.3](https://github.com/pigfoot/morphe-patches/compare/v0.6.2...v0.6.3) (2026-11-13)\n\n### 🐛 Bug Fixes\n\n* **gps:** edit the Maps key through the decoded manifest API for Patcher 2.3 ([#14](https://github.com/pigfoot/morphe-patches/issues/14)) ([43df073](https://github.com/pigfoot/morphe-patches/commit/43df073e4bac22c19c8116ee6f387e1074df8fb5))",
+  "download_url": "https://github.com/pigfoot/morphe-patches/releases/download/v0.6.3/patches-0.6.3.mpp",
   "signature_download_url": "",
-  "version": "0.6.2"
+  "version": "0.6.3"
 }
