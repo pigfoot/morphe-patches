@@ -1,6 +1,6 @@
 # pigfoot Patches
 
-App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT, Windy and PikieWalker**, built
+App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT, Windy, PikieWalker and 智生活**, built
 with the official Morphe Gradle template. Each app has independent patch policies
 and strict clean-input compatibility guards.
 
@@ -14,6 +14,7 @@ and strict clean-input compatibility guards.
 | [PiTT](#pitt) | **12.0.0 (40892)**, ARM64 APKS, Android 8+ | Local sponsored features; default-selected, optional Google-account sign-in with on-demand MicroG setup guidance |
 | [PikieWalker](#pikiewalker) | **2.0.4 (42)**, arm64-v8a APKS, Android 12L+ | Normal rewards without video playback |
 | [Windy](#windy) | **51.3.2 (5103023)**, full APKM, Android 12L+ | Premium features and home-screen widgets |
+| [智生活 (Kingnet)](#智生活-kingnet) | **4.20.8 (420080)**, full APK, Android 11+ | Remove in-app ads and marketing messages |
 
 Only these qualified versions/builds are supported. Use pristine originals, not
 previously patched APKs or third-party mods. Standard and Shizuku installation
@@ -71,6 +72,24 @@ For build details and test coverage, see [implementation and validation](docs/wi
 Local premium policies do not create a purchase, subscription, server entitlement,
 cloud quota or credit grant. Reduced telemetry is scoped suppression, not a
 zero-traffic guarantee. Build/static checks do not replace device validation.
+
+## 智生活 (Kingnet)
+
+Use clean **智生活 4.20.8 (420080)** (`chk.kingnet.app`), full APK, Android 11 or newer.
+
+**智生活: Remove ads and marketing messages** hides the in-app ad cards, banners and
+pop-ups, stops the third-party marketing message service and cancels the automatic
+"you have not opened the app for a while" reminder. It is selected by default; no
+settings are needed. Parcel, order, intercom and other community notifications use the
+app's own push channel and are not changed.
+
+Re-signing means you cannot update over the Play Store install: uninstall the original
+app, install the patched APK and sign in again. Whether Google/Facebook sign-in, payment
+features and the app's root checks accept a re-signed APK has to be confirmed on your
+phone. This does not create a subscription or server entitlement. Server-side marketing
+that arrives through the app's own push channel is not filtered.
+
+For details and test coverage, see [implementation notes](docs/kingnet-implementation.md).
 
 ## RailsGo / 台灣鐵道通
 
