@@ -198,3 +198,8 @@ Fix: a fourth app-owned class pin (`Lse/a;`, one hash per distribution) and one 
 
 Success criteria/tests: only `Lse/a;->a(Z)V` gains the first instruction; wrong owner, flags, parameter shape or register count rejects before mutation; policy pin sets include the callback class and differ per distribution; the actual patched APKs for both distributions differ from the originals in exactly the tier, preference and callback methods; unsupported or modified inputs still reject. Phone acceptance (no Splash ad on cold start) is a separate check.
 
+
+## Maps key option failed with the current Morphe Patcher (v0.6.1/v0.6.2 regression)
+Root cause: bundles built with Patcher 2.3 run with decode-on-first-use behavior. Requesting the decoded `AndroidManifest.xml` path decodes every resource, so the staged `AndroidManifest.xml.bin` sibling never exists and a non-blank Maps key failed with "Missing raw GPS JoyStick manifest". The blank-key path never reached that code, so earlier blank-key regression runs did not show it.
+
+Fix: read and write the original binary manifest through the raw-root `./AndroidManifest.xml` entry only. The unchanged full-manifest pin and Maps-literal pin still reject any input that is not the original bytes. Success criteria: the official MPP applies with a non-blank key to both distributions with exactly the key bytes changed, blank-key output unchanged, and non-DEX entries other than the manifest identical.

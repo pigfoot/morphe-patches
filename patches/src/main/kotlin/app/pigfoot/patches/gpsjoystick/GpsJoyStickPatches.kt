@@ -117,16 +117,18 @@ val gpsJoyStickPremiumPatch = bytecodePatch(
         execute {
             val policy = requireNotNull(detectedPolicy) { "Missing GPS JoyStick input qualification" }
             if(!mapsKey.isNullOrBlank()) {
-                // Raw mode stages binary AXML beside (not at) the decoded XML path.
-                // Stage the replacement as a raw root entry: the .bin export alone
-                // goes to the decoded workspace, not the returned raw payload.
-                val manifest=get("AndroidManifest.xml").resolveSibling("AndroidManifest.xml.bin")
+                // Read and write the original binary manifest through the raw-root entry.
+                // Requesting the decoded "AndroidManifest.xml" path makes current Morphe
+                // patchers decode every resource (no raw binary is staged afterwards), and
+                // the staged ".bin" sibling only exists in older raw mode. The raw-root path
+                // does neither; the manifest pin below rejects anything but the original bytes.
+                val manifest=get("./AndroidManifest.xml")
                 require(manifest.isFile) { "Missing raw GPS JoyStick manifest" }
                 requireGpsTarget(packageMetadata.packageName,packageMetadata.versionName,packageMetadata.versionCode)
                 val replacement=replaceMapsKeyBytes(manifest.readBytes(),
                     setOf(policy.manifestHash),
                     "18e4effd43e80b25d94c45bd641313d180d826d876656f1a93383c9ffc9f8628",mapsKey)
-                get("./AndroidManifest.xml").writeBytes(replacement)
+                manifest.writeBytes(replacement)
             }
         }
     })
