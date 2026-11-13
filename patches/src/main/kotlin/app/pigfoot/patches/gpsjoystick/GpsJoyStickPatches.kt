@@ -110,11 +110,12 @@ val gpsJoyStickPremiumPatch = bytecodePatch(
         description="Optional Maps key override; this does not guarantee map access. Leave blank to keep the original key.",
         required=false, validator={value -> isMapsKey(value)}
     )
-    dependsOn(resourcePatch {
+    dependsOn(rawResourcePatch {
         dependsOn(originalInput)
         execute {
             requireNotNull(detectedPolicy) { "Missing GPS JoyStick input qualification" }
-            // Only a non-blank key touches the manifest; blank leaves the original untouched.
+            // Raw patch: with a blank key nothing is decoded, so resources stay byte-identical to the original.
+            // Only a non-blank key decodes and edits the manifest.
             if(!mapsKey.isNullOrBlank()) {
                 requireGpsTarget(packageMetadata.packageName,packageMetadata.versionName,packageMetadata.versionCode)
                 document("AndroidManifest.xml").use {
