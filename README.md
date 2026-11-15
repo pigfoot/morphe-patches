@@ -1,6 +1,6 @@
 # pigfoot Patches
 
-App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT, Windy, PikieWalker and 智生活**, built
+App-scoped Android patches for **RailsGo (台灣鐵道通), CamScanner, Fing, PiTT, Windy, PikieWalker, Bitwarden and 智生活**, built
 with the official Morphe Gradle template. Each app has independent patch policies
 and strict clean-input compatibility guards.
 
@@ -14,6 +14,7 @@ and strict clean-input compatibility guards.
 | [PiTT](#pitt) | **12.0.0 (40892)**, ARM64 APKS, Android 8+ | Local sponsored features; default-selected, optional Google-account sign-in with on-demand MicroG setup guidance |
 | [PikieWalker](#pikiewalker) | **2.0.4 (42)**, arm64-v8a APKS, Android 12L+ | Normal rewards without video playback |
 | [Windy](#windy) | **51.3.2 (5103023)**, full APKM, Android 12L+ | Premium features and home-screen widgets |
+| [Bitwarden](#bitwarden) | **2026.10.1 (21986)**, full APK, Android 10+ | Trust patched browsers for passkeys |
 | [智生活 (Kingnet)](#智生活-kingnet) | **4.20.8 (420080)**, full APK, Android 11+ | Remove in-app ads and marketing messages |
 
 Only these qualified versions/builds are supported. Use pristine originals, not
@@ -72,6 +73,20 @@ For build details and test coverage, see [implementation and validation](docs/wi
 Local premium policies do not create a purchase, subscription, server entitlement,
 cloud quota or credit grant. Reduced telemetry is scoped suppression, not a
 zero-traffic guarantee. Build/static checks do not replace device validation.
+
+## Bitwarden
+
+Use clean **Bitwarden 2026.10.1 (21986)** (`com.x8bit.bitwarden`), the single APK, Android 10 or newer.
+
+**Bitwarden: Trust re-signed browsers for passkeys** lets you trust a browser that was patched
+and re-signed. Bitwarden normally rejects it with "signature does not match" and gives you no
+choice; with this patch it shows the standard "trust this browser?" prompt instead. Browsers
+whose signature already matches are not affected. It is selected by default; no settings are needed.
+
+Re-signing Bitwarden itself means you cannot update over an installed Play copy: uninstall it,
+install the patched APK and sign in again, then re-enable Autofill and the passkey provider.
+Push-based vault sync and Google services that depend on the original signature must be
+confirmed on your phone. See [implementation notes](docs/bitwarden-implementation.md).
 
 ## 智生活 (Kingnet)
 
