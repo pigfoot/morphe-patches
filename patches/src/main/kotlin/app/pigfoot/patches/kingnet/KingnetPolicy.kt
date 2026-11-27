@@ -35,7 +35,8 @@ private const val AD_SETTING = ".a.commit(\"advertising/setAdSetting\",e.data.Da
  * Marketing: Infobip is never initialized (the personalization path is gated on that
  * flag) and the automatic "come back" reminder is cancelled without being scheduled.
  * Platform messages: the notification-box "platform messages" tab (server-broadcast
- * promotions) is left empty and its unread count is forced to zero.
+ * promotions) is left as an empty list (never null: the page shows a loading skeleton while any
+ * list is null) and its unread count is forced to zero.
  * FCM registration, notification handling and every other call stay untouched.
  */
 internal val kingnetEdits = listOf(
@@ -53,7 +54,7 @@ internal val kingnetEdits = listOf(
         "cordova.plugins.notification.local.cancelAll((function(){return;var e=this,t=new Date,n=[3,4,5];"),
     KingnetEdit("platform messages, first list",
         "r.mescrollArr[1].listArr=o.data.News,",
-        "r.mescrollArr[1].listArr=o.data.News=null,"),
+        "r.mescrollArr[1].listArr=o.data.News=[],"),
     KingnetEdit("platform messages, first unread count",
         "r.\$store.state.CountUnread=o.data.UnreadCount;",
         "o.data.UnreadCount&&(o.data.UnreadCount.News=0),r.\$store.state.CountUnread=o.data.UnreadCount;"),

@@ -19,7 +19,8 @@ promotions); the client stops showing it for the same reason.
    ready flag stays false, so the personalization/data-sync path never runs.
 3. The re-engagement scheduler keeps `cancelAll` but returns before scheduling.
 4. The notification box "platform messages" tab is server-broadcast promotion content
-   (`NotificationBox/LoadNews`). The first list load keeps it empty, the paged request
+   (`NotificationBox/LoadNews`). The first list load keeps it an empty list (not null: the page shows a loading skeleton
+   while any list is null), the paged request
    resolves to an empty list, and both unread-count paths (`RegisterCache` list load and
    `CountUnread`) zero the news counter before it is stored, so the tab shows nothing and
    contributes no badge. The notice ("my reminders") and shared-circle tabs are unchanged.

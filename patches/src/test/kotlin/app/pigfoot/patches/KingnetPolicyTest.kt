@@ -57,7 +57,9 @@ class KingnetPolicyTest {
         val original = fixture().toString(Charsets.UTF_8)
         val result = patchKingnetJavaScript(fixture()).toString(Charsets.UTF_8)
         // The initial list and the paged request no longer deliver server news.
-        assertTrue(result.contains("r.mescrollArr[1].listArr=o.data.News=null,"))
+        // An empty list, never null: the page renders its loading skeleton while a list is null.
+        assertTrue(result.contains("r.mescrollArr[1].listArr=o.data.News=[],"))
+        assertFalse(result.contains("o.data.News=null"))
         assertTrue(result.contains("b=function(e){return Promise.resolve({status:200,data:[]})}"))
         assertFalse(result.contains("h(\"POST\",\"/NotificationBox/LoadNews\""))
         // Both unread-count paths zero the news counter before it is stored.
