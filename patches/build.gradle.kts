@@ -42,7 +42,7 @@ tasks {
     }
 }
 
-sourceSets["test"].java.srcDirs("../extensions/railsgo/src/main/java", "../extensions/railsgo/stubs/src/main/java", "../extensions/camscanner/src/main/java")
+sourceSets["test"].java.srcDirs("../extensions/railsgo/src/main/java", "../extensions/railsgo/stubs/src/main/java", "../extensions/camscanner/src/main/java", "../extensions/kingnet/src/main/java")
 tasks.test { useJUnit() }
 
 // Match the official plugin's JVM 11 target for Java test sources as well.

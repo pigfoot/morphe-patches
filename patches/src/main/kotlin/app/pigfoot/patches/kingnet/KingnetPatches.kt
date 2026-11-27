@@ -3,7 +3,7 @@ package app.pigfoot.patches.kingnet
 import app.morphe.patcher.patch.*
 import app.pigfoot.patches.shared.certificate.requireOriginalCertificate
 
-private val target = Compatibility(packageName = KINGNET_PACKAGE, name = "智生活", apkFileType = ApkFileType.APK,
+internal val kingnetTarget = Compatibility(packageName = KINGNET_PACKAGE, name = "智生活", apkFileType = ApkFileType.APK,
     targets = listOf(AppTarget(KINGNET_VERSION, versionCodes = mapOf(
         SupportedAbi.ARM64_V8A to KINGNET_CODE.toInt(), SupportedAbi.ARMEABI_V7A to KINGNET_CODE.toInt(),
         SupportedAbi.X86_64 to KINGNET_CODE.toInt(), SupportedAbi.X86 to KINGNET_CODE.toInt()), minSdk = 30)))
@@ -13,7 +13,7 @@ val kingnetCleanupPatch = rawResourcePatch(
     description = "Hide the in-app ad cards, banners and pop-ups, the notification-box platform messages and their unread count, stop the third-party marketing message service and cancel the automatic come-back reminder in the original 智生活 4.21.0 APK. Parcel, order and community notifications are not changed. You must uninstall the original app and sign in again.",
     default = true
 ) {
-    compatibleWith(target)
+    compatibleWith(kingnetTarget)
     availability { installer, _ -> if (installer == InstallerType.MOUNT) PatchAvailability.UNAVAILABLE else PatchAvailability.ENABLED }
     execute {
         requireKingnetTarget(packageMetadata.packageName, packageMetadata.versionName, packageMetadata.versionCode)

@@ -15,7 +15,7 @@ and strict clean-input compatibility guards.
 | [PikieWalker](#pikiewalker) | **2.0.4 (42)**, arm64-v8a APKS, Android 12L+ | Normal rewards without video playback |
 | [Windy](#windy) | **51.3.2 (5103023)**, full APKM, Android 12L+ | Premium features and home-screen widgets |
 | [Bitwarden](#bitwarden) | **2026.10.1 (21986)**, full APK, Android 10+ | Trust patched browsers for passkeys |
-| [智生活 (Kingnet)](#智生活-kingnet) | **4.21.0 (421004)**, full APK, Android 11+ | Remove in-app ads, platform messages and marketing messages |
+| [智生活 (Kingnet)](#智生活-kingnet) | **4.21.0 (421004)**, full APK, Android 11+ | Remove in-app ads, platform messages and marketing messages; experimental: block platform message notifications |
 
 Only these qualified versions/builds are supported. Use pristine originals, not
 previously patched APKs or third-party mods. Standard and Shizuku installation
@@ -99,11 +99,19 @@ stops the third-party marketing message service and cancels the automatic
 settings are needed. Parcel, order, intercom and other community notifications use the
 app's own push channel and are not changed.
 
+**智生活: Block platform message notifications (experimental)** is a separate patch that is
+**not selected by default** and needs Manager's experimental mode. It stops the promotional
+"platform messages" from showing as phone notifications. It can only recognize messages the
+app itself labels as platform messages, so some promotions may still arrive, and a
+recognized message that you wanted is dropped without a trace. Parcel, order, announcement
+and community notifications are not changed. Please report what still gets through or what
+is missing.
+
 Re-signing means you cannot update over the Play Store install: uninstall the original
 app, install the patched APK and sign in again. Whether Google/Facebook sign-in, payment
 features and the app's root checks accept a re-signed APK has to be confirmed on your
 phone. This does not create a subscription or server entitlement. Server-side marketing
-that arrives through the app's own push channel is not filtered by this patch.
+that arrives through the app's own push channel is not filtered by the first patch.
 
 For details and test coverage, see [implementation notes](docs/kingnet-implementation.md).
 
