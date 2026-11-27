@@ -1,6 +1,6 @@
-# 智生活 (Kingnet) 4.20.8 implementation notes
+# 智生活 (Kingnet) 4.21.0 implementation notes
 
-Qualified input: `chk.kingnet.app` 4.20.8 (420080), full APK, signer SHA-1
+Qualified input: `chk.kingnet.app` 4.21.0 (421004), full APK, signer SHA-1
 `6b7853fdb77120ce00bf4148d059db9f1515c04d`. The app is a Cordova hybrid; all edits are in
 `assets/www/js/app.js` (SHA-256 pinned to the original).
 
@@ -9,6 +9,8 @@ Ads are first-party content delivered by one API (`POST /AppUser/GetAd`) that th
 hides only for VIP accounts. Marketing messages come from the third-party Infobip service
 and a locally scheduled re-engagement reminder. A local patch cannot make the server treat the
 account as VIP, so the client stops using this content instead.
+The notification box also has a "platform messages" tab filled by server broadcasts (partner
+promotions); the client stops showing it for the same reason.
 
 ## Edits (each anchor must match exactly once; unrelated bytes are preserved)
 1. Both `GetAd` success handlers no longer commit the response to the ad store, so every ad
@@ -16,6 +18,11 @@ account as VIP, so the client stops using this content instead.
 2. The Infobip `initialize` function returns before `MobileMessaging.init`; the Infobip
    ready flag stays false, so the personalization/data-sync path never runs.
 3. The re-engagement scheduler keeps `cancelAll` but returns before scheduling.
+4. The notification box "platform messages" tab is server-broadcast promotion content
+   (`NotificationBox/LoadNews`). The first list load keeps it empty, the paged request
+   resolves to an empty list, and both unread-count paths (`RegisterCache` list load and
+   `CountUnread`) zero the news counter before it is stored, so the tab shows nothing and
+   contributes no badge. The notice ("my reminders") and shared-circle tabs are unchanged.
 
 Not changed: FCM registration and handling (parcel, order, intercom and other feature
 notifications), billing, VIP state, manifest, native libraries and every other asset.

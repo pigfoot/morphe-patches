@@ -10,7 +10,8 @@ class KingnetPolicyTest {
     @Test fun onlyTheQualifiedPackageVersionAndBuildAreEligible() {
         requireKingnetTarget(KINGNET_PACKAGE, KINGNET_VERSION, KINGNET_CODE)
         for ((pkg, version, code) in listOf(Triple("other", KINGNET_VERSION, KINGNET_CODE),
-            Triple(KINGNET_PACKAGE, "4.20.7", KINGNET_CODE), Triple(KINGNET_PACKAGE, KINGNET_VERSION, "420079"),
+            Triple(KINGNET_PACKAGE, "4.20.8", "420080"), Triple(KINGNET_PACKAGE, "4.20.8", KINGNET_CODE),
+            Triple(KINGNET_PACKAGE, KINGNET_VERSION, "420080"), Triple(KINGNET_PACKAGE, KINGNET_VERSION, "421003"),
             Triple(KINGNET_PACKAGE, KINGNET_VERSION, null))) {
             assertThrows(IllegalArgumentException::class.java) { requireKingnetTarget(pkg, version, code) }
         }
@@ -21,7 +22,7 @@ class KingnetPolicyTest {
         assertThrows(IllegalArgumentException::class.java) { requireKingnetAsset(byteArrayOf()) }
     }
 
-    @Test fun fourExactSitesChangeAndEverythingElseRoundtrips() {
+    @Test fun eightExactSitesChangeAndEverythingElseRoundtrips() {
         val original = fixture()
         val result = patchKingnetJavaScript(original).toString(Charsets.UTF_8)
         var inverse = result
@@ -30,14 +31,16 @@ class KingnetPolicyTest {
             inverse = inverse.replace(edit.after, edit.before)
         }
         assertArrayEquals(original, inverse.toByteArray())
-        assertEquals(4, kingnetEdits.size)
+        assertEquals(8, kingnetEdits.size)
     }
 
     @Test fun adRequestStillResolvesButNeverCommitsAdData() {
         val result = patchKingnetJavaScript(fixture()).toString(Charsets.UTF_8)
         assertFalse(result.contains("1===e.data.Status&&(d.a.commit(\"advertising/setAdStorage\""))
         assertFalse(result.contains("1===e.data.Status&&(v.a.commit(\"advertising/setAdStorage\""))
-        assertEquals(2, Regex(Regex.escape("!1&&(")).findAll(result).count())
+        val original = fixture().toString(Charsets.UTF_8)
+        assertEquals(Regex(Regex.escape("!1&&(")).findAll(original).count() + 2,
+            Regex(Regex.escape("!1&&(")).findAll(result).count())
         assertEquals(2, Regex(Regex.escape(".a.commit(\"advertising/setAdSetting\",e.data.Data.Settings)),t(e)")).findAll(result).count())
     }
 
@@ -48,6 +51,22 @@ class KingnetPolicyTest {
         // FCM push registration and handling are untouched.
         val original = fixture().toString(Charsets.UTF_8)
         assertEquals(Regex("PushNotification").findAll(original).count(), Regex("PushNotification").findAll(result).count())
+    }
+
+    @Test fun platformMessagesStayEmptyAndNeverCountAsUnread() {
+        val original = fixture().toString(Charsets.UTF_8)
+        val result = patchKingnetJavaScript(fixture()).toString(Charsets.UTF_8)
+        // The initial list and the paged request no longer deliver server news.
+        assertTrue(result.contains("r.mescrollArr[1].listArr=o.data.News=null,"))
+        assertTrue(result.contains("b=function(e){return Promise.resolve({status:200,data:[]})}"))
+        assertFalse(result.contains("h(\"POST\",\"/NotificationBox/LoadNews\""))
+        // Both unread-count paths zero the news counter before it is stored.
+        assertTrue(result.contains("o.data.UnreadCount&&(o.data.UnreadCount.News=0),"))
+        assertTrue(result.contains("(n.data&&(n.data.News=0),u.a.commit(\"setCountUnread\",n.data),e(n))"))
+        // Reminders, notices and shared-circle (other tabs) requests are untouched.
+        for (keep in listOf("Notice", "Sharing")) {
+            assertEquals(Regex(keep).findAll(original).count(), Regex(keep).findAll(result).count())
+        }
     }
 
     @Test fun missingAmbiguousAndAlreadyModifiedSitesRejectWithoutChangingInput() {
