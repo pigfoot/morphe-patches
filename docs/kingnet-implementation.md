@@ -34,3 +34,26 @@ missing/duplicate/already-modified sites and malformed UTF-8. The official MPP i
 the original APK and compared with it: only the JavaScript asset may differ.
 Whether Google/Facebook sign-in, payment SDK and root checks accept the re-signed APK, whether
 parcel notifications still arrive and whether ads are gone are phone acceptance checks.
+
+## Experimental push filter ("Block platform message notifications")
+
+Server-broadcast promotions also arrive as phone notifications. They are shown by the app's
+push plugin or the Firebase SDK, not by `app.js`, so the JavaScript patch cannot stop them.
+
+- Static evidence: the app's JavaScript treats a push whose `FeatureName` is `Default` as a
+  platform message (the notification box opens the "platform messages" tab for it; the
+  handler shows a toast or opens `Details.FeatureName`). Every other value (`Msg`, `Ann`,
+  `vote`, order and community features) belongs to the other tabs and features.
+- `com.adobe.phonegap.push.FCMService` is the only effective messaging service (it also
+  forwards Infobip messages itself) and already overrides `handleIntent(Intent)`, which runs
+  before both the Firebase SDK display and `onMessageReceived`.
+- The patch inserts a guard at the start of that method: read the `FeatureName` string extra,
+  and return when `PushFilter.isPlatformNews` says it equals `Default`. The helper is a stateless
+  Java class in `extensions/kingnet`. The original body is otherwise untouched.
+- Input guards: package/version/build, signer, SHA-256 of the re-serialized `FCMService`
+  class, and the exact instruction list and register count of `handleIntent` (nothing is
+  changed unless all match; a second application is rejected).
+- Not verified: that the promotions use `Default` in the live payload, and whether
+  `Default` is ever used for a message the user wants. The patch is off by default and its
+  target is marked experimental. Infobip messages (`org_ib_d`) are not affected by this
+  patch; Infobip is stopped by the first patch.

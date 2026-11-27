@@ -21,6 +21,9 @@ class BundleContractTest {
             val wordBytes = zip.getInputStream(zip.getEntry("extensions/camscanner-policy.mpe")).readBytes()
             val wordDex = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(wordBytes))
             assertEquals(setOf("Lapp/pigfoot/camscanner/LoginApiPolicy;"), wordDex.classes.map { it.type }.toSet())
+            val pushBytes = zip.getInputStream(zip.getEntry("extensions/kingnet-push.mpe")).readBytes()
+            val pushDex = DexBackedDexFile(Opcodes.getDefault(), ByteBuffer.wrap(pushBytes))
+            assertEquals(setOf("Lapp/pigfoot/kingnet/PushFilter;"), pushDex.classes.map { it.type }.toSet())
             assertNull(zip.getEntry("extensions/camscanner-word-diagnostics.mpe"))
             assertFalse(zip.entries().asSequence().any { it.name.startsWith("v5/") || it.name.startsWith("t0/") })
         }
