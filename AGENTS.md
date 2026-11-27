@@ -26,6 +26,16 @@ app-scoped; report checks actually run and limitations. Do not equate a successf
 build or APK comparison with verified phone startup or live bus updates.
 Pointer: [README.md](README.md), [APK verifier](scripts/verify-apk.py).
 
+### Supported app versions
+Trigger: adding support for a new version/build of an app that already has a patch.
+Guard: replace the old version rather than supporting both. In the same change
+update the version/build and class or asset pins, test fixtures, tests, README and
+implementation docs, and the compatibility declaration, and delete the old
+version's fixtures and pins. Keep more than one version only when the maintainer
+explicitly asks for it. Qualify the new version against its own clean original;
+never widen an existing pin to accept it.
+Pointer: [README.md](README.md), the app's `docs/<app>-implementation.md`.
+
 ### RailsGo input compatibility
 Trigger: editing RailsGo patches or expanding supported versions.
 Guard: current support is clean RailsGo 1.25.2 (156), arm64-v8a APKS. Preserve

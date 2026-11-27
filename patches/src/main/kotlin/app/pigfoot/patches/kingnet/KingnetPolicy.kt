@@ -5,11 +5,11 @@ import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
 internal const val KINGNET_PACKAGE = "chk.kingnet.app"
-internal const val KINGNET_VERSION = "4.20.8"
-internal const val KINGNET_CODE = "420080"
+internal const val KINGNET_VERSION = "4.21.0"
+internal const val KINGNET_CODE = "421004"
 internal const val KINGNET_SIGNER = "6b7853fdb77120ce00bf4148d059db9f1515c04d"
 internal const val KINGNET_ASSET = "assets/www/js/app.js"
-internal const val KINGNET_JS_HASH = "bd97d5e3fa55891b35c546c570a65b8c4422200d3735f24465a6c1fa955c6637"
+internal const val KINGNET_JS_HASH = "e45ae88379fd47c45f804ac6b8d7e0e6b2c1d573fbed165ba2efa66f55b44375"
 
 internal fun kingnetSha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256")
     .digest(bytes).joinToString("") { "%02x".format(it) }
@@ -30,10 +30,13 @@ private const val AD_STORE = "\"advertising/setAdStorage\",e.data.Data.Ad2Specif
 private const val AD_SETTING = ".a.commit(\"advertising/setAdSetting\",e.data.Data.Settings)),t(e)"
 
 /**
- * Qualified against 4.20.8. Ads: the first-party ad API response is still read by the
+ * Qualified against 4.21.0. Ads: the first-party ad API response is still read by the
  * callers, but is no longer committed to the ad store, so every ad getter stays empty.
  * Marketing: Infobip is never initialized (the personalization path is gated on that
  * flag) and the automatic "come back" reminder is cancelled without being scheduled.
+ * Platform messages: the notification-box "platform messages" tab (server-broadcast
+ * promotions) is left as an empty list (never null: the page shows a loading skeleton while any
+ * list is null) and its unread count is forced to zero.
  * FCM registration, notification handling and every other call stay untouched.
  */
 internal val kingnetEdits = listOf(
@@ -48,7 +51,19 @@ internal val kingnetEdits = listOf(
         "case 0:return t.abrupt(\"return\",void 0);case 1:return MobileMessaging.init({applicationCode:"),
     KingnetEdit("re-engagement reminder",
         "cordova.plugins.notification.local.cancelAll((function(){var e=this,t=new Date,n=[3,4,5];",
-        "cordova.plugins.notification.local.cancelAll((function(){return;var e=this,t=new Date,n=[3,4,5];")
+        "cordova.plugins.notification.local.cancelAll((function(){return;var e=this,t=new Date,n=[3,4,5];"),
+    KingnetEdit("platform messages, first list",
+        "r.mescrollArr[1].listArr=o.data.News,",
+        "r.mescrollArr[1].listArr=o.data.News=[],"),
+    KingnetEdit("platform messages, first unread count",
+        "r.\$store.state.CountUnread=o.data.UnreadCount;",
+        "o.data.UnreadCount&&(o.data.UnreadCount.News=0),r.\$store.state.CountUnread=o.data.UnreadCount;"),
+    KingnetEdit("platform messages, unread count refresh",
+        "200===n.status?(u.a.commit(\"setCountUnread\",n.data),e(n)):t(\"error\")",
+        "200===n.status?(n.data&&(n.data.News=0),u.a.commit(\"setCountUnread\",n.data),e(n)):t(\"error\")"),
+    KingnetEdit("platform messages, paged list request",
+        "b=function(e){return h(\"POST\",\"/NotificationBox/LoadNews\",e,\"communityUser\")}",
+        "b=function(e){return Promise.resolve({status:200,data:[]})}")
 )
 
 /** All sites are collected/validated on the original before any transformation. */

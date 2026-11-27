@@ -10,7 +10,7 @@ private val target = Compatibility(packageName = KINGNET_PACKAGE, name = "智生
 
 val kingnetCleanupPatch = rawResourcePatch(
     name = "智生活: Remove ads and marketing messages",
-    description = "Hide the in-app ad cards, banners and pop-ups, stop the third-party marketing message service and cancel the automatic come-back reminder in the original 智生活 4.20.8 APK. Parcel, order and community notifications are not changed. You must uninstall the original app and sign in again.",
+    description = "Hide the in-app ad cards, banners and pop-ups, the notification-box platform messages and their unread count, stop the third-party marketing message service and cancel the automatic come-back reminder in the original 智生活 4.21.0 APK. Parcel, order and community notifications are not changed. You must uninstall the original app and sign in again.",
     default = true
 ) {
     compatibleWith(target)
